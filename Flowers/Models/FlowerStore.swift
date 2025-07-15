@@ -13,6 +13,7 @@ class FlowerStore: ObservableObject {
     @Published var hasUnrevealedFlower = false
     @Published var pendingFlower: AIFlower?
     @Published var nextFlowerTime: Date?
+    @Published var shouldShowOnboarding = false
     
     private let userDefaults = UserDefaults.standard
     private let sharedDefaults = UserDefaults(suiteName: "group.OCTOBER.Flowers")
@@ -1034,6 +1035,7 @@ class FlowerStore: ObservableObject {
         hasUnrevealedFlower = false
         pendingFlower = nil
         nextFlowerTime = nil
+        shouldShowOnboarding = true // Set this to true after reset
         
         // Force UI update
         objectWillChange.send()

@@ -1,0 +1,18 @@
+"/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Services/ContextualFlowerGenerator.swift":
+  object: "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ContextualFlowerGenerator.o"
+  const-values: "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ContextualFlowerGenerator.swiftconstvalues"
+  swift-dependencies: "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ContextualFlowerGenerator.swiftdeps"
+  dependencies: "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ContextualFlowerGenerator.d"
+  diagnostics: "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ContextualFlowerGenerator.dia"
+"/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Views/FavoritesSheet.swift":
+  object: "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FavoritesSheet.o"
+  const-values: "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FavoritesSheet.swiftconstvalues"
+  dependencies: "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FavoritesSheet.d"
+  swift-dependencies: "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FavoritesSheet.swiftdeps"
+  diagnostics: "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FavoritesSheet.dia"
+"/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Views/GeneratorSheet.swift":
+  object: "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/GeneratorSheet.o"
+  dependencies: "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/GeneratorSheet.d"
+  diagnostics: "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/GeneratorSheet.dia"
+  swift-dependencies: "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/GeneratorSheet.swiftdeps"
+  const-values: "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/GeneratorSheet.swiftconstvalues"

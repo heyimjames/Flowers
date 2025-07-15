@@ -166,7 +166,18 @@
 		</dict>
 	</array>
 	<key>images</key>
-	<array/>
+	<array>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameIconFlowers</string>
+			<key>relativePath</key>
+			<string>./Icon Flowers.imageset</string>
+			<key>swiftSymbol</key>
+			<string>iconFlowers</string>
+		</dict>
+	</array>
 	<key>symbols</key>
 	<array/>
 </dict>

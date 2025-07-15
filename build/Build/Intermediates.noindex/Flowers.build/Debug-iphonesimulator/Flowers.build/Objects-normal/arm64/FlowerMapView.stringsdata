@@ -7,7 +7,7 @@
         "key": "Discovery Location",
         "location": {
           "startingColumn": 26,
-          "startingLine": 48
+          "startingLine": 65
         }
       },
       {
@@ -15,7 +15,23 @@
         "key": "Tap to Expand",
         "location": {
           "startingColumn": 42,
-          "startingLine": 103
+          "startingLine": 120
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@, %@",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 147
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@, %@",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 301
         }
       },
       {
@@ -23,7 +39,7 @@
         "key": "Done",
         "location": {
           "startingColumn": 28,
-          "startingLine": 272
+          "startingLine": 318
         }
       },
       {
@@ -31,7 +47,7 @@
         "key": "Discovered",
         "location": {
           "startingColumn": 34,
-          "startingLine": 281
+          "startingLine": 327
         }
       }
     ]

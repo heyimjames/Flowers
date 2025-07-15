@@ -1,0 +1,18 @@
+"/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/ContentView.swift":
+  dependencies: "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ContentView.d"
+  swift-dependencies: "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ContentView.swiftdeps"
+  const-values: "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ContentView.swiftconstvalues"
+  object: "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ContentView.o"
+  diagnostics: "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ContentView.dia"
+"/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Models/AIFlower.swift":
+  const-values: "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/AIFlower.swiftconstvalues"
+  diagnostics: "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/AIFlower.dia"
+  object: "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/AIFlower.o"
+  dependencies: "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/AIFlower.d"
+  swift-dependencies: "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/AIFlower.swiftdeps"
+"/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Services/APIConfiguration.swift":
+  swift-dependencies: "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/APIConfiguration.swiftdeps"
+  diagnostics: "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/APIConfiguration.dia"
+  dependencies: "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/APIConfiguration.d"
+  const-values: "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/APIConfiguration.swiftconstvalues"
+  object: "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/APIConfiguration.o"

@@ -7,7 +7,7 @@
         "key": "Hold to Reveal...",
         "location": {
           "startingColumn": 42,
-          "startingLine": 51
+          "startingLine": 50
         }
       },
       {
@@ -15,7 +15,7 @@
         "key": "Reveal Flower",
         "location": {
           "startingColumn": 64,
-          "startingLine": 51
+          "startingLine": 50
         }
       }
     ]

@@ -192,11 +192,18 @@ struct ContentView: View {
         }
         .onAppear {
             // Check if user needs onboarding (starter flower selection)
-            if !UserDefaults.standard.bool(forKey: "hasCompletedOnboarding") {
+            if !UserDefaults.standard.bool(forKey: "hasCompletedOnboarding") || flowerStore.shouldShowOnboarding {
                 // Small delay to ensure Jenny flower is loaded
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     showingOnboarding = true
+                    flowerStore.shouldShowOnboarding = false
                 }
+            }
+        }
+        .onChange(of: flowerStore.shouldShowOnboarding) { newValue in
+            if newValue {
+                showingOnboarding = true
+                flowerStore.shouldShowOnboarding = false
             }
         }
         .fullScreenCover(isPresented: $showingOnboarding) {
