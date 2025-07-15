@@ -476,11 +476,11 @@ struct FlowerDetailSheet: View {
         .alert("Delete Flower?", isPresented: $showingDeleteAlert) {
             Button("Cancel", role: .cancel) { }
             Button("Delete", role: .destructive) {
-                flowerStore.deleteFavorite(flower)
+                flowerStore.deleteFlower(flower)
                 dismiss()
             }
         } message: {
-            Text("This flower will be removed from your favorites.")
+            Text("This flower will be permanently removed from your collection.")
         }
         .alert(saveImageSuccess ? "Image Saved!" : "Permission Required", isPresented: $saveImageAlert) {
             Button("OK") { }

@@ -522,6 +522,23 @@ class FlowerStore: ObservableObject {
         saveFavorites()
     }
     
+    func deleteFlower(_ flower: AIFlower) {
+        // Remove from favorites
+        favorites.removeAll { $0.id == flower.id }
+        
+        // Remove from discovered flowers
+        discoveredFlowers.removeAll { $0.id == flower.id }
+        
+        // Clear current flower if it's the one being deleted
+        if currentFlower?.id == flower.id {
+            currentFlower = nil
+        }
+        
+        // Save both collections
+        saveFavorites()
+        saveDiscoveredFlowers()
+    }
+    
     // MARK: - Public Refresh Method
     func refreshCollection() {
         loadFavorites()

@@ -23,19 +23,33 @@ struct ContentView: View {
         ZStack {
             Color.flowerBackground.ignoresSafeArea()
             
-            VStack(spacing: 0) {
-                // Fixed navigation bar at top
-                ZStack {
-                    // Centered app title
-                    Text("Flowers")
-                        .font(.system(size: 24, weight: .semibold, design: .serif))
-                        .foregroundColor(.flowerTextPrimary)
-                        .frame(maxWidth: .infinity)
+            ScrollView {
+                VStack(spacing: 20) {
+                    // Main flower display
+                    flowerDisplay
+                        .padding(.horizontal, 20)
+                        .padding(.top, 16)
                     
-                    // Overlay with pill and settings
-                    HStack {
-                        // Animated discovery/countdown pill
-                        ZStack {
+                    // Error message if any
+                    if let errorMessage = flowerStore.errorMessage {
+                        Text(errorMessage)
+                            .font(.system(size: 14))
+                            .foregroundColor(.flowerError)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 40)
+                    }
+                    
+                    // Extra padding for action buttons
+                    Color.clear
+                        .frame(height: 100)
+                }
+            }
+            .scrollIndicators(.hidden)
+            .safeAreaInset(edge: .top, spacing: 0) {
+                // Navigation bar
+                HStack {
+                    // Animated discovery/countdown pill
+                    ZStack {
                             // Discovery count view
                             HStack(spacing: 4) {
                                 Image(systemName: "sparkles")
@@ -75,45 +89,28 @@ struct ContentView: View {
                         .cornerRadius(16)
                         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: showDiscoveryCount)
                         
-                        Spacer()
-                        
-                        // Settings button
-                        Button {
-                            showingSettings = true
-                        } label: {
-                            Image(systemName: "gearshape.fill")
-                                .font(.system(size: 22))
-                                .foregroundColor(.flowerTextSecondary)
-                        }
+                    
+                    Spacer()
+                    
+                    // Centered app title
+                    Text("Flowers")
+                        .font(.system(size: 24, weight: .semibold, design: .serif))
+                        .foregroundColor(.flowerTextPrimary)
+                    
+                    Spacer()
+                    
+                    // Settings button
+                    Button {
+                        showingSettings = true
+                    } label: {
+                        Image(systemName: "gearshape.fill")
+                            .font(.system(size: 22))
+                            .foregroundColor(.flowerTextSecondary)
                     }
                 }
                 .padding(.horizontal, 20)
-                .padding(.top, 60)
-                .padding(.bottom, 16)
+                .padding(.vertical, 16)
                 .background(Color.flowerBackground)
-                
-                ScrollView {
-                    VStack(spacing: 20) {
-                        // Main flower display
-                        flowerDisplay
-                            .padding(.horizontal, 20)
-                            .padding(.top, 10)
-                        
-                        // Error message if any
-                        if let errorMessage = flowerStore.errorMessage {
-                            Text(errorMessage)
-                                .font(.system(size: 14))
-                                .foregroundColor(.flowerError)
-                                .multilineTextAlignment(.center)
-                                .padding(.horizontal, 40)
-                        }
-                        
-                        // Extra padding for action buttons
-                        Color.clear
-                            .frame(height: 100)
-                    }
-                }
-                .scrollIndicators(.hidden)
             }
             
             // Action buttons pinned to bottom
