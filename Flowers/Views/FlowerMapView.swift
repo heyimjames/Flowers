@@ -54,12 +54,13 @@ struct FlowerMapView: View {
                 Button(action: {
                     showingFullMap = true
                 }) {
-                    ZStack(alignment: .bottomLeading) {
+                    ZStack {
                         Map(coordinateRegion: .constant(region),
                             interactionModes: [],
+                            showsUserLocation: true,
                             annotationItems: [MapFlower(flower: flower)]) { item in
                             MapAnnotation(coordinate: item.coordinate) {
-                                FlowerMapPin()
+                                FlowerMapPin(flower: item.flower)
                             }
                         }
                         .frame(height: 180)
@@ -69,44 +70,50 @@ struct FlowerMapView: View {
                                 .strokeBorder(Color.flowerPrimary.opacity(0.2), lineWidth: 1)
                         )
                         
-                        // Location label overlay
-                        if let locationName = flower.discoveryLocationName {
-                            HStack(spacing: 4) {
-                                Image(systemName: "location.fill")
-                                    .font(.system(size: 10))
-                                Text(locationName)
-                                    .font(.system(size: 12, weight: .medium))
+                        // Location label overlay - bottom left
+                        VStack {
+                            Spacer()
+                            HStack {
+                                if let locationName = flower.discoveryLocationName {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "location.fill")
+                                            .font(.system(size: 10))
+                                        Text(locationName)
+                                            .font(.system(size: 12, weight: .medium))
+                                    }
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(
+                                        Capsule()
+                                            .fill(Color.black.opacity(0.7))
+                                    )
+                                }
+                                Spacer()
                             }
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(
-                                Capsule()
-                                    .fill(Color.black.opacity(0.7))
-                            )
                             .padding(12)
                         }
                         
-                        // Tap indicator
-                        HStack {
+                        // Tap indicator - bottom right
+                        VStack {
                             Spacer()
-                            VStack {
+                            HStack {
                                 Spacer()
                                 HStack(spacing: 4) {
+                                    Text("Tap to Expand")
+                                        .font(.system(size: 12, weight: .medium))
                                     Image(systemName: "arrow.up.left.and.arrow.down.right")
                                         .font(.system(size: 10))
-                                    Text("Tap to expand")
-                                        .font(.system(size: 11))
                                 }
                                 .foregroundColor(.white)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 5)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
                                 .background(
                                     Capsule()
-                                        .fill(Color.flowerPrimary.opacity(0.9))
+                                        .fill(Color.black.opacity(0.7))
                                 )
-                                .padding(8)
                             }
+                            .padding(12)
                         }
                     }
                 }
@@ -114,16 +121,14 @@ struct FlowerMapView: View {
             }
             .sheet(isPresented: $showingFullMap) {
                 FullScreenMapView(selectedFlower: flower)
-                    .presentationDetents([.large])
-                    .presentationCornerRadius(32)
-                    .presentationDragIndicator(.hidden)
-                    .interactiveDismissDisabled()
+                    .environmentObject(FlowerStore())
             }
         }
     }
 }
 
 struct FlowerMapPin: View {
+    let flower: AIFlower
     @State private var animatePin = false
     
     var body: some View {
@@ -131,21 +136,31 @@ struct FlowerMapPin: View {
             // Pulsing circle background
             Circle()
                 .fill(Color.flowerPrimary.opacity(0.3))
-                .frame(width: animatePin ? 40 : 20, height: animatePin ? 40 : 20)
+                .frame(width: animatePin ? 60 : 36, height: animatePin ? 60 : 36)
                 .opacity(animatePin ? 0 : 1)
             
-            // Pin with green color
-            Image(systemName: "flower.fill")
-                .font(.system(size: 24))
-                .foregroundColor(.flowerPrimary)
-                .background(
-                    Circle()
-                        .fill(Color.white)
-                        .frame(width: 32, height: 32)
-                        .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
-                )
-                .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+            // White circle background
+            Circle()
+                .fill(Color.white)
+                .frame(width: 36, height: 36)
+                .shadow(color: .black.opacity(0.15), radius: 3, x: 0, y: 2)
+            
+            // Flower image inside circle
+            if let imageData = flower.imageData,
+               let uiImage = UIImage(data: imageData) {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 30, height: 30)
+                    .clipShape(Circle())
+            } else {
+                // Fallback flower icon if no image
+                Image(systemName: "flower.fill")
+                    .font(.system(size: 20))
+                    .foregroundColor(.flowerPrimary)
+            }
         }
+        .zIndex(0) // Ensure flower pins are below user location
         .onAppear {
             withAnimation(.easeOut(duration: 2).repeatForever(autoreverses: false)) {
                 animatePin = true
@@ -158,7 +173,7 @@ struct FullScreenMapView: View {
     let selectedFlower: AIFlower
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var store: FlowerStore
-    @State private var region: MKCoordinateRegion
+    @State private var mapRegion: MKCoordinateRegion
     @State private var flowersWithLocation: [AIFlower] = []
     @State private var selectedIndex: Int = 0
     
@@ -167,12 +182,12 @@ struct FullScreenMapView: View {
         
         if let lat = selectedFlower.discoveryLatitude,
            let lon = selectedFlower.discoveryLongitude {
-            self._region = State(initialValue: MKCoordinateRegion(
+            self._mapRegion = State(initialValue: MKCoordinateRegion(
                 center: CLLocationCoordinate2D(latitude: lat, longitude: lon),
                 span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
             ))
         } else {
-            self._region = State(initialValue: MKCoordinateRegion(
+            self._mapRegion = State(initialValue: MKCoordinateRegion(
                 center: CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194),
                 span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
             ))
@@ -183,14 +198,16 @@ struct FullScreenMapView: View {
         NavigationView {
             ZStack {
                 // Full screen map
-                Map(coordinateRegion: $region,
-                    showsUserLocation: false,
+                Map(coordinateRegion: $mapRegion,
+                    showsUserLocation: true,
                     annotationItems: flowersWithLocation.map { MapFlower(flower: $0) }) { item in
                     MapAnnotation(coordinate: item.coordinate) {
-                        FlowerMapPin()
+                        FlowerMapPin(flower: item.flower)
+                            .zIndex(0) // Ensure flower pins are below user location
                     }
                 }
                 .ignoresSafeArea()
+                .tint(.flowerPrimary) // Make user location green
                 
                 // Top gradient for better text visibility
                 VStack {
@@ -209,24 +226,25 @@ struct FullScreenMapView: View {
                 VStack {
                     Spacer()
                     
-                    // TabView for carousel
+                    // TabView for carousel with extra padding to prevent shadow clipping
                     TabView(selection: $selectedIndex) {
                         ForEach(Array(flowersWithLocation.enumerated()), id: \.offset) { index, flower in
                             FlowerMapCard(flower: flower)
                                 .tag(index)
-                                .padding(.horizontal, 20)
+                                .padding(.horizontal, 30) // More padding to prevent shadow clipping
+                                .padding(.vertical, 10)
                         }
                     }
                     .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-                    .frame(height: 200)
+                    .frame(height: 220) // Increased height for shadow
                     .onChange(of: selectedIndex) { newIndex in
                         // Animate to the selected flower's location
                         if newIndex < flowersWithLocation.count {
                             let flower = flowersWithLocation[newIndex]
                             if let lat = flower.discoveryLatitude,
                                let lon = flower.discoveryLongitude {
-                                withAnimation(.easeInOut(duration: 0.5)) {
-                                    region = MKCoordinateRegion(
+                                withAnimation(.easeInOut(duration: 0.7)) {
+                                    mapRegion = MKCoordinateRegion(
                                         center: CLLocationCoordinate2D(latitude: lat, longitude: lon),
                                         span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
                                     )
@@ -240,9 +258,8 @@ struct FullScreenMapView: View {
                         HStack(spacing: 6) {
                             ForEach(0..<flowersWithLocation.count, id: \.self) { index in
                                 Circle()
-                                    .fill(index == selectedIndex ? Color.flowerPrimary : Color.flowerPrimary.opacity(0.3))
+                                    .fill(index == selectedIndex ? Color.white : Color.white.opacity(0.5))
                                     .frame(width: 8, height: 8)
-                                    .animation(.easeInOut, value: selectedIndex)
                             }
                         }
                         .padding(.bottom, 20)
@@ -252,28 +269,38 @@ struct FullScreenMapView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Close") {
+                    Button("Done") {
                         dismiss()
                     }
-                    .font(.system(size: 17, weight: .medium))
                     .foregroundColor(.white)
                 }
                 
                 ToolbarItem(placement: .principal) {
-                    Text("Discovery Locations")
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundColor(.white)
+                    if let date = selectedFlower.discoveryDate {
+                        VStack(spacing: 2) {
+                            Text("Discovered")
+                                .font(.system(size: 12))
+                                .foregroundColor(.white.opacity(0.8))
+                            Text(date, style: .date)
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.white)
+                        }
+                    }
                 }
             }
         }
         .onAppear {
-            // Get all flowers with location data
-            flowersWithLocation = store.discoveredFlowers.filter { flower in
-                flower.discoveryLatitude != nil && flower.discoveryLongitude != nil
-            }.sorted(by: { $0.generatedDate > $1.generatedDate })
+            // Load all flowers with location data and find selected index
+            let flowers = store.discoveredFlowers.filter { 
+                $0.discoveryLatitude != nil && $0.discoveryLongitude != nil 
+            }.sorted { 
+                ($0.discoveryDate ?? $0.generatedDate) > ($1.discoveryDate ?? $1.generatedDate) 
+            }
+            
+            flowersWithLocation = flowers
             
             // Find the index of the selected flower
-            if let index = flowersWithLocation.firstIndex(where: { $0.id == selectedFlower.id }) {
+            if let index = flowers.firstIndex(where: { $0.id == selectedFlower.id }) {
                 selectedIndex = index
             }
         }
@@ -284,70 +311,45 @@ struct FlowerMapCard: View {
     let flower: AIFlower
     
     var body: some View {
-        VStack(spacing: 16) {
-            // Flower name and image
-            HStack(spacing: 16) {
+        VStack(spacing: 12) {
+            HStack(spacing: 12) {
+                // Flower image
                 if let imageData = flower.imageData,
                    let uiImage = UIImage(data: imageData) {
                     Image(uiImage: uiImage)
                         .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 80, height: 80)
-                        .cornerRadius(16)
+                        .scaledToFill()
+                        .frame(width: 60, height: 60)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(flower.name)
-                        .font(.system(size: 20, weight: .semibold))
+                        .font(.system(size: 18, weight: .medium, design: .serif))
                         .foregroundColor(.flowerTextPrimary)
+                    
+                    Text(flower.descriptor)
+                        .font(.system(size: 14))
+                        .foregroundColor(.flowerTextSecondary)
+                        .lineLimit(2)
                     
                     if let locationName = flower.discoveryLocationName {
                         HStack(spacing: 4) {
                             Image(systemName: "location.fill")
-                                .font(.system(size: 12))
+                                .font(.system(size: 10))
                             Text(locationName)
-                                .font(.system(size: 14))
+                                .font(.system(size: 12))
                         }
-                        .foregroundColor(.flowerTextSecondary)
+                        .foregroundColor(.flowerTextTertiary)
                     }
-                    
-                    HStack(spacing: 4) {
-                        Image(systemName: "calendar")
-                            .font(.system(size: 12))
-                        Text(flower.discoveryDate ?? flower.generatedDate, style: .date)
-                            .font(.system(size: 14))
-                        Text("at")
-                            .font(.system(size: 14))
-                        Text(flower.discoveryDate ?? flower.generatedDate, style: .time)
-                            .font(.system(size: 14))
-                    }
-                    .foregroundColor(.flowerTextSecondary)
                 }
                 
                 Spacer()
             }
-            .padding(20)
-            .background(Color.white)
-            .cornerRadius(20)
-            .shadow(radius: 10)
-            
-            // Coordinates
-            if let lat = flower.discoveryLatitude,
-               let lon = flower.discoveryLongitude {
-                HStack {
-                    Image(systemName: "location.circle")
-                        .font(.system(size: 14))
-                        .foregroundColor(.flowerTextTertiary)
-                    Text(String(format: "%.4f°, %.4f°", lat, lon))
-                        .font(.system(size: 12, design: .monospaced))
-                        .foregroundColor(.flowerTextTertiary)
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(Color.flowerCardBackground)
-                .cornerRadius(20)
-            }
+            .padding(16)
         }
-        .padding(.bottom, 20)
+        .background(Color.white)
+        .cornerRadius(16)
+        .shadow(color: .black.opacity(0.08), radius: 6, x: 0, y: 3)
     }
 } 

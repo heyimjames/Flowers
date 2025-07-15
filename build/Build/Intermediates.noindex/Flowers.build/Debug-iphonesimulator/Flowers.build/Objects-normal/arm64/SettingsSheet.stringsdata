@@ -7,7 +7,7 @@
         "key": "API Keys Required",
         "location": {
           "startingColumn": 16,
-          "startingLine": 190
+          "startingLine": 221
         }
       },
       {
@@ -156,10 +156,34 @@
       },
       {
         "comment": "",
+        "key": "Test Flower Reveal",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 156
+        }
+      },
+      {
+        "comment": "",
+        "key": "Creates a test flower and shows the reveal screen",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 178
+        }
+      },
+      {
+        "comment": "",
+        "key": "Test 3-Second Hold Reveal",
+        "location": {
+          "startingColumn": 46,
+          "startingLine": 173
+        }
+      },
+      {
+        "comment": "",
         "key": "About",
         "location": {
           "startingColumn": 35,
-          "startingLine": 158
+          "startingLine": 189
         }
       },
       {
@@ -167,7 +191,7 @@
         "key": "Version",
         "location": {
           "startingColumn": 38,
-          "startingLine": 163
+          "startingLine": 194
         }
       },
       {
@@ -175,7 +199,7 @@
         "key": "1.0.0",
         "location": {
           "startingColumn": 38,
-          "startingLine": 166
+          "startingLine": 197
         }
       },
       {
@@ -183,7 +207,7 @@
         "key": "Flowers Discovered",
         "location": {
           "startingColumn": 38,
-          "startingLine": 172
+          "startingLine": 203
         }
       },
       {
@@ -191,7 +215,7 @@
         "key": "%lld",
         "location": {
           "startingColumn": 38,
-          "startingLine": 175
+          "startingLine": 206
         }
       },
       {
@@ -199,7 +223,7 @@
         "key": "OK",
         "location": {
           "startingColumn": 20,
-          "startingLine": 191
+          "startingLine": 222
         }
       },
       {
@@ -207,7 +231,7 @@
         "key": "To use AI features, you'll need API keys from:\n\n• FAL.ai for flower images\n• OpenAI for flower names and descriptions\n\nVisit their websites to sign up and get your API keys.",
         "location": {
           "startingColumn": 18,
-          "startingLine": 193
+          "startingLine": 224
         }
       },
       {
@@ -215,7 +239,7 @@
         "key": "iCloud Sync",
         "location": {
           "startingColumn": 18,
-          "startingLine": 213
+          "startingLine": 244
         }
       },
       {
@@ -223,7 +247,7 @@
         "key": "Your flowers are automatically backed up to iCloud",
         "location": {
           "startingColumn": 22,
-          "startingLine": 264
+          "startingLine": 295
         }
       },
       {
@@ -231,7 +255,7 @@
         "key": "Sign in to iCloud in Settings to back up your flowers",
         "location": {
           "startingColumn": 22,
-          "startingLine": 269
+          "startingLine": 300
         }
       },
       {
@@ -239,7 +263,7 @@
         "key": "Not synced yet",
         "location": {
           "startingColumn": 30,
-          "startingLine": 232
+          "startingLine": 263
         }
       },
       {
@@ -247,7 +271,7 @@
         "key": "Last synced %@ ago",
         "location": {
           "startingColumn": 30,
-          "startingLine": 228
+          "startingLine": 259
         }
       },
       {
@@ -255,7 +279,7 @@
         "key": "iCloud Connected",
         "location": {
           "startingColumn": 55,
-          "startingLine": 223
+          "startingLine": 254
         }
       },
       {
@@ -263,7 +287,7 @@
         "key": "iCloud Not Available",
         "location": {
           "startingColumn": 76,
-          "startingLine": 223
+          "startingLine": 254
         }
       },
       {
@@ -271,7 +295,7 @@
         "key": "Sync Now",
         "location": {
           "startingColumn": 30,
-          "startingLine": 258
+          "startingLine": 289
         }
       }
     ]

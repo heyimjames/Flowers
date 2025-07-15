@@ -7,6 +7,25 @@ struct FavoritesSheet: View {
     @State private var selectedFlower: AIFlower?
     @State private var showingDetail = false
     @State private var showFavoritesOnly = false
+    @State private var sortOption: SortOption = .newestFirst
+    
+    enum SortOption: String, CaseIterable {
+        case newestFirst = "Newest First"
+        case oldestFirst = "Oldest First"
+        case nameAZ = "Name (A-Z)"
+        case nameZA = "Name (Z-A)"
+        case favoritesFirst = "Favorites First"
+        
+        var icon: String {
+            switch self {
+            case .newestFirst: return "arrow.down.circle"
+            case .oldestFirst: return "arrow.up.circle"
+            case .nameAZ: return "textformat.abc"
+            case .nameZA: return "textformat.abc.dottedunderline"
+            case .favoritesFirst: return "heart.circle"
+            }
+        }
+    }
     
     let columns = [
         GridItem(.flexible(), spacing: 16),
@@ -14,13 +33,27 @@ struct FavoritesSheet: View {
     ]
     
     var displayedFlowers: [AIFlower] {
-        if showFavoritesOnly {
-            return flowerStore.favorites.sorted { 
+        let flowers = showFavoritesOnly ? flowerStore.favorites : flowerStore.discoveredFlowers
+        
+        switch sortOption {
+        case .newestFirst:
+            return flowers.sorted { 
                 ($0.discoveryDate ?? $0.generatedDate) > ($1.discoveryDate ?? $1.generatedDate) 
             }
-        } else {
-            return flowerStore.discoveredFlowers.sorted { 
-                ($0.discoveryDate ?? $0.generatedDate) > ($1.discoveryDate ?? $1.generatedDate) 
+        case .oldestFirst:
+            return flowers.sorted { 
+                ($0.discoveryDate ?? $0.generatedDate) < ($1.discoveryDate ?? $1.generatedDate) 
+            }
+        case .nameAZ:
+            return flowers.sorted { $0.name < $1.name }
+        case .nameZA:
+            return flowers.sorted { $0.name > $1.name }
+        case .favoritesFirst:
+            return flowers.sorted { flower1, flower2 in
+                if flower1.isFavorite == flower2.isFavorite {
+                    return (flower1.discoveryDate ?? flower1.generatedDate) > (flower2.discoveryDate ?? flower2.generatedDate)
+                }
+                return flower1.isFavorite && !flower2.isFavorite
             }
         }
     }
@@ -55,7 +88,7 @@ struct FavoritesSheet: View {
                     .padding(.top, 20)
                     .padding(.bottom, 16)
                     
-                    // Filter toggle
+                    // Filter toggle and sort menu
                     HStack(spacing: 12) {
                         FilterButton(
                             title: "All Flowers",
@@ -72,6 +105,38 @@ struct FavoritesSheet: View {
                         )
                         
                         Spacer()
+                        
+                        // Sort menu
+                        Menu {
+                            ForEach(SortOption.allCases, id: \.self) { option in
+                                Button(action: { sortOption = option }) {
+                                    HStack {
+                                        Text(option.rawValue)
+                                        if sortOption == option {
+                                            Image(systemName: "checkmark")
+                                        }
+                                    }
+                                }
+                            }
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: sortOption.icon)
+                                    .font(.system(size: 14))
+                                Text("Sort")
+                                    .font(.system(size: 14, weight: .medium))
+                            }
+                            .foregroundColor(.flowerPrimary)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(
+                                RoundedRectangle(cornerRadius: 20)
+                                    .fill(Color.flowerPrimary.opacity(0.1))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 20)
+                                            .strokeBorder(Color.flowerPrimary.opacity(0.2), lineWidth: 1)
+                                    )
+                            )
+                        }
                     }
                     .padding(.horizontal, 24)
                     .padding(.bottom, 16)

@@ -104,9 +104,7 @@ struct ContentView: View {
                         Button {
                             showingSettings = true
                         } label: {
-                            Image(systemName: "gearshape.fill")
-                                .font(.system(size: 22))
-                                .foregroundColor(.flowerTextSecondary)
+                            SettingsIcon(size: 22, color: .flowerTextSecondary)
                         }
                     }
                 }

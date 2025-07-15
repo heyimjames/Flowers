@@ -1,0 +1,391 @@
+{
+  "buildCommandCategory" : {
+    "other" : {
+
+    }
+  },
+  "buildRequestParameters" : {
+    "action" : "build",
+    "activeArchitecture" : "undefined_arch",
+    "activeRunDestination" : {
+      "disableOnlyActiveArch" : true,
+      "platform" : "iphonesimulator",
+      "sdk" : "iphonesimulator18.5",
+      "sdkVariant" : "iphonesimulator",
+      "supportedArchitectures" : [
+        "i386",
+        "x86_64"
+      ],
+      "targetArchitecture" : "undefined_arch"
+    },
+    "arena" : {
+      "buildIntermediatesPath" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex",
+      "buildProductsPath" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Products",
+      "derivedDataPath" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build",
+      "indexDataStoreFolderPath" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Index.noindex/DataStore",
+      "indexEnableDataStore" : true,
+      "indexPCHPath" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Index.noindex/PrecompiledHeaders",
+      "pchPath" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/PrecompiledHeaders"
+    },
+    "commandLineConfigOverrides" : {
+
+    },
+    "commandLineOverrides" : {
+      "SDKROOT" : "iphonesimulator18.5"
+    },
+    "configuration" : "Debug",
+    "environmentConfigOverrides" : {
+
+    },
+    "overrides" : {
+      "ACTION" : "build",
+      "CLANG_COVERAGE_MAPPING" : "YES",
+      "CLANG_PROFILE_DATA_DIRECTORY" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/ProfileData",
+      "ENABLE_PREVIEWS" : "NO",
+      "ENABLE_XOJIT_PREVIEWS" : "YES",
+      "ONLY_ACTIVE_ARCH" : "YES"
+    },
+    "packageConfigurationOverride" : "Debug"
+  },
+  "buildServiceModTime" : 768810322,
+  "developerPath" : "/Applications/Xcode.app/Contents/Developer",
+  "enableStaleFileRemoval" : true,
+  "projects" : [
+    {
+      "macroConfigSignature" : {
+        "signature" : [
+          100,
+          52,
+          49,
+          100,
+          56,
+          99,
+          100,
+          57,
+          56,
+          102,
+          48,
+          48,
+          98,
+          50,
+          48,
+          52,
+          101,
+          57,
+          56,
+          48,
+          48,
+          57,
+          57,
+          56,
+          101,
+          99,
+          102,
+          56,
+          52,
+          50,
+          55,
+          101
+        ]
+      },
+      "name" : "Flowers"
+    }
+  ],
+  "sdkVersions" : [
+    {
+      "canonicalName" : "appletvos18.5",
+      "productBuildVersion" : "22L572"
+    },
+    {
+      "canonicalName" : "appletvsimulator18.5",
+      "productBuildVersion" : "22L572"
+    },
+    {
+      "canonicalName" : "driverkit24.5"
+    },
+    {
+      "canonicalName" : "iphoneos18.5",
+      "productBuildVersion" : "22F76"
+    },
+    {
+      "canonicalName" : "iphonesimulator18.5",
+      "productBuildVersion" : "22F76"
+    },
+    {
+      "canonicalName" : "macosx15.5",
+      "productBuildVersion" : "24F74"
+    },
+    {
+      "canonicalName" : "watchos11.5",
+      "productBuildVersion" : "22T572"
+    },
+    {
+      "canonicalName" : "watchsimulator11.5",
+      "productBuildVersion" : "22T572"
+    },
+    {
+      "canonicalName" : "xros2.5",
+      "productBuildVersion" : "22O473"
+    },
+    {
+      "canonicalName" : "xrsimulator2.5",
+      "productBuildVersion" : "22O473"
+    }
+  ],
+  "systemInfo" : {
+    "nativeArchitecture" : "arm64",
+    "operatingSystemVersion" : "15.5.0",
+    "productBuildVersion" : "24F74"
+  },
+  "targets" : [
+    {
+      "buildParameters" : {
+        "action" : "build",
+        "activeArchitecture" : "undefined_arch",
+        "activeRunDestination" : {
+          "disableOnlyActiveArch" : true,
+          "platform" : "iphonesimulator",
+          "sdk" : "iphonesimulator18.5",
+          "sdkVariant" : "iphonesimulator",
+          "supportedArchitectures" : [
+            "i386",
+            "x86_64"
+          ],
+          "targetArchitecture" : "undefined_arch"
+        },
+        "arena" : {
+          "buildIntermediatesPath" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex",
+          "buildProductsPath" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Products",
+          "derivedDataPath" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build",
+          "indexDataStoreFolderPath" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Index.noindex/DataStore",
+          "indexEnableDataStore" : true,
+          "indexPCHPath" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Index.noindex/PrecompiledHeaders",
+          "pchPath" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/PrecompiledHeaders"
+        },
+        "commandLineConfigOverrides" : {
+
+        },
+        "commandLineOverrides" : {
+          "SDKROOT" : "iphonesimulator18.5"
+        },
+        "configuration" : "Debug",
+        "environmentConfigOverrides" : {
+
+        },
+        "overrides" : {
+          "ACTION" : "build",
+          "CLANG_COVERAGE_MAPPING" : "YES",
+          "CLANG_PROFILE_DATA_DIRECTORY" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/ProfileData",
+          "ENABLE_PREVIEWS" : "NO",
+          "ENABLE_XOJIT_PREVIEWS" : "YES",
+          "ONLY_ACTIVE_ARCH" : "YES"
+        },
+        "packageConfigurationOverride" : "Debug"
+      },
+      "macroConfigSignature" : {
+        "signature" : [
+          100,
+          52,
+          49,
+          100,
+          56,
+          99,
+          100,
+          57,
+          56,
+          102,
+          48,
+          48,
+          98,
+          50,
+          48,
+          52,
+          101,
+          57,
+          56,
+          48,
+          48,
+          57,
+          57,
+          56,
+          101,
+          99,
+          102,
+          56,
+          52,
+          50,
+          55,
+          101
+        ]
+      },
+      "name" : "Flowers",
+      "provisioningInputs" : {
+        "appIdentifierPrefix" : "HJJGM6KHY5.",
+        "errors" : [
+
+        ],
+        "identityHash" : "-",
+        "identityName" : "Sign to Run Locally",
+        "isEnterpriseTeam" : false,
+        "signedEntitlements" : {
+
+        },
+        "simulatedEntitlements" : {
+          "application-identifier" : "HJJGM6KHY5.OCTOBER.Flowers",
+          "aps-environment" : "development",
+          "com.apple.developer.icloud-container-identifiers" : [
+            "iCloud.com.OCTOBER.Flowers"
+          ],
+          "com.apple.developer.icloud-services" : [
+            "CloudKit",
+            "CloudDocuments"
+          ],
+          "com.apple.developer.ubiquity-container-identifiers" : [
+            "iCloud.com.OCTOBER.Flowers"
+          ],
+          "com.apple.security.application-groups" : [
+            "group.OCTOBER.Flowers"
+          ]
+        },
+        "teamIdentifierPrefix" : "HJJGM6KHY5.",
+        "useSigningTool" : false,
+        "warnings" : [
+
+        ]
+      },
+      "signature" : "TARGET@v11_hash=270179d6eece233995a83a7017430dfc",
+      "specializeGuidForActiveRunDestination" : false
+    }
+  ],
+  "useImplicitDependencies" : true,
+  "useParallelTargets" : true,
+  "userInfo" : {
+    "buildSystemEnvironment" : {
+      "COLORTERM" : "truecolor",
+      "COMMAND_MODE" : "unix2003",
+      "COMPOSER_NO_INTERACTION" : "1",
+      "CONDA_DEFAULT_ENV" : "base",
+      "CONDA_EXE" : "/opt/anaconda3/bin/conda",
+      "CONDA_PREFIX" : "/opt/anaconda3",
+      "CONDA_PROMPT_MODIFIER" : "(base) ",
+      "CONDA_PYTHON_EXE" : "/opt/anaconda3/bin/python",
+      "CONDA_SHLVL" : "1",
+      "CURSOR_TRACE_ID" : "902a19b48fe647cea609eb2923c25708",
+      "DISABLE_AUTO_UPDATE" : "true",
+      "GIT_ASKPASS" : "/Applications/Cursor.app/Contents/Resources/app/extensions/git/dist/askpass.sh",
+      "GSETTINGS_SCHEMA_DIR" : "/opt/anaconda3/share/glib-2.0/schemas",
+      "GSETTINGS_SCHEMA_DIR_CONDA_BACKUP" : "",
+      "HOME" : "/Users/jamesfrewin",
+      "HOMEBREW_CELLAR" : "/opt/homebrew/Cellar",
+      "HOMEBREW_PREFIX" : "/opt/homebrew",
+      "HOMEBREW_REPOSITORY" : "/opt/homebrew",
+      "INFOPATH" : "/opt/homebrew/share/info:/opt/homebrew/share/info:",
+      "LANG" : "en_US.UTF-8",
+      "LOGNAME" : "jamesfrewin",
+      "MANPATH" : "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/share/man:/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/usr/share/man:/Applications/Xcode.app/Contents/Developer/usr/share/man:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/share/man:",
+      "MallocNanoZone" : "0",
+      "NVM_BIN" : "/Users/jamesfrewin/.nvm/versions/node/v20.9.0/bin",
+      "NVM_CD_FLAGS" : "-q",
+      "NVM_DIR" : "/Users/jamesfrewin/.nvm",
+      "NVM_INC" : "/Users/jamesfrewin/.nvm/versions/node/v20.9.0/include/node",
+      "OLDPWD" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers",
+      "ORIGINAL_XDG_CURRENT_DESKTOP" : "undefined",
+      "PAGER" : "head -n 10000 | cat",
+      "PATH" : "/Applications/Xcode.app/Contents/Developer/usr/bin:/Users/jamesfrewin/.npm-global/bin:/Users/jamesfrewin/.nvm/versions/node/v20.9.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin://Applications/Topaz Gigapixel AI.app/Contents/Resources/bin:/Library/Apple/usr/bin:/Users/jamesfrewin/.npm-global/bin:/Users/jamesfrewin/.nvm/versions/node/v20.9.0/bin:/opt/anaconda3/bin:/opt/anaconda3/condabin",
+      "PIP_NO_INPUT" : "true",
+      "PWD" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers",
+      "SHELL" : "/bin/zsh",
+      "SHLVL" : "1",
+      "SSH_AUTH_SOCK" : "/private/tmp/com.apple.launchd.VXaML6nlZc/Listeners",
+      "TERM" : "xterm-256color",
+      "TERM_PROGRAM" : "vscode",
+      "TERM_PROGRAM_VERSION" : "1.2.4",
+      "TMPDIR" : "/var/folders/tz/_2z8bgfx3rg_cp58rqj69fbw0000gn/T/",
+      "USER" : "jamesfrewin",
+      "USER_ZDOTDIR" : "/Users/jamesfrewin",
+      "VSCODE_GIT_ASKPASS_EXTRA_ARGS" : "",
+      "VSCODE_GIT_ASKPASS_MAIN" : "/Applications/Cursor.app/Contents/Resources/app/extensions/git/dist/askpass-main.js",
+      "VSCODE_GIT_ASKPASS_NODE" : "/Applications/Cursor.app/Contents/Frameworks/Cursor Helper (Plugin).app/Contents/MacOS/Cursor Helper (Plugin)",
+      "VSCODE_GIT_IPC_HANDLE" : "/var/folders/tz/_2z8bgfx3rg_cp58rqj69fbw0000gn/T/vscode-git-fda511f993.sock",
+      "VSCODE_INJECTION" : "1",
+      "VSCODE_PROFILE_INITIALIZED" : "1",
+      "XPC_FLAGS" : "0x0",
+      "XPC_SERVICE_NAME" : "0",
+      "ZDOTDIR" : "/Users/jamesfrewin",
+      "_" : "/usr/bin/xcodebuild",
+      "_CE_CONDA" : "",
+      "_CE_M" : "",
+      "__CFBundleIdentifier" : "com.todesktop.230313mzl4w4u92",
+      "__CF_USER_TEXT_ENCODING" : "0x1F5:0x0:0x0",
+      "npm_config_yes" : "true"
+    },
+    "gid" : 20,
+    "group" : "staff",
+    "home" : "/Users/jamesfrewin",
+    "processEnvironment" : {
+      "COLORTERM" : "truecolor",
+      "COMMAND_MODE" : "unix2003",
+      "COMPOSER_NO_INTERACTION" : "1",
+      "CONDA_DEFAULT_ENV" : "base",
+      "CONDA_EXE" : "/opt/anaconda3/bin/conda",
+      "CONDA_PREFIX" : "/opt/anaconda3",
+      "CONDA_PROMPT_MODIFIER" : "(base) ",
+      "CONDA_PYTHON_EXE" : "/opt/anaconda3/bin/python",
+      "CONDA_SHLVL" : "1",
+      "CURSOR_TRACE_ID" : "902a19b48fe647cea609eb2923c25708",
+      "DISABLE_AUTO_UPDATE" : "true",
+      "GIT_ASKPASS" : "/Applications/Cursor.app/Contents/Resources/app/extensions/git/dist/askpass.sh",
+      "GSETTINGS_SCHEMA_DIR" : "/opt/anaconda3/share/glib-2.0/schemas",
+      "GSETTINGS_SCHEMA_DIR_CONDA_BACKUP" : "",
+      "HOME" : "/Users/jamesfrewin",
+      "HOMEBREW_CELLAR" : "/opt/homebrew/Cellar",
+      "HOMEBREW_PREFIX" : "/opt/homebrew",
+      "HOMEBREW_REPOSITORY" : "/opt/homebrew",
+      "INFOPATH" : "/opt/homebrew/share/info:/opt/homebrew/share/info:",
+      "LANG" : "en_US.UTF-8",
+      "LOGNAME" : "jamesfrewin",
+      "MANPATH" : "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/share/man:/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/usr/share/man:/Applications/Xcode.app/Contents/Developer/usr/share/man:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/share/man:",
+      "MallocNanoZone" : "0",
+      "NVM_BIN" : "/Users/jamesfrewin/.nvm/versions/node/v20.9.0/bin",
+      "NVM_CD_FLAGS" : "-q",
+      "NVM_DIR" : "/Users/jamesfrewin/.nvm",
+      "NVM_INC" : "/Users/jamesfrewin/.nvm/versions/node/v20.9.0/include/node",
+      "OLDPWD" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers",
+      "ORIGINAL_XDG_CURRENT_DESKTOP" : "undefined",
+      "PAGER" : "head -n 10000 | cat",
+      "PATH" : "/Applications/Xcode.app/Contents/Developer/usr/bin:/Users/jamesfrewin/.npm-global/bin:/Users/jamesfrewin/.nvm/versions/node/v20.9.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin://Applications/Topaz Gigapixel AI.app/Contents/Resources/bin:/Library/Apple/usr/bin:/Users/jamesfrewin/.npm-global/bin:/Users/jamesfrewin/.nvm/versions/node/v20.9.0/bin:/opt/anaconda3/bin:/opt/anaconda3/condabin",
+      "PIP_NO_INPUT" : "true",
+      "PWD" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers",
+      "SHELL" : "/bin/zsh",
+      "SHLVL" : "1",
+      "SSH_AUTH_SOCK" : "/private/tmp/com.apple.launchd.VXaML6nlZc/Listeners",
+      "TERM" : "xterm-256color",
+      "TERM_PROGRAM" : "vscode",
+      "TERM_PROGRAM_VERSION" : "1.2.4",
+      "TMPDIR" : "/var/folders/tz/_2z8bgfx3rg_cp58rqj69fbw0000gn/T/",
+      "USER" : "jamesfrewin",
+      "USER_ZDOTDIR" : "/Users/jamesfrewin",
+      "UsePerConfigurationBuildLocations" : "YES",
+      "VSCODE_GIT_ASKPASS_EXTRA_ARGS" : "",
+      "VSCODE_GIT_ASKPASS_MAIN" : "/Applications/Cursor.app/Contents/Resources/app/extensions/git/dist/askpass-main.js",
+      "VSCODE_GIT_ASKPASS_NODE" : "/Applications/Cursor.app/Contents/Frameworks/Cursor Helper (Plugin).app/Contents/MacOS/Cursor Helper (Plugin)",
+      "VSCODE_GIT_IPC_HANDLE" : "/var/folders/tz/_2z8bgfx3rg_cp58rqj69fbw0000gn/T/vscode-git-fda511f993.sock",
+      "VSCODE_INJECTION" : "1",
+      "VSCODE_PROFILE_INITIALIZED" : "1",
+      "XPC_FLAGS" : "0x0",
+      "XPC_SERVICE_NAME" : "0",
+      "ZDOTDIR" : "/Users/jamesfrewin",
+      "_" : "/usr/bin/xcodebuild",
+      "_CE_CONDA" : "",
+      "_CE_M" : "",
+      "__CFBundleIdentifier" : "com.todesktop.230313mzl4w4u92",
+      "__CF_USER_TEXT_ENCODING" : "0x1F5:0x0:0x0",
+      "npm_config_yes" : "true"
+    },
+    "uid" : 501,
+    "user" : "jamesfrewin"
+  },
+  "workspaceSignature" : "WORKSPACE@v11_hash=7b776c01644646ae474de10f08dc1c6f_subobjects=50e1c243afd781095f25aa0233957784",
+  "xcodeProductBuildVersionString" : "16F6",
+  "xcodeVersionString" : "16.4"
+}

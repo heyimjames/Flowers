@@ -808,4 +808,23 @@ class FlowerStore: ObservableObject {
             }
         }
     }
+    
+    // MARK: - Test Methods
+    
+    func generateTestFlowerForReveal() async {
+        // Generate a test flower for reveal screen
+        let testFlower = AIFlower(
+            name: "Test Reveal Flower",
+            descriptor: "beautiful test flower with rainbow petals",
+            imageData: createPlaceholderImage(),
+            generatedDate: Date(),
+            discoveryDate: Date()
+        )
+        
+        // Set as pending flower to trigger reveal view
+        await MainActor.run {
+            self.pendingFlower = testFlower
+            self.hasUnrevealedFlower = true
+        }
+    }
 } 

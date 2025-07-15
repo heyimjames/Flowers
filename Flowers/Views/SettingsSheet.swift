@@ -148,6 +148,37 @@ struct SettingsSheet: View {
                                 }
                                 .buttonStyle(FlowerPrimaryButtonStyle())
                             }
+                            
+                            Divider()
+                            
+                            // Test Flower Reveal
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Test Flower Reveal")
+                                    .font(.system(size: 16, weight: .medium))
+                                    .foregroundColor(.flowerTextPrimary)
+                                
+                                Button(action: {
+                                    // Create a test flower
+                                    Task {
+                                        await flowerStore.generateTestFlowerForReveal()
+                                        // Small delay to ensure the pending flower is set
+                                        try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+                                        await MainActor.run {
+                                            dismiss()
+                                        }
+                                    }
+                                }) {
+                                    HStack {
+                                        Image(systemName: "sparkles")
+                                        Text("Test 3-Second Hold Reveal")
+                                    }
+                                }
+                                .buttonStyle(FlowerPrimaryButtonStyle())
+                                
+                                Text("Creates a test flower and shows the reveal screen")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.flowerTextSecondary)
+                            }
                         }
                         .padding(20)
                         .background(Color.flowerCardBackground)
