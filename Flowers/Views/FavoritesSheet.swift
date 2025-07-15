@@ -344,9 +344,21 @@ struct FlowerDetailSheet: View {
                                         .font(.system(size: 32, weight: .medium, design: .serif))
                                         .foregroundColor(.flowerTextPrimary)
                                     
+                                    if flowerItem.isBouquet, let holidayName = flowerItem.holidayName {
+                                        HStack(spacing: 6) {
+                                            Image(systemName: "gift.fill")
+                                                .font(.system(size: 16))
+                                                .foregroundColor(.flowerSecondary)
+                                            Text("Special \(holidayName) Collection")
+                                                .font(.system(size: 16, weight: .medium))
+                                                .foregroundColor(.flowerTextSecondary)
+                                        }
+                                        .padding(.bottom, 4)
+                                    }
+                                    
                                     HStack(spacing: 16) {
                                         if let continent = flowerItem.continent {
-                                            Label(continent.rawValue, systemImage: "globe")
+                                            Label(flowerItem.isBouquet ? "Tradition from \(continent.rawValue)" : continent.rawValue, systemImage: "globe")
                                                 .font(.system(size: 14))
                                                 .foregroundColor(.flowerTextSecondary)
                                         }
@@ -364,11 +376,19 @@ struct FlowerDetailSheet: View {
                                 .padding(.horizontal, 24)
                                 
                                 // Detailed information sections
-                                if flowerItem.meaning != nil || flowerItem.properties != nil || flowerItem.origins != nil {
+                                if flowerItem.meaning != nil || flowerItem.properties != nil || flowerItem.origins != nil || flowerItem.bouquetFlowers != nil {
                                     VStack(alignment: .leading, spacing: 20) {
+                                        if flowerItem.isBouquet, let bouquetFlowers = flowerItem.bouquetFlowers {
+                                            DetailSection(
+                                                title: "Bouquet Contains",
+                                                content: bouquetFlowers.joined(separator: " • "),
+                                                icon: "leaf.circle"
+                                            )
+                                        }
+                                        
                                         if let meaning = flowerItem.meaning {
                                             DetailSection(
-                                                title: "Meaning",
+                                                title: flowerItem.isBouquet ? "Holiday Significance" : "Meaning",
                                                 content: meaning,
                                                 icon: "book"
                                             )
@@ -376,17 +396,17 @@ struct FlowerDetailSheet: View {
                                         
                                         if let properties = flowerItem.properties {
                                             DetailSection(
-                                                title: "Characteristics",
+                                                title: flowerItem.isBouquet ? "Arrangement Details" : "Characteristics",
                                                 content: properties,
-                                                icon: "leaf"
+                                                icon: flowerItem.isBouquet ? "sparkles" : "leaf"
                                             )
                                         }
                                         
                                         if let origins = flowerItem.origins {
                                             DetailSection(
-                                                title: "Origins",
+                                                title: flowerItem.isBouquet ? "Holiday Traditions" : "Origins",
                                                 content: origins,
-                                                icon: "map"
+                                                icon: flowerItem.isBouquet ? "gift" : "map"
                                             )
                                         }
                                         
@@ -400,6 +420,11 @@ struct FlowerDetailSheet: View {
                                     }
                                     .padding(.top, 32)
                                     .padding(.horizontal, 24)
+                                    
+                                    // Discovery location map
+                                    FlowerMapView(flower: flowerItem)
+                                        .padding(.top, 20)
+                                        .padding(.horizontal, 24)
                                 } else if index == currentIndex && isLoadingDetails {
                                     // Loading state - only show for current flower
                                     VStack(spacing: 16) {
@@ -453,6 +478,13 @@ struct FlowerDetailSheet: View {
                                     }
                                     .padding(.vertical, 40)
                                     .padding(.horizontal, 24)
+                                }
+                                
+                                // Discovery location map (shown independently of other details)
+                                if flowerItem.discoveryLatitude != nil && flowerItem.discoveryLongitude != nil {
+                                    FlowerMapView(flower: flowerItem)
+                                        .padding(.top, 20)
+                                        .padding(.horizontal, 24)
                                 }
                                 
                                 // Extra bottom padding to prevent clipping
@@ -532,6 +564,7 @@ struct FlowerDetailSheet: View {
                                             )
                                     )
                             }
+                            .accessibilityLabel("Share flower image")
                         }
                         
                         // Discard button
@@ -594,7 +627,7 @@ struct FlowerDetailSheet: View {
         
         Task {
             do {
-                let details = try await OpenAIService.shared.generateFlowerDetails(for: flower)
+                let details = try await OpenAIService.shared.generateFlowerDetails(for: flower, context: nil)
                 flowerStore.updateFlowerDetails(flower, with: details)
                 isLoadingDetails = false
             } catch {
@@ -631,8 +664,14 @@ struct FlowerDetailSheet: View {
         guard let imageData = flower.imageData,
               let image = UIImage(data: imageData) else { return }
         
+        var shareText = "🌸 \(flower.name)"
+        if let meaning = flower.meaning {
+            shareText += "\n\n\(meaning)"
+        }
+        shareText += "\n\nDiscovered with Flowers app"
+        
         let activityVC = UIActivityViewController(
-            activityItems: [image, flower.name],
+            activityItems: [image, shareText],
             applicationActivities: nil
         )
         

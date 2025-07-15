@@ -12,9 +12,10 @@ struct ContentView: View {
     @StateObject private var flowerStore = FlowerStore()
     @State private var showingGenerator = false
     @State private var showingFavorites = false
-    @State private var showingShare = false
     @State private var showingSettings = false
     @State private var showDiscoveryCount = true
+    @State private var showingFlowerDetail = false
+    @State private var showingOnboarding = false
     
     // Timer for pill animation
     let pillAnimationTimer = Timer.publish(every: 5, on: .main, in: .common).autoconnect()
@@ -177,10 +178,32 @@ struct ContentView: View {
                 .presentationDragIndicator(.hidden)
                 .interactiveDismissDisabled()
         }
+        .sheet(isPresented: $showingFlowerDetail) {
+            if let flower = flowerStore.currentFlower {
+                FlowerDetailSheet(
+                    flower: flower,
+                    flowerStore: flowerStore,
+                    allFlowers: [flower],
+                    currentIndex: 0
+                )
+                    .presentationDetents([.large])
+                    .presentationCornerRadius(32)
+                    .presentationDragIndicator(.visible)
+            }
+        }
         .onReceive(pillAnimationTimer) { _ in
             withAnimation {
                 showDiscoveryCount.toggle()
             }
+        }
+        .onAppear {
+            // Check if user needs onboarding
+            if !UserDefaults.standard.bool(forKey: "hasCompletedOnboarding") {
+                showingOnboarding = true
+            }
+        }
+        .fullScreenCover(isPresented: $showingOnboarding) {
+            OnboardingView(flowerStore: flowerStore)
         }
     }
     
@@ -207,6 +230,28 @@ struct ContentView: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
+                .onTapGesture {
+                    showingFlowerDetail = true
+                }
+                .contentShape(Rectangle()) // Makes entire area tappable
+                .overlay(
+                    // Subtle tap indicator in corner
+                    VStack {
+                        HStack {
+                            Spacer()
+                            Image(systemName: "arrow.up.left.and.arrow.down.right")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(.white)
+                                .padding(8)
+                                .background(
+                                    Circle()
+                                        .fill(Color.black.opacity(0.5))
+                                )
+                                .padding(8)
+                        }
+                        Spacer()
+                    }
+                )
                 .transition(
                     .asymmetric(
                         insertion: .scale(scale: 0.3, anchor: .center)
@@ -216,11 +261,24 @@ struct ContentView: View {
                     )
                 )
                 
-                // Flower name
-                Text(flower.name)
-                    .font(.system(size: 28, weight: .medium, design: .serif))
-                    .foregroundColor(.flowerTextPrimary)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                // Flower/Bouquet name
+                VStack(spacing: 8) {
+                    Text(flower.name)
+                        .font(.system(size: 28, weight: .medium, design: .serif))
+                        .foregroundColor(.flowerTextPrimary)
+                    
+                    if flower.isBouquet, let holidayName = flower.holidayName {
+                        HStack(spacing: 6) {
+                            Image(systemName: "gift.fill")
+                                .font(.system(size: 14))
+                                .foregroundColor(.flowerSecondary)
+                            Text("Special \(holidayName) Collection")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.flowerTextSecondary)
+                        }
+                    }
+                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
                 
                 // Flower details or loading state
                 if flower.meaning != nil || flower.properties != nil {
@@ -263,12 +321,31 @@ struct ContentView: View {
                             }
                         }
                         
+                        if flower.isBouquet, let bouquetFlowers = flower.bouquetFlowers {
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "leaf.circle")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.flowerPrimary)
+                                    Text("Includes")
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundColor(.flowerTextPrimary)
+                                }
+                                
+                                Text(bouquetFlowers.joined(separator: " • "))
+                                    .font(.system(size: 13))
+                                    .foregroundColor(.flowerTextSecondary)
+                                    .lineSpacing(3)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                        
                         if let continent = flower.continent {
                             HStack(spacing: 6) {
                                 Image(systemName: "globe")
                                     .font(.system(size: 12))
                                     .foregroundColor(.flowerPrimary)
-                                Text("Native to \(continent.rawValue)")
+                                Text(flower.isBouquet ? "Tradition from \(continent.rawValue)" : "Native to \(continent.rawValue)")
                                     .font(.system(size: 13))
                                     .foregroundColor(.flowerTextSecondary)
                             }
@@ -316,7 +393,18 @@ struct ContentView: View {
                 }
             } else if flowerStore.hasUnrevealedFlower {
                 // Reveal state
-                PulsingFlowerRevealView()
+                ZStack {
+                    PulsingFlowerRevealView()
+                    
+                    // Centered Reveal Button
+                    RevealFlowerButton(flowerStore: flowerStore)
+                        .frame(maxWidth: 200)
+                        .offset(y: 80) // Position it lower in the box
+                        .onAppear {
+                            // Request fresh location when showing reveal button
+                            ContextualFlowerGenerator.shared.requestLocationUpdate()
+                        }
+                }
             } else {
                 // Empty state
                 RoundedRectangle(cornerRadius: 20)
@@ -341,11 +429,8 @@ struct ContentView: View {
     
     private var actionButtons: some View {
         HStack(spacing: 16) {
-            // Find/Reveal button
-            if flowerStore.hasUnrevealedFlower {
-                RevealFlowerButton(flowerStore: flowerStore)
-                    .frame(maxWidth: .infinity)
-            } else if flowerStore.debugAnytimeGenerations {
+            // Find button
+            if flowerStore.debugAnytimeGenerations && !flowerStore.hasUnrevealedFlower {
                 Button(action: { showingGenerator = true }) {
                     HStack(spacing: 8) {
                         Image(systemName: "sparkles")
@@ -354,7 +439,7 @@ struct ContentView: View {
                 }
                 .buttonStyle(FlowerPrimaryButtonStyle())
                 .disabled(flowerStore.isGenerating)
-            } else {
+            } else if !flowerStore.hasUnrevealedFlower {
                 // Show next flower timing
                 HStack(spacing: 8) {
                     Image(systemName: "clock")
@@ -366,6 +451,11 @@ struct ContentView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 56)
+            } else {
+                // Empty space when flower is ready to reveal
+                Color.clear
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
             }
             
             // Heart button
@@ -398,7 +488,6 @@ struct ContentView: View {
             
             // Share button
             Button(action: {
-                showingShare = true
                 shareFlower()
             }) {
                 Image(systemName: "square.and.arrow.up")
@@ -415,6 +504,7 @@ struct ContentView: View {
                     )
             }
             .disabled(flowerStore.currentFlower == nil)
+            .accessibilityLabel("Share flower image")
             
             // Collection button (was favorites)
             Button(action: { showingFavorites = true }) {
@@ -452,8 +542,14 @@ struct ContentView: View {
               let imageData = flower.imageData,
               let image = UIImage(data: imageData) else { return }
         
+        var shareText = "🌸 \(flower.name)"
+        if let meaning = flower.meaning {
+            shareText += "\n\n\(meaning)"
+        }
+        shareText += "\n\nDiscovered with Flowers app"
+        
         let activityVC = UIActivityViewController(
-            activityItems: [image, flower.name],
+            activityItems: [image, shareText],
             applicationActivities: nil
         )
         
@@ -519,18 +615,16 @@ struct PulsingFlowerRevealView: View {
             )
             .aspectRatio(1, contentMode: .fit)
             .overlay(
-                VStack(spacing: 16) {
+                VStack(spacing: 20) {
                     Image(systemName: "gift")
-                        .font(.system(size: 48))
+                        .font(.system(size: 64))
                         .foregroundColor(.flowerPrimary)
                         .scaleEffect(isPulsing ? 1.1 : 1.0)
-                    Text("A new flower awaits...")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundColor(.flowerTextPrimary)
-                    Text("Hold 'Reveal Flower' below")
-                        .font(.system(size: 14))
-                        .foregroundColor(.flowerTextSecondary)
+                        .offset(y: -20)
+                    
+                    Spacer()
                 }
+                .padding(.top, 60)
             )
             .shadow(color: .flowerPrimary.opacity(0.2), radius: isPulsing ? 25 : 20, y: 10)
             .scaleEffect(isPulsing ? 1.02 : 1.0)

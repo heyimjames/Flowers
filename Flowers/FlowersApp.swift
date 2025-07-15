@@ -11,11 +11,15 @@ import UserNotifications
 @main
 struct FlowersApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    let contextualGenerator = ContextualFlowerGenerator.shared
     
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .onAppear {
+                    // Initialize contextual generator
+                    _ = contextualGenerator
+                    
                     // Request notification permissions on first launch
                     UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
                         if granted {

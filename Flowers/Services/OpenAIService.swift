@@ -137,7 +137,7 @@ class OpenAIService {
         return (image, imageData.revised_prompt ?? prompt)
     }
     
-    func generateFlowerDetails(for flower: AIFlower) async throws -> FlowerDetails {
+    func generateFlowerDetails(for flower: AIFlower, context: FlowerContext? = nil) async throws -> FlowerDetails {
         guard !APIConfiguration.shared.openAIKey.isEmpty else {
             throw OpenAIError.invalidAPIKey
         }
@@ -151,29 +151,76 @@ class OpenAIService {
         
         let season = getCurrentSeason()
         
-        let systemPrompt = """
-        You are a knowledgeable botanist and naturalist who creates detailed information about rare and beautiful flowers. 
-        You must respond with a valid JSON object with exactly these fields:
-        {
-            "meaning": "Cultural and symbolic significance of this flower",
-            "properties": "Notable botanical characteristics and growth patterns",
-            "origins": "Geographic origins and natural habitat",
-            "detailedDescription": "Rich description of appearance and growth",
-            "continent": "One of: North America, South America, Europe, Africa, Asia, Oceania, Antarctica"
+        let systemPrompt: String
+        if flower.isBouquet {
+            systemPrompt = """
+            You are a knowledgeable florist and botanist who creates detailed information about beautiful flower bouquets for special occasions.
+            You must respond with a valid JSON object with exactly these fields:
+            {
+                "meaning": "Cultural significance and symbolism of this bouquet arrangement for the holiday",
+                "properties": "Description of the flowers included and how they complement each other",
+                "origins": "Traditional and cultural history of giving these flowers for this occasion",
+                "detailedDescription": "Rich description of the bouquet's appearance, arrangement, and emotional impact",
+                "continent": "One of: North America, South America, Europe, Africa, Asia, Oceania, Antarctica"
+            }
+            Make the information culturally relevant and emotionally resonant for the holiday.
+            The continent should reflect where this holiday tradition is most celebrated.
+            """
+        } else {
+            systemPrompt = """
+            You are a knowledgeable botanist and naturalist who creates detailed information about rare and beautiful flowers. 
+            You must respond with a valid JSON object with exactly these fields:
+            {
+                "meaning": "Cultural and symbolic significance of this flower",
+                "properties": "Notable botanical characteristics and growth patterns",
+                "origins": "Geographic origins and natural habitat",
+                "detailedDescription": "Rich description of appearance and growth",
+                "continent": "One of: North America, South America, Europe, Africa, Asia, Oceania, Antarctica"
+            }
+            Make the information scientifically plausible yet poetic. Include seasonal context when relevant.
+            Ensure the continent field EXACTLY matches one of the seven options provided.
+            """
         }
-        Make the information scientifically plausible yet poetic. Include seasonal context when relevant.
-        Ensure the continent field EXACTLY matches one of the seven options provided.
-        """
         
-        let userPrompt = """
-        Generate detailed botanical information for a flower called "\(flower.name)" which is described as "\(flower.descriptor)".
-        Remember to:
-        1. Include cultural significance in the meaning field
-        2. Focus on botanical characteristics in the properties field
-        3. Describe geographic origins in the origins field
-        4. Create a rich description considering it's currently \(season)
-        5. Choose the most appropriate continent from the exact list
-        """
+        var userPrompt: String
+        if flower.isBouquet {
+            var flowerList = ""
+            if let bouquetFlowers = flower.bouquetFlowers {
+                flowerList = bouquetFlowers.joined(separator: ", ")
+            }
+            
+            userPrompt = """
+            Generate detailed information for a holiday bouquet called "\(flower.name)" for \(flower.holidayName ?? "a special occasion").
+            The bouquet contains: \(flowerList)
+            
+            Remember to:
+            1. Explain the holiday significance and why these specific flowers were chosen
+            2. Describe how the flowers work together visually and symbolically
+            3. Include cultural traditions around giving flowers for this holiday
+            4. Create a rich, emotional description of the bouquet arrangement
+            5. Choose the continent where this holiday tradition is strongest
+            """
+        } else {
+            userPrompt = """
+            Generate detailed botanical information for a flower called "\(flower.name)" which is described as "\(flower.descriptor)".
+            Remember to:
+            1. Include cultural significance in the meaning field
+            2. Focus on botanical characteristics in the properties field
+            3. Describe geographic origins in the origins field
+            4. Create a rich description considering it's currently \(season)
+            5. Choose the most appropriate continent from the exact list
+            """
+        }
+        
+        // Add contextual information if available
+        if flower.contextualGeneration, let context = flower.generationContext {
+            userPrompt += """
+            
+            
+            This flower was inspired by real-world context: \(context).
+            Please incorporate relevant cultural, geographical, or seasonal elements into the description while maintaining botanical plausibility.
+            """
+        }
         
         let request = ChatCompletionRequest(
             model: "gpt-4o-mini",
@@ -379,14 +426,14 @@ class OpenAIService {
         }
     }
     
-    func generateFlowerNotification(flowerName: String) async throws -> (title: String, body: String) {
+    func generateFlowerNotification(flowerName: String, isBouquet: Bool = false, holidayName: String? = nil) async throws -> (title: String, body: String) {
         guard !APIConfiguration.shared.openAIKey.isEmpty else {
             throw OpenAIError.invalidAPIKey
         }
         
         let systemPrompt = """
         You are a poetic notification writer for a flower discovery app. Create beautiful, engaging push notification messages.
-        The notification should feel magical and make the user excited to discover their new flower.
+        The notification should feel magical and make the user excited to discover their new flower or bouquet.
         Return a JSON object with "title" and "body" fields.
         Keep the title under 30 characters and the body under 80 characters.
         Use emojis sparingly but effectively.
@@ -394,11 +441,21 @@ class OpenAIService {
         Sometimes be poetic, sometimes mysterious, sometimes joyful.
         """
         
-        let userPrompt = """
-        Create a push notification for a flower called "\(flowerName)".
-        Make it sound like this specific flower has just bloomed and is waiting to be discovered.
-        Don't just say "has bloomed" every time - vary the language.
-        """
+        let userPrompt: String
+        if isBouquet, let holiday = holidayName {
+            userPrompt = """
+            Create a special push notification for a holiday bouquet for \(holiday).
+            Make it sound festive and exciting - this is a special gift, not just a regular flower.
+            Reference the holiday but keep it elegant.
+            Examples: "🎁 A \(holiday) surprise awaits!" or "✨ Special bouquet for \(holiday)"
+            """
+        } else {
+            userPrompt = """
+            Create a push notification for a flower called "\(flowerName)".
+            Make it sound like this specific flower has just bloomed and is waiting to be discovered.
+            Don't just say "has bloomed" every time - vary the language.
+            """
+        }
         
         let request = ChatCompletionRequest(
             model: "gpt-4o-mini",

@@ -50,11 +50,75 @@ class FlowerStore: ObservableObject {
     }
     
     init() {
+        // Check if first time user before loading data
+        let isFirstTimeUser = !UserDefaults.standard.bool(forKey: "hasReceivedJennyFlower")
+        
         loadFavorites()
         loadDiscoveredFlowers()
+        
+        // Add Jenny flower for first-time users
+        if isFirstTimeUser &&
+           !discoveredFlowers.contains(where: { $0.name == "Jennifer's Blessing" }) {
+            addJennyFlower()
+        }
+        
         checkForPendingFlower()
         loadNextFlowerTime()
         scheduleNextFlowerIfNeeded()
+        
+        // Check for iCloud data on first launch
+        Task { @MainActor in
+            await iCloudSyncManager.shared.mergeWithICloudData(flowerStore: self)
+        }
+    }
+    
+    // MARK: - Special Flowers
+    
+    private func addJennyFlower() {
+        Task {
+            do {
+                // Generate the Jennifer's Blessing flower image
+                let descriptor = "elegant pink and white rose with delicate petals, soft romantic colors, graceful and beautiful"
+                let (image, _) = try await FALService.shared.generateFlowerImage(descriptor: descriptor)
+                guard let imageData = image.pngData() else { return }
+                
+                // Create the Jenny flower with specific attributes
+                let jennyFlower = AIFlower(
+                    name: "Jennifer's Blessing",
+                    descriptor: descriptor,
+                    imageData: imageData,
+                    generatedDate: Date(timeIntervalSince1970: 1669334400), // Nov 25, 2022
+                    isFavorite: true, // Auto-favorite this special flower
+                    meaning: "A symbol of kindness, beauty, and joy. This flower represents the light that special people bring into our lives.",
+                    properties: "This special flower was picked and named by James, the creator of this app, as a gift to every user in celebration of his fiancée Jenny. Her kindness, beauty, and humor light up the lives of everyone she meets. 💝",
+                    origins: "First discovered in Canary Wharf, London, where love bloomed alongside the Thames.",
+                    detailedDescription: "Jennifer's Blessing is more than just a flower – it's a testament to love and the joy that special people bring into our world. Like Jenny herself, this flower has the remarkable ability to brighten any space it inhabits, bringing warmth and happiness to all who encounter it.",
+                    continent: nil,
+                    discoveryDate: Date(timeIntervalSince1970: 1669334400),
+                    contextualGeneration: false,
+                    generationContext: nil,
+                    isBouquet: false,
+                    bouquetFlowers: nil,
+                    holidayName: nil,
+                    discoveryLatitude: 51.5054, // Canary Wharf coordinates
+                    discoveryLongitude: -0.0235,
+                    discoveryLocationName: "Canary Wharf, London"
+                )
+                
+                await MainActor.run {
+                    // Add to discovered flowers
+                    self.discoveredFlowers.insert(jennyFlower, at: 0)
+                    self.favorites.insert(jennyFlower, at: 0)
+                    self.saveDiscoveredFlowers()
+                    self.saveFavorites()
+                    
+                    // Mark as received
+                    UserDefaults.standard.set(true, forKey: "hasReceivedJennyFlower")
+                }
+            } catch {
+                print("Failed to create Jenny flower: \(error)")
+            }
+        }
     }
     
     // MARK: - Daily Flower Scheduling
@@ -140,7 +204,11 @@ class FlowerStore: ObservableObject {
             
             if apiConfig.hasValidOpenAIKey {
                 do {
-                    let customMessage = try await OpenAIService.shared.generateFlowerNotification(flowerName: flower.name)
+                    let customMessage = try await OpenAIService.shared.generateFlowerNotification(
+                        flowerName: flower.name,
+                        isBouquet: flower.isBouquet,
+                        holidayName: flower.holidayName
+                    )
                     notificationTitle = customMessage.title
                     notificationBody = customMessage.body
                 } catch {
@@ -164,7 +232,11 @@ class FlowerStore: ObservableObject {
         
         if apiConfig.hasValidOpenAIKey {
             do {
-                let customMessage = try await OpenAIService.shared.generateFlowerNotification(flowerName: flower.name)
+                let customMessage = try await OpenAIService.shared.generateFlowerNotification(
+                    flowerName: flower.name,
+                    isBouquet: flower.isBouquet,
+                    holidayName: flower.holidayName
+                )
                 notificationTitle = customMessage.0
                 notificationBody = customMessage.1
             } catch {
@@ -215,7 +287,11 @@ class FlowerStore: ObservableObject {
             
             if apiConfig.hasValidOpenAIKey {
                 do {
-                    let customMessage = try await OpenAIService.shared.generateFlowerNotification(flowerName: flower.name)
+                    let customMessage = try await OpenAIService.shared.generateFlowerNotification(
+                        flowerName: flower.name,
+                        isBouquet: flower.isBouquet,
+                        holidayName: flower.holidayName
+                    )
                     notificationTitle = customMessage.0
                     notificationBody = customMessage.1
                 } catch {
@@ -269,7 +345,17 @@ class FlowerStore: ObservableObject {
     }
     
     func revealPendingFlower() {
-        guard let flower = pendingFlower else { return }
+        guard var flower = pendingFlower else { return }
+        
+        // Update discovery date to current time and capture current location
+        flower.discoveryDate = Date()
+        if let currentLocation = ContextualFlowerGenerator.shared.currentLocation {
+            flower.discoveryLatitude = currentLocation.coordinate.latitude
+            flower.discoveryLongitude = currentLocation.coordinate.longitude
+        }
+        if let currentPlacemark = ContextualFlowerGenerator.shared.currentPlacemark {
+            flower.discoveryLocationName = currentPlacemark.locality ?? currentPlacemark.name
+        }
         
         currentFlower = flower
         hasUnrevealedFlower = false
@@ -308,10 +394,31 @@ class FlowerStore: ObservableObject {
         errorMessage = nil
         
         do {
-            let actualDescriptor = descriptor ?? FlowerDescriptors.random()
+            var actualDescriptor = descriptor ?? FlowerDescriptors.random()
+            var flowerContext: FlowerContext?
+            var isContextual = false
+            var isBouquet = false
+            var holiday: Holiday?
+            
+            // Check for holidays first - bouquets take priority
+            if let currentHoliday = ContextualFlowerGenerator.shared.getCurrentHoliday(),
+               currentHoliday.isBouquetWorthy && descriptor == nil {
+                holiday = currentHoliday
+                isBouquet = true
+                actualDescriptor = currentHoliday.bouquetTheme ?? "festive holiday bouquet"
+                isContextual = true
+            }
+            // Otherwise check if we should use contextual generation (only if no descriptor provided)
+            else if descriptor == nil && ContextualFlowerGenerator.shared.shouldUseContextualGeneration() {
+                if let contextualResult = ContextualFlowerGenerator.shared.generateContextualDescriptor() {
+                    actualDescriptor = contextualResult.descriptor
+                    flowerContext = contextualResult.context
+                    isContextual = true
+                }
+            }
             
             // Always use FAL for image generation
-            let (image, prompt) = try await FALService.shared.generateFlowerImage(descriptor: actualDescriptor)
+            let (image, prompt) = try await FALService.shared.generateFlowerImage(descriptor: actualDescriptor, isBouquet: isBouquet)
             
             // Convert UIImage to Data
             guard let imageData = image.jpegData(compressionQuality: 0.9) else {
@@ -321,9 +428,21 @@ class FlowerStore: ObservableObject {
             // Check if this is the user's first flower
             let isFirstFlower = discoveredFlowers.isEmpty && userDefaults.object(forKey: "hasGeneratedFirstFlower") == nil
             
-            // Use OpenAI to generate a beautiful flower name
+            // Generate appropriate name based on type
             let name: String
-            if apiConfig.hasValidOpenAIKey {
+            var bouquetFlowerNames: [String]?
+            
+            if isBouquet {
+                // Generate bouquet name
+                if let holidayName = holiday?.name {
+                    name = "\(holidayName) Bouquet"
+                } else {
+                    name = "Special Occasion Bouquet"
+                }
+                
+                // Generate list of flowers in the bouquet
+                bouquetFlowerNames = generateBouquetFlowerNames(for: holiday)
+            } else if apiConfig.hasValidOpenAIKey {
                 if isFirstFlower {
                     // Generate a Jenny-related name for the first flower
                     name = try await OpenAIService.shared.generateJennyFlowerName(descriptor: actualDescriptor)
@@ -341,13 +460,25 @@ class FlowerStore: ObservableObject {
                 }
             }
             
+            // Capture current location if available
+            let currentLocation = ContextualFlowerGenerator.shared.currentLocation
+            let currentPlacemark = ContextualFlowerGenerator.shared.currentPlacemark
+            
             var flower = AIFlower(
                 name: name,
                 descriptor: actualDescriptor,
                 imageData: imageData,
                 generatedDate: Date(),
                 isFavorite: false,
-                discoveryDate: Date()
+                discoveryDate: Date(),
+                contextualGeneration: isContextual,
+                generationContext: isContextual ? actualDescriptor : nil,
+                isBouquet: isBouquet,
+                bouquetFlowers: bouquetFlowerNames,
+                holidayName: holiday?.name,
+                discoveryLatitude: currentLocation?.coordinate.latitude,
+                discoveryLongitude: currentLocation?.coordinate.longitude,
+                discoveryLocationName: currentPlacemark?.locality ?? currentPlacemark?.name
             )
             
             // Get a random continent for now (will be replaced by AI-generated continent)
@@ -356,12 +487,17 @@ class FlowerStore: ObservableObject {
             // Always generate details for every flower
             if apiConfig.hasValidOpenAIKey {
                 do {
-                    let details = try await OpenAIService.shared.generateFlowerDetails(for: flower)
+                    let details = try await OpenAIService.shared.generateFlowerDetails(for: flower, context: flowerContext)
                     flower.meaning = details.meaning
                     flower.properties = details.properties
                     flower.origins = details.origins
                     flower.detailedDescription = details.detailedDescription
                     flower.continent = Continent(rawValue: details.continent) ?? flower.continent
+                    
+                    // Add contextual meaning if available
+                    if let contextualMeaning = flowerContext?.generateContextualMeaning() {
+                        flower.meaning = (flower.meaning ?? "") + " " + contextualMeaning
+                    }
                 } catch {
                     // Continue without details if generation fails
                     print("Failed to generate flower details: \(error)")
@@ -423,6 +559,37 @@ class FlowerStore: ObservableObject {
         }
         
         isGenerating = false
+    }
+    
+    private func generateBouquetFlowerNames(for holiday: Holiday?) -> [String] {
+        // Generate appropriate flower names based on the holiday
+        if let holiday = holiday {
+            switch holiday.name {
+            case "Valentine's Day":
+                return ["Red Roses", "Pink Lilies", "White Carnations", "Baby's Breath"]
+            case "Mother's Day":
+                return ["Pink Peonies", "White Gardenias", "Lavender", "Yellow Roses"]
+            case "Christmas":
+                return ["Red Poinsettias", "White Roses", "Holly Berries", "Pine Branches"]
+            case "Halloween":
+                return ["Orange Marigolds", "Deep Purple Roses", "Black Dahlias", "Autumn Leaves"]
+            case "St. Patrick's Day":
+                return ["Green Carnations", "White Roses", "Shamrocks", "Green Bells of Ireland"]
+            case "New Year":
+                return ["White Roses", "Gold Chrysanthemums", "Silver Dusty Miller", "Sparkle Baby's Breath"]
+            case "International Women's Day":
+                return ["Purple Orchids", "Yellow Tulips", "Pink Roses", "White Daisies"]
+            case "Father's Day":
+                return ["Sunflowers", "Blue Delphiniums", "White Roses", "Green Ferns"]
+            case "Thanksgiving":
+                return ["Orange Chrysanthemums", "Burgundy Dahlias", "Wheat Stalks", "Fall Berries"]
+            case "May Day":
+                return ["Mixed Wildflowers", "Daisies", "Lavender", "Sweet Peas"]
+            default:
+                return ["Mixed Roses", "Seasonal Blooms", "Garden Flowers", "Fresh Greens"]
+            }
+        }
+        return ["Assorted Flowers", "Mixed Blooms", "Garden Varieties"]
     }
     
     private func extractFlowerName(from descriptor: String) -> String {
@@ -582,6 +749,16 @@ class FlowerStore: ObservableObject {
         if let encoded = try? JSONEncoder().encode(discoveredFlowers) {
             userDefaults.set(encoded, forKey: discoveredFlowersKey)
         }
+        
+        // Sync to iCloud
+        Task {
+            await iCloudSyncManager.shared.syncToICloud()
+        }
+    }
+    
+    func saveFlowers() {
+        saveFavorites()
+        saveDiscoveredFlowers()
     }
     
     // Update a flower's details (used after fetching details from AI)
@@ -623,7 +800,7 @@ class FlowerStore: ObservableObject {
         if flower.meaning == nil && flower.properties == nil && flower.origins == nil {
             if apiConfig.hasValidOpenAIKey {
                 do {
-                    let details = try await OpenAIService.shared.generateFlowerDetails(for: flower)
+                    let details = try await OpenAIService.shared.generateFlowerDetails(for: flower, context: nil)
                     updateFlowerDetails(flower, with: details)
                 } catch {
                     print("Failed to refresh flower details: \(error)")

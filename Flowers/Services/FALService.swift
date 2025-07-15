@@ -45,15 +45,20 @@ class FALService {
         }
     }
     
-    func generateFlowerImage(descriptor: String) async throws -> (UIImage, String) {
+    func generateFlowerImage(descriptor: String, isBouquet: Bool = false) async throws -> (UIImage, String) {
         guard !APIConfiguration.shared.falKey.isEmpty else {
             throw FALError.invalidAPIKey
         }
         
         let apiKey = APIConfiguration.shared.falKey
         
-        // Build the prompt using the consistent structure from PRD
-        let prompt = "A single \(descriptor) flower, botanical illustration style, centered on pure white background, soft watercolor texture, delicate petals, elegant stem with leaves, dreamy and ethereal, pastel colors with subtle gradients, professional botanical art, highly detailed, 4K"
+        // Build the prompt based on whether it's a bouquet or single flower
+        let prompt: String
+        if isBouquet {
+            prompt = "A beautiful bouquet of \(descriptor), arranged in elegant botanical illustration style, centered on pure white background, soft watercolor texture, multiple flower types harmoniously arranged, wrapped with delicate ribbon, dreamy and ethereal, pastel colors with subtle gradients, professional botanical art, highly detailed, 4K"
+        } else {
+            prompt = "A single \(descriptor) flower, botanical illustration style, centered on pure white background, soft watercolor texture, delicate petals, elegant stem with leaves, dreamy and ethereal, pastel colors with subtle gradients, professional botanical art, highly detailed, 4K"
+        }
         
         let request = ImageGenerationRequest(prompt: prompt)
         

@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsSheet: View {
     @ObservedObject var apiConfig = APIConfiguration.shared
     @ObservedObject var flowerStore = FlowerStore()
+    @StateObject private var iCloudSync = iCloudSyncManager.shared
     @Environment(\.dismiss) private var dismiss
     @State private var showingAPIKeyInfo = false
     @State private var showingDebugScheduler = false
@@ -75,6 +76,9 @@ struct SettingsSheet: View {
                         .padding(20)
                         .background(Color.flowerCardBackground)
                         .cornerRadius(16)
+                        
+                        // iCloud Sync Section
+                        iCloudSyncSection
                         
                         // Notifications Section
                         VStack(alignment: .leading, spacing: 16) {
@@ -201,6 +205,76 @@ struct SettingsSheet: View {
     private func scheduleDebugNotification() {
         flowerStore.scheduleDebugNotification(in: debugNotificationSeconds)
         dismiss()
+    }
+    
+    // MARK: - iCloud Sync Section
+    private var iCloudSyncSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("iCloud Sync")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundColor(.flowerTextPrimary)
+            
+            HStack {
+                Image(systemName: "icloud")
+                    .font(.system(size: 18))
+                    .foregroundColor(iCloudSync.iCloudAvailable ? .flowerPrimary : .flowerTextTertiary)
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(iCloudSync.iCloudAvailable ? "iCloud Connected" : "iCloud Not Available")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.flowerTextPrimary)
+                    
+                    if let lastSync = iCloudSync.lastSyncDate {
+                        Text("Last synced \(lastSync, style: .relative) ago")
+                            .font(.system(size: 12))
+                            .foregroundColor(.flowerTextSecondary)
+                    } else {
+                        Text("Not synced yet")
+                            .font(.system(size: 12))
+                            .foregroundColor(.flowerTextSecondary)
+                    }
+                }
+                
+                Spacer()
+                
+                if iCloudSync.syncStatus == .syncing {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                } else if case .error(let error) = iCloudSync.syncStatus {
+                    Image(systemName: "exclamationmark.circle")
+                        .font(.system(size: 16))
+                        .foregroundColor(.flowerError)
+                }
+            }
+            
+            if iCloudSync.iCloudAvailable {
+                Button(action: {
+                    Task {
+                        await iCloudSync.syncToICloud()
+                    }
+                }) {
+                    HStack {
+                        Image(systemName: "arrow.clockwise")
+                        Text("Sync Now")
+                    }
+                }
+                .buttonStyle(FlowerButtonStyle())
+                .disabled(iCloudSync.syncStatus == .syncing)
+                
+                Text("Your flowers are automatically backed up to iCloud")
+                    .font(.system(size: 12))
+                    .foregroundColor(.flowerTextTertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                Text("Sign in to iCloud in Settings to back up your flowers")
+                    .font(.system(size: 12))
+                    .foregroundColor(.flowerTextTertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(20)
+        .background(Color.flowerCardBackground)
+        .cornerRadius(16)
     }
 }
 

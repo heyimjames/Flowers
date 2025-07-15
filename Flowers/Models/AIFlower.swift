@@ -16,6 +16,14 @@ struct AIFlower: Identifiable, Codable {
     var detailedDescription: String?
     var continent: Continent?
     var discoveryDate: Date? // When the user "discovered" this flower
+    var contextualGeneration: Bool = false // Whether this flower used contextual generation
+    var generationContext: String? // Context used for generation (e.g., "Portuguese sunset rose")
+    var isBouquet: Bool = false // Whether this is a holiday bouquet
+    var bouquetFlowers: [String]? // Names of flowers in the bouquet
+    var holidayName: String? // Holiday this bouquet celebrates
+    var discoveryLatitude: Double? // Latitude where flower was discovered
+    var discoveryLongitude: Double? // Longitude where flower was discovered
+    var discoveryLocationName: String? // Human-readable location name
     
     init(id: UUID = UUID(), 
          name: String, 
@@ -28,7 +36,15 @@ struct AIFlower: Identifiable, Codable {
          origins: String? = nil,
          detailedDescription: String? = nil,
          continent: Continent? = nil,
-         discoveryDate: Date? = nil) {
+         discoveryDate: Date? = nil,
+         contextualGeneration: Bool = false,
+         generationContext: String? = nil,
+         isBouquet: Bool = false,
+         bouquetFlowers: [String]? = nil,
+         holidayName: String? = nil,
+         discoveryLatitude: Double? = nil,
+         discoveryLongitude: Double? = nil,
+         discoveryLocationName: String? = nil) {
         self.id = id
         self.name = name
         self.descriptor = descriptor
@@ -41,6 +57,14 @@ struct AIFlower: Identifiable, Codable {
         self.detailedDescription = detailedDescription
         self.continent = continent
         self.discoveryDate = discoveryDate
+        self.contextualGeneration = contextualGeneration
+        self.generationContext = generationContext
+        self.isBouquet = isBouquet
+        self.bouquetFlowers = bouquetFlowers
+        self.holidayName = holidayName
+        self.discoveryLatitude = discoveryLatitude
+        self.discoveryLongitude = discoveryLongitude
+        self.discoveryLocationName = discoveryLocationName
     }
     
     // Sample flower for preview/placeholder
