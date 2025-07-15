@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import UIKit
+import UserNotifications
 
 @MainActor
 class FlowerStore: ObservableObject {
@@ -9,6 +10,9 @@ class FlowerStore: ObservableObject {
     @Published var discoveredFlowers: [AIFlower] = []
     @Published var isGenerating = false
     @Published var errorMessage: String?
+    @Published var hasUnrevealedFlower = false
+    @Published var pendingFlower: AIFlower?
+    @Published var nextFlowerTime: Date?
     
     private let userDefaults = UserDefaults.standard
     private let sharedDefaults = UserDefaults(suiteName: "group.OCTOBER.Flowers")
@@ -16,6 +20,10 @@ class FlowerStore: ObservableObject {
     private let dailyFlowerKey = "dailyFlower"
     private let dailyFlowerDateKey = "dailyFlowerDate"
     private let discoveredFlowersKey = "discoveredFlowers"
+    private let pendingFlowerKey = "pendingFlower"
+    private let lastScheduledDateKey = "lastScheduledFlowerDate"
+    private let nextFlowerTimeKey = "nextFlowerTime"
+    private let debugAnytimeGenerationsKey = "debugAnytimeGenerations"
     private let apiConfig = APIConfiguration.shared
     
     // Computed properties for stats
@@ -33,34 +41,269 @@ class FlowerStore: ObservableObject {
         return stats
     }
     
+    var debugAnytimeGenerations: Bool {
+        get { userDefaults.bool(forKey: debugAnytimeGenerationsKey) }
+        set { 
+            userDefaults.set(newValue, forKey: debugAnytimeGenerationsKey)
+            objectWillChange.send()
+        }
+    }
+    
     init() {
         loadFavorites()
         loadDiscoveredFlowers()
-        loadDailyFlower()
+        checkForPendingFlower()
+        loadNextFlowerTime()
+        scheduleNextFlowerIfNeeded()
+    }
+    
+    // MARK: - Daily Flower Scheduling
+    func scheduleNextFlowerIfNeeded() {
+        // Check if we already scheduled for today
+        if let lastScheduled = userDefaults.object(forKey: lastScheduledDateKey) as? Date,
+           Calendar.current.isDateInToday(lastScheduled) {
+            return
+        }
+        
+        // Schedule a flower for today at a random time
+        scheduleFlowerForToday()
+    }
+    
+    func scheduleFlowerForToday() {
+        let calendar = Calendar.current
+        var components = calendar.dateComponents([.year, .month, .day], from: Date())
+        
+        // Random time between 8:00 AM and 10:30 PM (22:30)
+        let startHour = 8
+        let endMinute = 22 * 60 + 30 // 10:30 PM in minutes
+        let startMinute = startHour * 60
+        let randomMinute = Int.random(in: startMinute...endMinute)
+        
+        components.hour = randomMinute / 60
+        components.minute = randomMinute % 60
+        
+        guard let scheduledDate = calendar.date(from: components) else { return }
+        
+        // If the time has already passed today, generate the flower now
+        if scheduledDate < Date() {
+            Task {
+                await generateDailyFlower()
+            }
+            nextFlowerTime = nil
+        } else {
+            // Generate the flower first, then schedule notification with its name
+            Task {
+                await generateDailyFlowerAndScheduleNotification(at: scheduledDate)
+            }
+            nextFlowerTime = scheduledDate
+            userDefaults.set(scheduledDate, forKey: nextFlowerTimeKey)
+        }
+        
+        userDefaults.set(Date(), forKey: lastScheduledDateKey)
+    }
+    
+    func scheduleFlowerForTomorrow() {
+        let calendar = Calendar.current
+        guard let tomorrow = calendar.date(byAdding: .day, value: 1, to: Date()) else { return }
+        
+        var components = calendar.dateComponents([.year, .month, .day], from: tomorrow)
+        
+        // Random time between 8:00 AM and 10:30 PM (22:30)
+        let startHour = 8
+        let endMinute = 22 * 60 + 30 // 10:30 PM in minutes
+        let startMinute = startHour * 60
+        let randomMinute = Int.random(in: startMinute...endMinute)
+        
+        components.hour = randomMinute / 60
+        components.minute = randomMinute % 60
+        
+        guard let scheduledDate = calendar.date(from: components) else { return }
+        
+        // Generate the flower first, then schedule notification with its name
+        Task {
+            await generateDailyFlowerAndScheduleNotification(at: scheduledDate)
+        }
+        nextFlowerTime = scheduledDate
+        userDefaults.set(scheduledDate, forKey: nextFlowerTimeKey)
+        userDefaults.set(tomorrow, forKey: lastScheduledDateKey)
+    }
+    
+    func generateDailyFlowerAndScheduleNotification(at date: Date) async {
+        // Check if we already have a pending flower
+        if hasUnrevealedFlower {
+            // Already have a flower waiting, just reschedule the notification
+            guard let flower = pendingFlower else { return }
+            
+            // Generate notification for existing flower
+            var notificationTitle = "Your Daily Flower Has Bloomed! 🌸"
+            var notificationBody = "\(flower.name) has been discovered and is waiting for you."
+            
+            if apiConfig.hasValidOpenAIKey {
+                do {
+                    let customMessage = try await OpenAIService.shared.generateFlowerNotification(flowerName: flower.name)
+                    notificationTitle = customMessage.title
+                    notificationBody = customMessage.body
+                } catch {
+                    print("Failed to generate custom notification: \(error)")
+                }
+            }
+            
+            scheduleFlowerNotification(at: date, title: notificationTitle, body: notificationBody)
+            return
+        }
+        
+        // Generate the flower now
+        await generateNewFlower(isDaily: true)
+        
+        // Get the generated flower's name
+        guard let flower = pendingFlower else { return }
+        
+        // Generate custom notification message using OpenAI if available
+        var notificationTitle = "Your Daily Flower Has Bloomed! 🌸"
+        var notificationBody = "\(flower.name) has been discovered and is waiting for you."
+        
+        if apiConfig.hasValidOpenAIKey {
+            do {
+                let customMessage = try await OpenAIService.shared.generateFlowerNotification(flowerName: flower.name)
+                notificationTitle = customMessage.0
+                notificationBody = customMessage.1
+            } catch {
+                // Use default messages if generation fails
+                print("Failed to generate custom notification: \(error)")
+            }
+        }
+        
+        // Schedule the notification
+        scheduleFlowerNotification(at: date, title: notificationTitle, body: notificationBody)
+    }
+    
+    func scheduleFlowerNotification(at date: Date, title: String, body: String) {
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        content.sound = .default
+        content.badge = 1
+        
+        let components = Calendar.current.dateComponents([.hour, .minute], from: date)
+        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
+        
+        let request = UNNotificationRequest(
+            identifier: "daily.flower",
+            content: content,
+            trigger: trigger
+        )
+        
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("Error scheduling notification: \(error)")
+            }
+        }
+    }
+    
+    // MARK: - Debug Methods
+    func scheduleDebugNotification(in seconds: Int) {
+        Task {
+            // Generate the flower first
+            await generateNewFlower(isDaily: true)
+            
+            // Get the generated flower's name
+            guard let flower = pendingFlower else { return }
+            
+            // Generate custom notification message
+            var notificationTitle = "Your Daily Flower Has Bloomed! 🌸"
+            var notificationBody = "\(flower.name) has been discovered and is waiting for you."
+            
+            if apiConfig.hasValidOpenAIKey {
+                do {
+                    let customMessage = try await OpenAIService.shared.generateFlowerNotification(flowerName: flower.name)
+                    notificationTitle = customMessage.0
+                    notificationBody = customMessage.1
+                } catch {
+                    print("Failed to generate custom notification: \(error)")
+                }
+            }
+            
+            // Schedule the notification
+            let content = UNMutableNotificationContent()
+            content.title = notificationTitle
+            content.body = notificationBody
+            content.sound = .default
+            content.badge = 1
+            
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: TimeInterval(seconds), repeats: false)
+            
+            let request = UNNotificationRequest(
+                identifier: "debug.flower",
+                content: content,
+                trigger: trigger
+            )
+            
+            UNUserNotificationCenter.current().add(request) { error in
+                if let error = error {
+                    print("Error scheduling debug notification: \(error)")
+                }
+            }
+        }
     }
     
     // MARK: - Daily Flower Management
-    func loadDailyFlower() {
-        // Check if we have a daily flower for today
-        if let savedDate = userDefaults.object(forKey: dailyFlowerDateKey) as? Date,
-           Calendar.current.isDateInToday(savedDate),
-           let flowerData = userDefaults.data(forKey: dailyFlowerKey),
-           let flower = try? JSONDecoder().decode(AIFlower.self, from: flowerData) {
-            currentFlower = flower
-        } else {
-            // Generate new daily flower
-            generateDailyFlower()
+    func loadNextFlowerTime() {
+        if let storedTime = userDefaults.object(forKey: nextFlowerTimeKey) as? Date {
+            // Only keep it if it's in the future
+            if storedTime > Date() {
+                nextFlowerTime = storedTime
+            } else {
+                userDefaults.removeObject(forKey: nextFlowerTimeKey)
+                nextFlowerTime = nil
+            }
         }
+    }
+    
+    func checkForPendingFlower() {
+        // Check if we have a pending flower to reveal
+        if let flowerData = userDefaults.data(forKey: pendingFlowerKey),
+           let flower = try? JSONDecoder().decode(AIFlower.self, from: flowerData) {
+            pendingFlower = flower
+            hasUnrevealedFlower = true
+        }
+    }
+    
+    func revealPendingFlower() {
+        guard let flower = pendingFlower else { return }
+        
+        currentFlower = flower
+        hasUnrevealedFlower = false
+        pendingFlower = nil
+        
+        // Add to discovered flowers
+        addToDiscoveredFlowers(flower)
+        
+        // Save to shared container for widget
+        if let encoded = try? JSONEncoder().encode(flower) {
+            sharedDefaults?.set(encoded, forKey: dailyFlowerKey)
+            sharedDefaults?.set(Date(), forKey: dailyFlowerDateKey)
+        }
+        
+        // Clear pending flower from storage
+        userDefaults.removeObject(forKey: pendingFlowerKey)
+        
+        // Clear notification badge
+        UNUserNotificationCenter.current().setBadgeCount(0)
+        
+        // Clear the next flower time and schedule for tomorrow
+        nextFlowerTime = nil
+        userDefaults.removeObject(forKey: nextFlowerTimeKey)
+        scheduleFlowerForTomorrow()
     }
     
     func generateDailyFlower() {
         Task {
-            await generateNewFlower()
+            await generateNewFlower(isDaily: true)
         }
     }
     
     // MARK: - Flower Generation
-    func generateNewFlower(descriptor: String? = nil) async {
+    func generateNewFlower(descriptor: String? = nil, isDaily: Bool = false) async {
         isGenerating = true
         errorMessage = nil
         
@@ -75,13 +318,27 @@ class FlowerStore: ObservableObject {
                 throw NSError(domain: "FlowerStore", code: 0, userInfo: [NSLocalizedDescriptionKey: "Failed to convert image"])
             }
             
+            // Check if this is the user's first flower
+            let isFirstFlower = discoveredFlowers.isEmpty && userDefaults.object(forKey: "hasGeneratedFirstFlower") == nil
+            
             // Use OpenAI to generate a beautiful flower name
             let name: String
             if apiConfig.hasValidOpenAIKey {
-                name = try await OpenAIService.shared.generateFlowerName(descriptor: actualDescriptor)
+                if isFirstFlower {
+                    // Generate a Jenny-related name for the first flower
+                    name = try await OpenAIService.shared.generateJennyFlowerName(descriptor: actualDescriptor)
+                    userDefaults.set(true, forKey: "hasGeneratedFirstFlower")
+                } else {
+                    name = try await OpenAIService.shared.generateFlowerName(descriptor: actualDescriptor)
+                }
             } else {
                 // Fallback to extracting from descriptor if no OpenAI key
-                name = extractFlowerName(from: actualDescriptor)
+                if isFirstFlower {
+                    name = "Jenny's \(extractFlowerName(from: actualDescriptor))"
+                    userDefaults.set(true, forKey: "hasGeneratedFirstFlower")
+                } else {
+                    name = extractFlowerName(from: actualDescriptor)
+                }
             }
             
             var flower = AIFlower(
@@ -96,30 +353,72 @@ class FlowerStore: ObservableObject {
             // Get a random continent for now (will be replaced by AI-generated continent)
             flower.continent = Continent.allCases.randomElement()
             
-            currentFlower = flower
+            // Always generate details for every flower
+            if apiConfig.hasValidOpenAIKey {
+                do {
+                    let details = try await OpenAIService.shared.generateFlowerDetails(for: flower)
+                    flower.meaning = details.meaning
+                    flower.properties = details.properties
+                    flower.origins = details.origins
+                    flower.detailedDescription = details.detailedDescription
+                    flower.continent = Continent(rawValue: details.continent) ?? flower.continent
+                } catch {
+                    // Continue without details if generation fails
+                    print("Failed to generate flower details: \(error)")
+                    errorMessage = "Flower created, but details unavailable"
+                }
+            }
             
-            // Add to discovered flowers
-            addToDiscoveredFlowers(flower)
-            
-            // Save to shared container for widget
-            if let encoded = try? JSONEncoder().encode(flower) {
-                sharedDefaults?.set(encoded, forKey: dailyFlowerKey)
-                sharedDefaults?.set(Date(), forKey: dailyFlowerDateKey)
+            if isDaily {
+                // Store as pending flower instead of current
+                pendingFlower = flower
+                hasUnrevealedFlower = true
+                
+                // Save pending flower
+                if let encoded = try? JSONEncoder().encode(flower) {
+                    userDefaults.set(encoded, forKey: pendingFlowerKey)
+                }
+                
+                // Clear next flower time since the flower has bloomed
+                nextFlowerTime = nil
+                userDefaults.removeObject(forKey: nextFlowerTimeKey)
+            } else {
+                // Immediate reveal for manual generation
+                currentFlower = flower
+                
+                // Add to discovered flowers
+                addToDiscoveredFlowers(flower)
+                
+                // Save to shared container for widget
+                if let encoded = try? JSONEncoder().encode(flower) {
+                    sharedDefaults?.set(encoded, forKey: dailyFlowerKey)
+                    sharedDefaults?.set(Date(), forKey: dailyFlowerDateKey)
+                }
             }
             
         } catch {
             // If API fails or no API key, fall back to mock
             if !apiConfig.hasValidFalKey {
                 let flower = createMockFlower(descriptor: descriptor)
-                currentFlower = flower
-                addToDiscoveredFlowers(flower)
+                if isDaily {
+                    pendingFlower = flower
+                    hasUnrevealedFlower = true
+                } else {
+                    currentFlower = flower
+                    addToDiscoveredFlowers(flower)
+                }
                 errorMessage = "No FAL API key configured. Using placeholder images."
             } else {
                 errorMessage = error.localizedDescription
                 // Create a mock flower as fallback
                 let flower = createMockFlower(descriptor: descriptor)
-                currentFlower = flower
-                addToDiscoveredFlowers(flower)
+                if isDaily {
+                    pendingFlower = flower
+                    hasUnrevealedFlower = true
+                } else {
+                    currentFlower = flower
+                    addToDiscoveredFlowers(flower)
+                }
             }
         }
         
@@ -200,12 +499,19 @@ class FlowerStore: ObservableObject {
         currentFlower = flower
         
         if flower.isFavorite {
+            // Make sure we're adding the flower with all its current details
             favorites.append(flower)
         } else {
             favorites.removeAll { $0.id == flower.id }
         }
         
+        // Also update in discovered flowers to keep everything in sync
+        if let index = discoveredFlowers.firstIndex(where: { $0.id == flower.id }) {
+            discoveredFlowers[index] = flower
+        }
+        
         saveFavorites()
+        saveDiscoveredFlowers()
     }
     
     func deleteFavorite(_ flower: AIFlower) {
@@ -214,6 +520,12 @@ class FlowerStore: ObservableObject {
             currentFlower?.isFavorite = false
         }
         saveFavorites()
+    }
+    
+    // MARK: - Public Refresh Method
+    func refreshCollection() {
+        loadFavorites()
+        loadDiscoveredFlowers()
     }
     
     private func loadFavorites() {
@@ -282,5 +594,20 @@ class FlowerStore: ObservableObject {
         
         saveFavorites()
         saveDiscoveredFlowers()
+    }
+    
+    // Refresh details for a flower if they're missing
+    func refreshFlowerDetailsIfNeeded(_ flower: AIFlower) async {
+        // Only refresh if details are missing
+        if flower.meaning == nil && flower.properties == nil && flower.origins == nil {
+            if apiConfig.hasValidOpenAIKey {
+                do {
+                    let details = try await OpenAIService.shared.generateFlowerDetails(for: flower)
+                    updateFlowerDetails(flower, with: details)
+                } catch {
+                    print("Failed to refresh flower details: \(error)")
+                }
+            }
+        }
     }
 } 

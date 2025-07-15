@@ -24,6 +24,27 @@ struct FlowerButtonStyle: ButtonStyle {
     }
 }
 
+// Primary button style with transparent/floating design
+struct FlowerPrimaryButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 16, weight: .medium))
+            .foregroundColor(.flowerPrimary)
+            .frame(height: 56)
+            .frame(maxWidth: .infinity)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.flowerPrimary.opacity(configuration.isPressed ? 0.15 : 0.1))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .strokeBorder(Color.flowerPrimary.opacity(0.3), lineWidth: 1)
+                    )
+            )
+            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: configuration.isPressed)
+    }
+}
+
 // MARK: - Legacy Color Definitions
 // The main color definitions are automatically generated from Assets.xcassets
 // These are kept for backwards compatibility with older code

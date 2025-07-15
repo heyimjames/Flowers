@@ -8,5 +8,7 @@
 	<string>Save beautiful flower images to your photo library</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Add flower images to your photo library collection</string>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>Get notified when your daily flower blooms</string>
 </dict>
 </plist>

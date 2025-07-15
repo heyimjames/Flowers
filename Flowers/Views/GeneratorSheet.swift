@@ -21,7 +21,7 @@ struct GeneratorSheet: View {
         NavigationView {
             VStack(spacing: 0) {
                 // Header
-                Text("Create New Flower")
+                Text("Find New Flower")
                     .font(.system(size: 20, weight: .semibold))
                     .foregroundColor(.flowerTextPrimary)
                     .padding(.top, 8)
@@ -50,7 +50,7 @@ struct GeneratorSheet: View {
                             ProgressView()
                                 .tint(.flowerPrimary)
                                 .scaleEffect(1.5)
-                            Text("Creating your flower...")
+                            Text("Finding your flower...")
                                 .font(.system(size: 16))
                                 .foregroundColor(.flowerTextSecondary)
                         }
@@ -64,13 +64,13 @@ struct GeneratorSheet: View {
                 .padding(.horizontal, 24)
                 
                 // Surprise Me text
-                Text("✨ Surprise Me")
+                Text("🌸 Discover")
                     .font(.system(size: 20, weight: .medium))
                     .foregroundColor(.flowerTextSecondary)
                     .padding(.top, 24)
                     .padding(.bottom, 16)
                 
-                Text("Discover a unique flower created just for you")
+                Text("Pick a unique flower from nature's hidden garden")
                     .font(.system(size: 14))
                     .foregroundColor(.flowerTextTertiary)
                     .multilineTextAlignment(.center)
@@ -79,9 +79,9 @@ struct GeneratorSheet: View {
                 
                 // Create button
                 Button(action: createFlower) {
-                    Text("Generate Flower")
+                    Text("Pick Flower")
                 }
-                .buttonStyle(FlowerButtonStyle())
+                .buttonStyle(FlowerPrimaryButtonStyle())
                 .padding(.horizontal, 24)
                 .padding(.vertical, 20)
                 .disabled(isCreating)

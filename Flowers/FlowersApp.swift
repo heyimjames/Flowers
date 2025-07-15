@@ -6,12 +6,48 @@
 //
 
 import SwiftUI
+import UserNotifications
 
 @main
 struct FlowersApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .onAppear {
+                    // Request notification permissions on first launch
+                    UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
+                        if granted {
+                            print("Notification permission granted")
+                        }
+                    }
+                }
         }
+    }
+}
+
+class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+        // Set notification delegate
+        UNUserNotificationCenter.current().delegate = self
+        
+        // Clear badge on app launch
+        UNUserNotificationCenter.current().setBadgeCount(0)
+        
+        return true
+    }
+    
+    // Handle notification when app is in foreground
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        // Show notification even when app is in foreground
+        completionHandler([.banner, .sound, .badge])
+    }
+    
+    // Handle notification tap
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+        // Clear badge when notification is tapped
+        UNUserNotificationCenter.current().setBadgeCount(0)
+        completionHandler()
     }
 }

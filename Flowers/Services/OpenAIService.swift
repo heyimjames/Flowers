@@ -58,6 +58,7 @@ class OpenAIService {
         case invalidAPIKey
         case invalidURL
         case noImageGenerated
+        case noNameGenerated
         case networkError(String)
         case invalidResponse
         
@@ -69,6 +70,8 @@ class OpenAIService {
                 return "Invalid URL"
             case .noImageGenerated:
                 return "No image was generated"
+            case .noNameGenerated:
+                return "No name was generated"
             case .networkError(let message):
                 return "Network error: \(message)"
             case .invalidResponse:
@@ -150,20 +153,26 @@ class OpenAIService {
         
         let systemPrompt = """
         You are a knowledgeable botanist and naturalist who creates detailed information about rare and beautiful flowers. 
-        You should respond with a JSON object containing meaning, properties, origins, detailedDescription, and continent fields.
-        Make the information scientifically plausible yet poetic, focusing on natural beauty, botanical characteristics, and ecological significance.
-        Include references to the current season (\(season)) when describing blooming patterns or growth cycles.
-        The continent should be one of: North America, South America, Europe, Africa, Asia, Oceania, Antarctica.
+        You must respond with a valid JSON object with exactly these fields:
+        {
+            "meaning": "Cultural and symbolic significance of this flower",
+            "properties": "Notable botanical characteristics and growth patterns",
+            "origins": "Geographic origins and natural habitat",
+            "detailedDescription": "Rich description of appearance and growth",
+            "continent": "One of: North America, South America, Europe, Africa, Asia, Oceania, Antarctica"
+        }
+        Make the information scientifically plausible yet poetic. Include seasonal context when relevant.
+        Ensure the continent field EXACTLY matches one of the seven options provided.
         """
         
         let userPrompt = """
         Generate detailed botanical information for a flower called "\(flower.name)" which is described as "\(flower.descriptor)".
-        Include:
-        1. meaning: Cultural and symbolic significance of this flower in various traditions
-        2. properties: Notable botanical characteristics, growth patterns, and ecological benefits
-        3. origins: Geographic origins and natural habitat, including climate preferences
-        4. detailedDescription: A rich description of its appearance, blooming season (considering it's currently \(season)), fragrance, and how it grows in nature
-        5. continent: Which continent this flower naturally originates from
+        Remember to:
+        1. Include cultural significance in the meaning field
+        2. Focus on botanical characteristics in the properties field
+        3. Describe geographic origins in the origins field
+        4. Create a rich description considering it's currently \(season)
+        5. Choose the most appropriate continent from the exact list
         """
         
         let request = ChatCompletionRequest(
@@ -206,13 +215,34 @@ class OpenAIService {
         let decoder = JSONDecoder()
         let completionResponse = try decoder.decode(ChatCompletionResponse.self, from: data)
         
-        guard let content = completionResponse.choices.first?.message.content,
-              let jsonData = content.data(using: .utf8) else {
+        guard let content = completionResponse.choices.first?.message.content else {
             throw OpenAIError.invalidResponse
         }
         
-        let flowerDetails = try JSONDecoder().decode(FlowerDetails.self, from: jsonData)
-        return flowerDetails
+        // Clean the content to ensure it's valid JSON
+        let cleanedContent = content.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        guard let jsonData = cleanedContent.data(using: .utf8) else {
+            throw OpenAIError.invalidResponse
+        }
+        
+        do {
+            let flowerDetails = try JSONDecoder().decode(FlowerDetails.self, from: jsonData)
+            return flowerDetails
+        } catch {
+            // If JSON parsing fails, try to extract the content and create a valid response
+            print("JSON parsing error: \(error)")
+            print("Raw content: \(cleanedContent)")
+            
+            // Create a fallback response
+            return FlowerDetails(
+                meaning: "This beautiful flower represents resilience and natural beauty.",
+                properties: "A remarkable specimen with unique petal formations and vibrant colors.",
+                origins: "Found in diverse habitats across temperate regions.",
+                detailedDescription: "A stunning flower that blooms during \(season), showcasing nature's artistry.",
+                continent: "North America"
+            )
+        }
     }
     
     func generateFlowerName(descriptor: String) async throws -> String {
@@ -275,6 +305,67 @@ class OpenAIService {
         return name.trimmingCharacters(in: .whitespacesAndNewlines)
     }
     
+    func generateJennyFlowerName(descriptor: String) async throws -> String {
+        guard !APIConfiguration.shared.openAIKey.isEmpty else {
+            throw OpenAIError.invalidAPIKey
+        }
+        
+        let apiKey = APIConfiguration.shared.openAIKey
+        
+        let systemPrompt = """
+        You are a botanist who names newly discovered flower species. Create an elegant name that incorporates "Jenny" or relates to the name Jenny.
+        Examples: "Jenny's Rose", "Jennifer Lily", "Jenny's Garden Bloom", "Jenniferia elegans".
+        The name should sound like it could be a real flower species named after or dedicated to someone named Jenny.
+        Respond with just the flower name, nothing else.
+        """
+        
+        let userPrompt = """
+        Create a beautiful flower name that includes or relates to "Jenny" for a flower described as: \(descriptor)
+        The name should be 2-4 words maximum and sound elegant and botanical.
+        """
+        
+        let request = ChatCompletionRequest(
+            model: "gpt-4o-mini",
+            messages: [
+                ChatCompletionRequest.Message(role: "system", content: systemPrompt),
+                ChatCompletionRequest.Message(role: "user", content: userPrompt)
+            ],
+            temperature: 0.9,
+            response_format: nil
+        )
+        
+        guard let url = URL(string: chatCompletionURL) else {
+            throw OpenAIError.invalidURL
+        }
+        
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+        urlRequest.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let encoder = JSONEncoder()
+        urlRequest.httpBody = try encoder.encode(request)
+        
+        let (data, response) = try await URLSession.shared.data(for: urlRequest)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw OpenAIError.networkError("Invalid response")
+        }
+        
+        if httpResponse.statusCode != 200 {
+            throw OpenAIError.networkError("Status code: \(httpResponse.statusCode)")
+        }
+        
+        let decoder = JSONDecoder()
+        let completionResponse = try decoder.decode(ChatCompletionResponse.self, from: data)
+        
+        guard let name = completionResponse.choices.first?.message.content else {
+            throw OpenAIError.invalidResponse
+        }
+        
+        return name.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    
     private func getCurrentSeason() -> String {
         let calendar = Calendar.current
         let month = calendar.component(.month, from: Date())
@@ -286,5 +377,83 @@ class OpenAIService {
         case 12, 1, 2: return "Winter"
         default: return "Unknown"
         }
+    }
+    
+    func generateFlowerNotification(flowerName: String) async throws -> (title: String, body: String) {
+        guard !APIConfiguration.shared.openAIKey.isEmpty else {
+            throw OpenAIError.invalidAPIKey
+        }
+        
+        let systemPrompt = """
+        You are a poetic notification writer for a flower discovery app. Create beautiful, engaging push notification messages.
+        The notification should feel magical and make the user excited to discover their new flower.
+        Return a JSON object with "title" and "body" fields.
+        Keep the title under 30 characters and the body under 80 characters.
+        Use emojis sparingly but effectively.
+        Vary your messages - don't always use the same format.
+        Sometimes be poetic, sometimes mysterious, sometimes joyful.
+        """
+        
+        let userPrompt = """
+        Create a push notification for a flower called "\(flowerName)".
+        Make it sound like this specific flower has just bloomed and is waiting to be discovered.
+        Don't just say "has bloomed" every time - vary the language.
+        """
+        
+        let request = ChatCompletionRequest(
+            model: "gpt-4o-mini",
+            messages: [
+                ChatCompletionRequest.Message(role: "system", content: systemPrompt),
+                ChatCompletionRequest.Message(role: "user", content: userPrompt)
+            ],
+            temperature: 0.9,
+            response_format: ChatCompletionRequest.ResponseFormat()
+        )
+        
+        guard let url = URL(string: chatCompletionURL) else {
+            throw OpenAIError.invalidURL
+        }
+        
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+        urlRequest.setValue("Bearer \(APIConfiguration.shared.openAIKey)", forHTTPHeaderField: "Authorization")
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let encoder = JSONEncoder()
+        urlRequest.httpBody = try encoder.encode(request)
+        
+        let (data, response) = try await URLSession.shared.data(for: urlRequest)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw OpenAIError.networkError("Invalid response")
+        }
+        
+        if httpResponse.statusCode != 200 {
+            if let errorString = String(data: data, encoding: .utf8) {
+                throw OpenAIError.networkError(errorString)
+            }
+            throw OpenAIError.networkError("Status code: \(httpResponse.statusCode)")
+        }
+        
+        let decoder = JSONDecoder()
+        let completionResponse = try decoder.decode(ChatCompletionResponse.self, from: data)
+        
+        guard let messageContent = completionResponse.choices.first?.message.content else {
+            throw OpenAIError.noNameGenerated
+        }
+        
+        // Parse the JSON response
+        guard let jsonData = messageContent.data(using: .utf8),
+              let json = try JSONSerialization.jsonObject(with: jsonData) as? [String: String],
+              let title = json["title"],
+              let body = json["body"] else {
+            // Fallback if parsing fails
+            return (
+                title: "🌸 \(flowerName) awaits!",
+                body: "Your new flower discovery is ready to be revealed."
+            )
+        }
+        
+        return (title: title, body: body)
     }
 } 

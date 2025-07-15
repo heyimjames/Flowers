@@ -6,101 +6,144 @@ struct FavoritesSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var selectedFlower: AIFlower?
     @State private var showingDetail = false
+    @State private var showFavoritesOnly = false
     
     let columns = [
         GridItem(.flexible(), spacing: 16),
         GridItem(.flexible(), spacing: 16)
     ]
     
+    var displayedFlowers: [AIFlower] {
+        if showFavoritesOnly {
+            return flowerStore.favorites
+        } else {
+            return flowerStore.discoveredFlowers
+        }
+    }
+    
     var body: some View {
         NavigationView {
-            VStack(spacing: 0) {
-                // Header
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("My Collection")
-                            .font(.system(size: 28, weight: .bold))
-                            .foregroundColor(.flowerTextPrimary)
-                        
-                        Text("\(flowerStore.totalDiscoveredCount) flowers discovered")
-                            .font(.system(size: 14))
-                            .foregroundColor(.flowerTextSecondary)
-                    }
-                    
-                    Spacer()
-                    
-                    Button("Done") {
-                        dismiss()
-                    }
-                    .font(.system(size: 17, weight: .medium))
-                    .foregroundColor(.flowerPrimary)
-                }
-                .padding(.horizontal, 24)
-                .padding(.top, 20)
-                .padding(.bottom, 16)
+            ZStack {
+                Color.flowerSheetBackground.ignoresSafeArea()
                 
-                // Continent stats
-                if !flowerStore.continentStats.isEmpty {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 12) {
-                            ForEach(Continent.allCases, id: \.self) { continent in
-                                if let count = flowerStore.continentStats[continent], count > 0 {
-                                    VStack(spacing: 4) {
-                                        Text("\(count)")
-                                            .font(.system(size: 16, weight: .semibold))
-                                            .foregroundColor(.flowerPrimary)
-                                        Text(continent.rawValue)
-                                            .font(.system(size: 12))
-                                            .foregroundColor(.flowerTextSecondary)
-                                    }
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 8)
-                                    .background(Color.flowerPrimary.opacity(0.1))
-                                    .cornerRadius(12)
-                                }
-                            }
+                VStack(spacing: 0) {
+                    // Header
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("My Collection")
+                                .font(.system(size: 28, weight: .bold))
+                                .foregroundColor(.flowerTextPrimary)
+                            
+                            Text("\(flowerStore.totalDiscoveredCount) flowers discovered")
+                                .font(.system(size: 14))
+                                .foregroundColor(.flowerTextSecondary)
                         }
-                        .padding(.horizontal, 24)
+                        
+                        Spacer()
+                        
+                        Button("Done") {
+                            dismiss()
+                        }
+                        .font(.system(size: 17, weight: .medium))
+                        .foregroundColor(.flowerPrimary)
                     }
+                    .padding(.horizontal, 24)
+                    .padding(.top, 20)
                     .padding(.bottom, 16)
-                }
-                
-                if flowerStore.favorites.isEmpty {
-                    // Empty state
-                    Spacer()
                     
-                    VStack(spacing: 16) {
-                        Image(systemName: "heart.circle")
-                            .font(.system(size: 64))
-                            .foregroundColor(.flowerTextTertiary)
+                    // Filter toggle
+                    HStack(spacing: 12) {
+                        FilterButton(
+                            title: "All Flowers",
+                            count: flowerStore.totalDiscoveredCount,
+                            isSelected: !showFavoritesOnly,
+                            action: { showFavoritesOnly = false }
+                        )
                         
-                        Text("No favorites yet")
-                            .font(.system(size: 18, weight: .medium))
-                            .foregroundColor(.flowerTextSecondary)
+                        FilterButton(
+                            title: "Favorites",
+                            count: flowerStore.favorites.count,
+                            isSelected: showFavoritesOnly,
+                            action: { showFavoritesOnly = true }
+                        )
                         
-                        Text("Tap the heart to save flowers")
-                            .font(.system(size: 14))
-                            .foregroundColor(.flowerTextTertiary)
+                        Spacer()
                     }
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 16)
                     
-                    Spacer()
-                } else {
-                    // Favorites grid
-                    ScrollView {
-                        LazyVGrid(columns: columns, spacing: 16) {
-                            ForEach(flowerStore.favorites) { flower in
-                                FlowerGridItem(flower: flower) {
-                                    selectedFlower = flower
-                                    showingDetail = true
+                    // Continent stats
+                    if !showFavoritesOnly && !flowerStore.continentStats.isEmpty {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 12) {
+                                ForEach(Continent.allCases, id: \.self) { continent in
+                                    if let count = flowerStore.continentStats[continent], count > 0 {
+                                        VStack(spacing: 4) {
+                                            Text("\(count)")
+                                                .font(.system(size: 16, weight: .semibold))
+                                                .foregroundColor(.flowerPrimary)
+                                            Text(continent.rawValue)
+                                                .font(.system(size: 12))
+                                                .foregroundColor(.flowerTextSecondary)
+                                        }
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 8)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 12)
+                                                .fill(Color.flowerPrimary.opacity(0.1))
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 12)
+                                                        .strokeBorder(Color.flowerPrimary.opacity(0.2), lineWidth: 1)
+                                                )
+                                        )
+                                    }
                                 }
                             }
+                            .padding(.horizontal, 24)
                         }
-                        .padding(.horizontal, 24)
-                        .padding(.bottom, 24)
+                        .padding(.bottom, 16)
+                    }
+                    
+                    if displayedFlowers.isEmpty {
+                        // Empty state
+                        Spacer()
+                        
+                        VStack(spacing: 16) {
+                            Image(systemName: showFavoritesOnly ? "heart.circle" : "sparkles.rectangle.stack")
+                                .font(.system(size: 64))
+                                .foregroundColor(.flowerTextTertiary)
+                            
+                            Text(showFavoritesOnly ? "No favorites yet" : "No flowers discovered yet")
+                                .font(.system(size: 18, weight: .medium))
+                                .foregroundColor(.flowerTextSecondary)
+                            
+                            Text(showFavoritesOnly ? "Tap the heart to save flowers" : "Generate flowers to start your collection")
+                                .font(.system(size: 14))
+                                .foregroundColor(.flowerTextTertiary)
+                        }
+                        
+                        Spacer()
+                    } else {
+                        // Flowers grid
+                        ScrollView {
+                            LazyVGrid(columns: columns, spacing: 16) {
+                                ForEach(displayedFlowers) { flower in
+                                    FlowerGridItem(flower: flower, isFavorite: flower.isFavorite) {
+                                        selectedFlower = flower
+                                        showingDetail = true
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, 24)
+                            .padding(.bottom, 24)
+                        }
+                        .refreshable {
+                            // Reload the discovered flowers and favorites
+                            await refreshCollection()
+                        }
                     }
                 }
             }
-            .background(Color.flowerSheetBackground)
         }
         .sheet(isPresented: $showingDetail) {
             if let flower = selectedFlower {
@@ -112,27 +155,91 @@ struct FavoritesSheet: View {
             }
         }
     }
+    
+    private func refreshCollection() async {
+        // Add a small delay to show the refresh indicator
+        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+        
+        // Reload favorites and discovered flowers from storage
+        await MainActor.run {
+            flowerStore.refreshCollection()
+        }
+    }
+}
+
+struct FilterButton: View {
+    let title: String
+    let count: Int
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Text(title)
+                    .font(.system(size: 14, weight: .medium))
+                
+                Text("\(count)")
+                    .font(.system(size: 12, weight: .semibold))
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(
+                        Capsule()
+                            .fill(isSelected ? Color.white.opacity(0.2) : Color.flowerTextTertiary.opacity(0.1))
+                    )
+            }
+            .foregroundColor(isSelected ? .flowerPrimary : .flowerTextSecondary)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(isSelected ? Color.flowerPrimary.opacity(0.1) : Color.clear)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20)
+                            .strokeBorder(
+                                isSelected ? Color.flowerPrimary.opacity(0.3) : Color.flowerTextTertiary.opacity(0.2),
+                                lineWidth: 1
+                            )
+                    )
+            )
+        }
+    }
 }
 
 struct FlowerGridItem: View {
     let flower: AIFlower
+    let isFavorite: Bool
     let action: () -> Void
     
     var body: some View {
         Button(action: action) {
             VStack(spacing: 8) {
-                if let imageData = flower.imageData,
-                   let uiImage = UIImage(data: imageData) {
-                    Image(uiImage: uiImage)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(maxWidth: .infinity)
-                        .aspectRatio(1, contentMode: .fit)
-                        .cornerRadius(12)
-                } else {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.flowerCardBackground)
-                        .aspectRatio(1, contentMode: .fit)
+                ZStack(alignment: .topTrailing) {
+                    if let imageData = flower.imageData,
+                       let uiImage = UIImage(data: imageData) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(maxWidth: .infinity)
+                            .aspectRatio(1, contentMode: .fit)
+                            .cornerRadius(12)
+                    } else {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.flowerCardBackground)
+                            .aspectRatio(1, contentMode: .fit)
+                    }
+                    
+                    if isFavorite {
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: 16))
+                            .foregroundColor(.flowerSecondary)
+                            .padding(8)
+                            .background(
+                                Circle()
+                                    .fill(Color.white.opacity(0.9))
+                            )
+                            .padding(8)
+                    }
                 }
                 
                 Text(flower.name)
@@ -281,9 +388,10 @@ struct FlowerDetailSheet: View {
                         .padding(.horizontal, 24)
                     }
                     
-                    Spacer(minLength: 100)
+                    Spacer(minLength: 160)
                 }
             }
+            .background(Color.flowerSheetBackground)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -291,6 +399,7 @@ struct FlowerDetailSheet: View {
                         Image(systemName: "trash")
                             .foregroundColor(.flowerError)
                     }
+                    .padding(.leading, 8)
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -298,43 +407,70 @@ struct FlowerDetailSheet: View {
                         dismiss()
                     }
                     .foregroundColor(.flowerPrimary)
+                    .font(.system(size: 17, weight: .medium))
+                    .padding(.trailing, 8)
                 }
             }
             .overlay(alignment: .bottom) {
-                // Action buttons
-                HStack(spacing: 16) {
-                    Button(action: saveToPhotos) {
-                        HStack {
-                            Image(systemName: "square.and.arrow.down")
-                            Text("Save Image")
-                        }
-                    }
-                    .buttonStyle(FlowerButtonStyle())
-                    
-                    Button(action: shareFlower) {
-                        Image(systemName: "square.and.arrow.up")
-                            .font(.system(size: 22))
-                            .foregroundColor(.flowerTextSecondary)
-                            .frame(width: 56, height: 56)
-                            .background(Color.flowerButtonBackground)
-                            .cornerRadius(12)
-                    }
-                }
-                .padding(.horizontal, 24)
-                .padding(.bottom, 40)
-                .background(
+                // Gradient fade with action buttons
+                VStack(spacing: 0) {
+                    // Multi-layer gradient for smooth fade
                     LinearGradient(
                         colors: [
                             Color.flowerSheetBackground.opacity(0),
-                            Color.flowerSheetBackground,
+                            Color.flowerSheetBackground.opacity(0.3),
+                            Color.flowerSheetBackground.opacity(0.6),
+                            Color.flowerSheetBackground.opacity(0.85),
+                            Color.flowerSheetBackground.opacity(0.95),
                             Color.flowerSheetBackground
                         ],
                         startPoint: .top,
                         endPoint: .bottom
                     )
-                    .frame(height: 120)
-                    .ignoresSafeArea()
-                )
+                    .frame(height: 100)
+                    
+                    // Action buttons
+                    HStack(spacing: 16) {
+                        Button(action: saveToPhotos) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "square.and.arrow.down")
+                                    .font(.system(size: 18))
+                                Text("Save Image")
+                                    .font(.system(size: 16, weight: .medium))
+                            }
+                            .foregroundColor(.flowerPrimary)
+                            .frame(height: 52)
+                            .frame(maxWidth: .infinity)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(Color.flowerPrimary.opacity(0.1))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .strokeBorder(Color.flowerPrimary.opacity(0.2), lineWidth: 1)
+                                    )
+                            )
+                        }
+                        
+                        Button(action: shareFlower) {
+                            Image(systemName: "square.and.arrow.up")
+                                .font(.system(size: 20))
+                                .foregroundColor(.flowerPrimary)
+                                .frame(width: 52, height: 52)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(Color.flowerPrimary.opacity(0.1))
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 12)
+                                                .strokeBorder(Color.flowerPrimary.opacity(0.2), lineWidth: 1)
+                                        )
+                                )
+                        }
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 40)
+                    .background(Color.flowerSheetBackground)
+                }
+                .ignoresSafeArea(edges: .bottom)
             }
         }
         .alert("Delete Flower?", isPresented: $showingDeleteAlert) {
