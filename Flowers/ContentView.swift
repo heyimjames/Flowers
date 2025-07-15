@@ -47,9 +47,17 @@ struct ContentView: View {
             .scrollIndicators(.hidden)
             .safeAreaInset(edge: .top, spacing: 0) {
                 // Navigation bar
-                HStack {
-                    // Animated discovery/countdown pill
-                    ZStack {
+                ZStack {
+                    // Centered app title (absolutely centered)
+                    Text("Flowers")
+                        .font(.system(size: 24, weight: .semibold, design: .serif))
+                        .foregroundColor(.flowerTextPrimary)
+                        .frame(maxWidth: .infinity)
+                    
+                    // HStack for pill and settings button
+                    HStack {
+                        // Animated discovery/countdown pill
+                        ZStack {
                             // Discovery count view
                             HStack(spacing: 4) {
                                 Image(systemName: "sparkles")
@@ -89,23 +97,16 @@ struct ContentView: View {
                         .cornerRadius(16)
                         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: showDiscoveryCount)
                         
-                    
-                    Spacer()
-                    
-                    // Centered app title
-                    Text("Flowers")
-                        .font(.system(size: 24, weight: .semibold, design: .serif))
-                        .foregroundColor(.flowerTextPrimary)
-                    
-                    Spacer()
-                    
-                    // Settings button
-                    Button {
-                        showingSettings = true
-                    } label: {
-                        Image(systemName: "gearshape.fill")
-                            .font(.system(size: 22))
-                            .foregroundColor(.flowerTextSecondary)
+                        Spacer()
+                        
+                        // Settings button
+                        Button {
+                            showingSettings = true
+                        } label: {
+                            Image(systemName: "gearshape.fill")
+                                .font(.system(size: 22))
+                                .foregroundColor(.flowerTextSecondary)
+                        }
                     }
                 }
                 .padding(.horizontal, 20)
