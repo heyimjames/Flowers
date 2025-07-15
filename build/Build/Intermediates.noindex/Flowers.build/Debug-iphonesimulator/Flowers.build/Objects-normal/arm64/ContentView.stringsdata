@@ -1,0 +1,144 @@
+{
+  "source": "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/ContentView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Flowers",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 53
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 67
+        }
+      },
+      {
+        "comment": "",
+        "key": "found",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 70
+        }
+      },
+      {
+        "comment": "",
+        "key": "Soon",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 87
+        }
+      },
+      {
+        "comment": "",
+        "key": "Special %@ Collection",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 260
+        }
+      },
+      {
+        "comment": "",
+        "key": "Meaning",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 277
+        }
+      },
+      {
+        "comment": "",
+        "key": "Characteristics",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 296
+        }
+      },
+      {
+        "comment": "",
+        "key": "Includes",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 315
+        }
+      },
+      {
+        "comment": "",
+        "key": "Tradition from %@",
+        "location": {
+          "startingColumn": 57,
+          "startingLine": 333
+        }
+      },
+      {
+        "comment": "",
+        "key": "Native to %@",
+        "location": {
+          "startingColumn": 98,
+          "startingLine": 333
+        }
+      },
+      {
+        "comment": "",
+        "key": "Studying this beautiful flower...",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 350
+        }
+      },
+      {
+        "comment": "",
+        "key": "Tap to learn more about this flower",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 368
+        }
+      },
+      {
+        "comment": "",
+        "key": "Your garden awaits...",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 403
+        }
+      },
+      {
+        "comment": "",
+        "key": "Share flower image",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 492
+        }
+      },
+      {
+        "comment": "",
+        "key": "Find Flower",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 422
+        }
+      },
+      {
+        "comment": "",
+        "key": "Next flower arrives randomly today",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 433
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 512
+        }
+      }
+    ]
+  },
+  "version": 1
+}

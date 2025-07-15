@@ -9,7 +9,7 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
-    @StateObject private var flowerStore = FlowerStore()
+    @EnvironmentObject var flowerStore: FlowerStore
     @State private var showingGenerator = false
     @State private var showingFavorites = false
     @State private var showingSettings = false
@@ -51,7 +51,7 @@ struct ContentView: View {
                 ZStack {
                     // Centered app title (absolutely centered)
                     Text("Flowers")
-                        .font(.system(size: 24, weight: .semibold, design: .serif))
+                        .font(.system(size: 24, weight: .light, design: .serif))
                         .foregroundColor(.flowerTextPrimary)
                         .frame(maxWidth: .infinity)
                     
@@ -197,9 +197,12 @@ struct ContentView: View {
             }
         }
         .onAppear {
-            // Check if user needs onboarding
+            // Check if user needs onboarding (starter flower selection)
             if !UserDefaults.standard.bool(forKey: "hasCompletedOnboarding") {
-                showingOnboarding = true
+                // Small delay to ensure Jenny flower is loaded
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    showingOnboarding = true
+                }
             }
         }
         .fullScreenCover(isPresented: $showingOnboarding) {
@@ -234,24 +237,6 @@ struct ContentView: View {
                     showingFlowerDetail = true
                 }
                 .contentShape(Rectangle()) // Makes entire area tappable
-                .overlay(
-                    // Subtle tap indicator in corner
-                    VStack {
-                        HStack {
-                            Spacer()
-                            Image(systemName: "arrow.up.left.and.arrow.down.right")
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundColor(.white)
-                                .padding(8)
-                                .background(
-                                    Circle()
-                                        .fill(Color.black.opacity(0.5))
-                                )
-                                .padding(8)
-                        }
-                        Spacer()
-                    }
-                )
                 .transition(
                     .asymmetric(
                         insertion: .scale(scale: 0.3, anchor: .center)
@@ -263,9 +248,9 @@ struct ContentView: View {
                 
                 // Flower/Bouquet name
                 VStack(spacing: 8) {
-                    Text(flower.name)
-                        .font(.system(size: 28, weight: .medium, design: .serif))
-                        .foregroundColor(.flowerTextPrimary)
+                                    Text(flower.name)
+                    .font(.system(size: 28, weight: .regular, design: .serif))
+                    .foregroundColor(.flowerTextPrimary)
                     
                     if flower.isBouquet, let holidayName = flower.holidayName {
                         HStack(spacing: 6) {
@@ -290,7 +275,7 @@ struct ContentView: View {
                                         .font(.system(size: 12))
                                         .foregroundColor(.flowerPrimary)
                                     Text("Meaning")
-                                        .font(.system(size: 14, weight: .semibold))
+                                        .font(.system(size: 14, weight: .light, design: .serif))
                                         .foregroundColor(.flowerTextPrimary)
                                 }
                                 

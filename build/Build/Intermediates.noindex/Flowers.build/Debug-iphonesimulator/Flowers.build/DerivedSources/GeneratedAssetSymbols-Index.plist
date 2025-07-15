@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>colors</key>
+	<array>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACColorNameAccentColor</string>
+			<key>relativePath</key>
+			<string>./AccentColor.colorset</string>
+			<key>swiftSymbol</key>
+			<string>accent</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACColorNameFlowerBackground</string>
+			<key>relativePath</key>
+			<string>./FlowerBackground.colorset</string>
+			<key>swiftSymbol</key>
+			<string>flowerBackground</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACColorNameFlowerBackgroundSecondary</string>
+			<key>relativePath</key>
+			<string>./FlowerBackgroundSecondary.colorset</string>
+			<key>swiftSymbol</key>
+			<string>flowerBackgroundSecondary</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACColorNameFlowerButtonBackground</string>
+			<key>relativePath</key>
+			<string>./FlowerButtonBackground.colorset</string>
+			<key>swiftSymbol</key>
+			<string>flowerButtonBackground</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACColorNameFlowerCardBackground</string>
+			<key>relativePath</key>
+			<string>./FlowerCardBackground.colorset</string>
+			<key>swiftSymbol</key>
+			<string>flowerCardBackground</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACColorNameFlowerDivider</string>
+			<key>relativePath</key>
+			<string>./FlowerDivider.colorset</string>
+			<key>swiftSymbol</key>
+			<string>flowerDivider</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACColorNameFlowerError</string>
+			<key>relativePath</key>
+			<string>./FlowerError.colorset</string>
+			<key>swiftSymbol</key>
+			<string>flowerError</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACColorNameFlowerInputBackground</string>
+			<key>relativePath</key>
+			<string>./FlowerInputBackground.colorset</string>
+			<key>swiftSymbol</key>
+			<string>flowerInputBackground</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACColorNameFlowerPrimary</string>
+			<key>relativePath</key>
+			<string>./FlowerPrimary.colorset</string>
+			<key>swiftSymbol</key>
+			<string>flowerPrimary</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACColorNameFlowerSecondary</string>
+			<key>relativePath</key>
+			<string>./FlowerSecondary.colorset</string>
+			<key>swiftSymbol</key>
+			<string>flowerSecondary</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACColorNameFlowerSheetBackground</string>
+			<key>relativePath</key>
+			<string>./FlowerSheetBackground.colorset</string>
+			<key>swiftSymbol</key>
+			<string>flowerSheetBackground</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACColorNameFlowerSuccess</string>
+			<key>relativePath</key>
+			<string>./FlowerSuccess.colorset</string>
+			<key>swiftSymbol</key>
+			<string>flowerSuccess</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACColorNameFlowerTextPrimary</string>
+			<key>relativePath</key>
+			<string>./FlowerTextPrimary.colorset</string>
+			<key>swiftSymbol</key>
+			<string>flowerTextPrimary</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACColorNameFlowerTextSecondary</string>
+			<key>relativePath</key>
+			<string>./FlowerTextSecondary.colorset</string>
+			<key>swiftSymbol</key>
+			<string>flowerTextSecondary</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACColorNameFlowerTextTertiary</string>
+			<key>relativePath</key>
+			<string>./FlowerTextTertiary.colorset</string>
+			<key>swiftSymbol</key>
+			<string>flowerTextTertiary</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACColorNameFlowerWarning</string>
+			<key>relativePath</key>
+			<string>./FlowerWarning.colorset</string>
+			<key>swiftSymbol</key>
+			<string>flowerWarning</string>
+		</dict>
+	</array>
+	<key>images</key>
+	<array/>
+	<key>symbols</key>
+	<array/>
+</dict>
+</plist>

@@ -1,0 +1,96 @@
+{
+  "source": "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Views/OnboardingView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Grant Permission & Continue",
+        "location": {
+          "startingColumn": 57,
+          "startingLine": 80
+        }
+      },
+      {
+        "comment": "",
+        "key": "Continue",
+        "location": {
+          "startingColumn": 89,
+          "startingLine": 80
+        }
+      },
+      {
+        "comment": "",
+        "key": "Welcome to Flowers",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 187
+        }
+      },
+      {
+        "comment": "",
+        "key": "A daily journey of discovering beautiful AI-generated flowers",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 192
+        }
+      },
+      {
+        "comment": "",
+        "key": "How It Works",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 210
+        }
+      },
+      {
+        "comment": "",
+        "key": "Location-Inspired Flowers",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 317
+        }
+      },
+      {
+        "comment": "",
+        "key": "Allow location access to discover flowers inspired by your surroundings, weather, and local seasons",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 322
+        }
+      },
+      {
+        "comment": "",
+        "key": "Pick Your First Flower",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 346
+        }
+      },
+      {
+        "comment": "",
+        "key": "Choose the flower that speaks to you",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 350
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cultivating your starter garden...",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 363
+        }
+      },
+      {
+        "comment": "",
+        "key": "Begin Your Journey",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 427
+        }
+      }
+    ]
+  },
+  "version": 1
+}

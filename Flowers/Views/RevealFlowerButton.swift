@@ -5,7 +5,7 @@ struct RevealFlowerButton: View {
     @State private var progress: CGFloat = 0
     @State private var isPressed = false
     @State private var showConfetti = false
-    @State private var confettiPieces: [ConfettiPiece] = []
+    @State private var confettiPieces: [ButtonConfettiPiece] = []
     @State private var timer: Timer?
     @State private var hapticTimer: Timer?
     @State private var hapticIntensity: CGFloat = 0
@@ -60,8 +60,8 @@ struct RevealFlowerButton: View {
             
             // Confetti overlay
             if showConfetti {
-                ForEach(confettiPieces) { piece in
-                    ConfettiView(piece: piece)
+                                        ForEach(confettiPieces) { piece in
+                            ButtonConfettiView(piece: piece)
                 }
             }
         }
@@ -196,7 +196,7 @@ struct RevealFlowerButton: View {
                 }
             }()
             
-            return ConfettiPiece(
+            return ButtonConfettiPiece(
                 id: UUID(),
                 color: color,
                 x: 0, // Start from center
@@ -210,7 +210,7 @@ struct RevealFlowerButton: View {
     }
 }
 
-struct ConfettiPiece: Identifiable {
+struct ButtonConfettiPiece: Identifiable {
     let id: UUID
     let color: Color
     var x: CGFloat
@@ -221,8 +221,8 @@ struct ConfettiPiece: Identifiable {
     let angle: Double
 }
 
-struct ConfettiView: View {
-    let piece: ConfettiPiece
+struct ButtonConfettiView: View {
+    let piece: ButtonConfettiPiece
     @State private var position = CGPoint.zero
     @State private var velocity = CGPoint.zero
     @State private var opacity: Double = 1

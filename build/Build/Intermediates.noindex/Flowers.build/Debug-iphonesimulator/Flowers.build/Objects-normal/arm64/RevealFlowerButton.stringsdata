@@ -1,0 +1,24 @@
+{
+  "source": "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Views/RevealFlowerButton.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Hold to Reveal...",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 51
+        }
+      },
+      {
+        "comment": "",
+        "key": "Reveal Flower",
+        "location": {
+          "startingColumn": 64,
+          "startingLine": 51
+        }
+      }
+    ]
+  },
+  "version": 1
+}

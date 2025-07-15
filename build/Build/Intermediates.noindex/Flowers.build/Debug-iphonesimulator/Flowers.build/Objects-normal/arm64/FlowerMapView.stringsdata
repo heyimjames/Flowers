@@ -1,0 +1,48 @@
+{
+  "source": "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Views/FlowerMapView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Discovery Location",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 48
+        }
+      },
+      {
+        "comment": "",
+        "key": "Tap to expand",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 98
+        }
+      },
+      {
+        "comment": "",
+        "key": "Close",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 255
+        }
+      },
+      {
+        "comment": "",
+        "key": "Discovery Locations",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 263
+        }
+      },
+      {
+        "comment": "",
+        "key": "at",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 319
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -90,9 +90,9 @@ class FlowerStore: ObservableObject {
                     generatedDate: Date(timeIntervalSince1970: 1669334400), // Nov 25, 2022
                     isFavorite: true, // Auto-favorite this special flower
                     meaning: "A symbol of kindness, beauty, and joy. This flower represents the light that special people bring into our lives.",
-                    properties: "This special flower was picked and named by James, the creator of this app, as a gift to every user in celebration of his fiancée Jenny. Her kindness, beauty, and humor light up the lives of everyone she meets. 💝",
+                    properties: "This special flower is a personal gift to you from James, the creator of this app, named in celebration of his fiancée Jenny. Her kindness, beauty, and humor light up the lives of everyone she meets. Like this flower, she brings joy wherever she goes. 💝",
                     origins: "First discovered in Canary Wharf, London, where love bloomed alongside the Thames.",
-                    detailedDescription: "Jennifer's Blessing is more than just a flower – it's a testament to love and the joy that special people bring into our world. Like Jenny herself, this flower has the remarkable ability to brighten any space it inhabits, bringing warmth and happiness to all who encounter it.",
+                    detailedDescription: "Jennifer's Blessing is more than just a flower – it's a gift from the app's creator to you. James named this flower after his fiancée Jenny, whose remarkable ability to brighten any space she inhabits mirrors this flower's beauty. It stands as a testament to love and the joy that special people bring into our world. Consider this flower a personal welcome gift as you begin your journey.",
                     continent: nil,
                     discoveryDate: Date(timeIntervalSince1970: 1669334400),
                     contextualGeneration: false,

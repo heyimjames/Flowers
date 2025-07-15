@@ -11,11 +11,13 @@ import UserNotifications
 @main
 struct FlowersApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    @StateObject private var flowerStore = FlowerStore()
     let contextualGenerator = ContextualFlowerGenerator.shared
     
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(flowerStore)
                 .onAppear {
                     // Initialize contextual generator
                     _ = contextualGenerator
@@ -25,6 +27,12 @@ struct FlowersApp: App {
                         if granted {
                             print("Notification permission granted")
                         }
+                    }
+                }
+                .fullScreenCover(isPresented: $flowerStore.hasUnrevealedFlower) {
+                    if let pendingFlower = flowerStore.pendingFlower {
+                        FlowerRevealView(flower: pendingFlower)
+                            .environmentObject(flowerStore)
                     }
                 }
         }

@@ -1,0 +1,280 @@
+{
+  "source": "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Views/SettingsSheet.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "API Keys Required",
+        "location": {
+          "startingColumn": 16,
+          "startingLine": 190
+        }
+      },
+      {
+        "comment": "",
+        "key": "Settings",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 17
+        }
+      },
+      {
+        "comment": "",
+        "key": "Done",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 23
+        }
+      },
+      {
+        "comment": "",
+        "key": "API Configuration",
+        "location": {
+          "startingColumn": 59,
+          "startingLine": 37
+        }
+      },
+      {
+        "comment": "",
+        "key": "FAL API Key",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 43
+        }
+      },
+      {
+        "comment": "",
+        "key": "Enter FAL API key",
+        "location": {
+          "startingColumn": 45,
+          "startingLine": 47
+        }
+      },
+      {
+        "comment": "",
+        "key": "OpenAI API Key",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 56
+        }
+      },
+      {
+        "comment": "",
+        "key": "Enter OpenAI API key",
+        "location": {
+          "startingColumn": 45,
+          "startingLine": 60
+        }
+      },
+      {
+        "comment": "",
+        "key": "How to get API keys",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 70
+        }
+      },
+      {
+        "comment": "",
+        "key": "Get notified when your daily flower blooms",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 100
+        }
+      },
+      {
+        "comment": "",
+        "key": "Notifications",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 85
+        }
+      },
+      {
+        "comment": "",
+        "key": "Enable Daily Flower Notifications",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 91
+        }
+      },
+      {
+        "comment": "",
+        "key": "Debug Options",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 110
+        }
+      },
+      {
+        "comment": "",
+        "key": "Anytime Generations",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 117
+        }
+      },
+      {
+        "comment": "",
+        "key": "Show 'Find Flower' button always",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 120
+        }
+      },
+      {
+        "comment": "",
+        "key": "Test Notification",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 131
+        }
+      },
+      {
+        "comment": "",
+        "key": "Schedule in %lld seconds",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 136
+        }
+      },
+      {
+        "comment": "",
+        "key": "",
+        "location": {
+          "startingColumn": 45,
+          "startingLine": 142
+        }
+      },
+      {
+        "comment": "",
+        "key": "Schedule Test Notification",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 147
+        }
+      },
+      {
+        "comment": "",
+        "key": "About",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 158
+        }
+      },
+      {
+        "comment": "",
+        "key": "Version",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 163
+        }
+      },
+      {
+        "comment": "",
+        "key": "1.0.0",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 166
+        }
+      },
+      {
+        "comment": "",
+        "key": "Flowers Discovered",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 172
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 175
+        }
+      },
+      {
+        "comment": "",
+        "key": "OK",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 191
+        }
+      },
+      {
+        "comment": "",
+        "key": "To use AI features, you'll need API keys from:\n\n• FAL.ai for flower images\n• OpenAI for flower names and descriptions\n\nVisit their websites to sign up and get your API keys.",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 193
+        }
+      },
+      {
+        "comment": "",
+        "key": "iCloud Sync",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 213
+        }
+      },
+      {
+        "comment": "",
+        "key": "Your flowers are automatically backed up to iCloud",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 264
+        }
+      },
+      {
+        "comment": "",
+        "key": "Sign in to iCloud in Settings to back up your flowers",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 269
+        }
+      },
+      {
+        "comment": "",
+        "key": "Not synced yet",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 232
+        }
+      },
+      {
+        "comment": "",
+        "key": "Last synced %@ ago",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 228
+        }
+      },
+      {
+        "comment": "",
+        "key": "iCloud Connected",
+        "location": {
+          "startingColumn": 55,
+          "startingLine": 223
+        }
+      },
+      {
+        "comment": "",
+        "key": "iCloud Not Available",
+        "location": {
+          "startingColumn": 76,
+          "startingLine": 223
+        }
+      },
+      {
+        "comment": "",
+        "key": "Sync Now",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 258
+        }
+      }
+    ]
+  },
+  "version": 1
+}

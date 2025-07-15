@@ -1,0 +1,198 @@
+{
+  "" : {
+    "diagnostics" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/Flowers-master.dia",
+    "emit-module-dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/Flowers-master-emit-module.d",
+    "emit-module-diagnostics" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/Flowers-master-emit-module.dia",
+    "swift-dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/Flowers-master.swiftdeps"
+  },
+  "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/ContentView.swift" : {
+    "const-values" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ContentView.swiftconstvalues",
+    "dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ContentView.d",
+    "diagnostics" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ContentView.dia",
+    "index-unit-output-path" : "/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ContentView.o",
+    "llvm-bc" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ContentView.bc",
+    "object" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ContentView.o",
+    "swift-dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ContentView.swiftdeps",
+    "swiftmodule" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ContentView~partial.swiftmodule"
+  },
+  "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/FlowersApp.swift" : {
+    "const-values" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FlowersApp.swiftconstvalues",
+    "dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FlowersApp.d",
+    "diagnostics" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FlowersApp.dia",
+    "index-unit-output-path" : "/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FlowersApp.o",
+    "llvm-bc" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FlowersApp.bc",
+    "object" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FlowersApp.o",
+    "swift-dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FlowersApp.swiftdeps",
+    "swiftmodule" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FlowersApp~partial.swiftmodule"
+  },
+  "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Models/AIFlower.swift" : {
+    "const-values" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/AIFlower.swiftconstvalues",
+    "dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/AIFlower.d",
+    "diagnostics" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/AIFlower.dia",
+    "index-unit-output-path" : "/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/AIFlower.o",
+    "llvm-bc" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/AIFlower.bc",
+    "object" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/AIFlower.o",
+    "swift-dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/AIFlower.swiftdeps",
+    "swiftmodule" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/AIFlower~partial.swiftmodule"
+  },
+  "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Models/FlowerStore.swift" : {
+    "const-values" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FlowerStore.swiftconstvalues",
+    "dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FlowerStore.d",
+    "diagnostics" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FlowerStore.dia",
+    "index-unit-output-path" : "/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FlowerStore.o",
+    "llvm-bc" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FlowerStore.bc",
+    "object" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FlowerStore.o",
+    "swift-dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FlowerStore.swiftdeps",
+    "swiftmodule" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FlowerStore~partial.swiftmodule"
+  },
+  "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Services/APIConfiguration.swift" : {
+    "const-values" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/APIConfiguration.swiftconstvalues",
+    "dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/APIConfiguration.d",
+    "diagnostics" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/APIConfiguration.dia",
+    "index-unit-output-path" : "/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/APIConfiguration.o",
+    "llvm-bc" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/APIConfiguration.bc",
+    "object" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/APIConfiguration.o",
+    "swift-dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/APIConfiguration.swiftdeps",
+    "swiftmodule" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/APIConfiguration~partial.swiftmodule"
+  },
+  "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Services/ContextualFlowerGenerator.swift" : {
+    "const-values" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ContextualFlowerGenerator.swiftconstvalues",
+    "dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ContextualFlowerGenerator.d",
+    "diagnostics" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ContextualFlowerGenerator.dia",
+    "index-unit-output-path" : "/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ContextualFlowerGenerator.o",
+    "llvm-bc" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ContextualFlowerGenerator.bc",
+    "object" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ContextualFlowerGenerator.o",
+    "swift-dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ContextualFlowerGenerator.swiftdeps",
+    "swiftmodule" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ContextualFlowerGenerator~partial.swiftmodule"
+  },
+  "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Services/FALService.swift" : {
+    "const-values" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FALService.swiftconstvalues",
+    "dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FALService.d",
+    "diagnostics" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FALService.dia",
+    "index-unit-output-path" : "/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FALService.o",
+    "llvm-bc" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FALService.bc",
+    "object" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FALService.o",
+    "swift-dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FALService.swiftdeps",
+    "swiftmodule" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FALService~partial.swiftmodule"
+  },
+  "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Services/OpenAIService.swift" : {
+    "const-values" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/OpenAIService.swiftconstvalues",
+    "dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/OpenAIService.d",
+    "diagnostics" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/OpenAIService.dia",
+    "index-unit-output-path" : "/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/OpenAIService.o",
+    "llvm-bc" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/OpenAIService.bc",
+    "object" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/OpenAIService.o",
+    "swift-dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/OpenAIService.swiftdeps",
+    "swiftmodule" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/OpenAIService~partial.swiftmodule"
+  },
+  "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Services/iCloudSyncManager.swift" : {
+    "const-values" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/iCloudSyncManager.swiftconstvalues",
+    "dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/iCloudSyncManager.d",
+    "diagnostics" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/iCloudSyncManager.dia",
+    "index-unit-output-path" : "/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/iCloudSyncManager.o",
+    "llvm-bc" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/iCloudSyncManager.bc",
+    "object" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/iCloudSyncManager.o",
+    "swift-dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/iCloudSyncManager.swiftdeps",
+    "swiftmodule" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/iCloudSyncManager~partial.swiftmodule"
+  },
+  "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Views/FavoritesSheet.swift" : {
+    "const-values" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FavoritesSheet.swiftconstvalues",
+    "dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FavoritesSheet.d",
+    "diagnostics" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FavoritesSheet.dia",
+    "index-unit-output-path" : "/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FavoritesSheet.o",
+    "llvm-bc" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FavoritesSheet.bc",
+    "object" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FavoritesSheet.o",
+    "swift-dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FavoritesSheet.swiftdeps",
+    "swiftmodule" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FavoritesSheet~partial.swiftmodule"
+  },
+  "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Views/FlowerMapView.swift" : {
+    "const-values" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FlowerMapView.swiftconstvalues",
+    "dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FlowerMapView.d",
+    "diagnostics" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FlowerMapView.dia",
+    "index-unit-output-path" : "/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FlowerMapView.o",
+    "llvm-bc" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FlowerMapView.bc",
+    "object" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FlowerMapView.o",
+    "swift-dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FlowerMapView.swiftdeps",
+    "swiftmodule" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FlowerMapView~partial.swiftmodule"
+  },
+  "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Views/FlowerRevealView.swift" : {
+    "const-values" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FlowerRevealView.swiftconstvalues",
+    "dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FlowerRevealView.d",
+    "diagnostics" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FlowerRevealView.dia",
+    "index-unit-output-path" : "/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FlowerRevealView.o",
+    "llvm-bc" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FlowerRevealView.bc",
+    "object" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FlowerRevealView.o",
+    "swift-dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FlowerRevealView.swiftdeps",
+    "swiftmodule" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/FlowerRevealView~partial.swiftmodule"
+  },
+  "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Views/GeneratorSheet.swift" : {
+    "const-values" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/GeneratorSheet.swiftconstvalues",
+    "dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/GeneratorSheet.d",
+    "diagnostics" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/GeneratorSheet.dia",
+    "index-unit-output-path" : "/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/GeneratorSheet.o",
+    "llvm-bc" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/GeneratorSheet.bc",
+    "object" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/GeneratorSheet.o",
+    "swift-dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/GeneratorSheet.swiftdeps",
+    "swiftmodule" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/GeneratorSheet~partial.swiftmodule"
+  },
+  "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Views/OnboardingView.swift" : {
+    "const-values" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/OnboardingView.swiftconstvalues",
+    "dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/OnboardingView.d",
+    "diagnostics" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/OnboardingView.dia",
+    "index-unit-output-path" : "/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/OnboardingView.o",
+    "llvm-bc" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/OnboardingView.bc",
+    "object" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/OnboardingView.o",
+    "swift-dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/OnboardingView.swiftdeps",
+    "swiftmodule" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/OnboardingView~partial.swiftmodule"
+  },
+  "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Views/RevealFlowerButton.swift" : {
+    "const-values" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/RevealFlowerButton.swiftconstvalues",
+    "dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/RevealFlowerButton.d",
+    "diagnostics" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/RevealFlowerButton.dia",
+    "index-unit-output-path" : "/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/RevealFlowerButton.o",
+    "llvm-bc" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/RevealFlowerButton.bc",
+    "object" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/RevealFlowerButton.o",
+    "swift-dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/RevealFlowerButton.swiftdeps",
+    "swiftmodule" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/RevealFlowerButton~partial.swiftmodule"
+  },
+  "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Views/SettingsSheet.swift" : {
+    "const-values" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/SettingsSheet.swiftconstvalues",
+    "dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/SettingsSheet.d",
+    "diagnostics" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/SettingsSheet.dia",
+    "index-unit-output-path" : "/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/SettingsSheet.o",
+    "llvm-bc" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/SettingsSheet.bc",
+    "object" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/SettingsSheet.o",
+    "swift-dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/SettingsSheet.swiftdeps",
+    "swiftmodule" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/SettingsSheet~partial.swiftmodule"
+  },
+  "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Views/ShareSheet.swift" : {
+    "const-values" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ShareSheet.swiftconstvalues",
+    "dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ShareSheet.d",
+    "diagnostics" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ShareSheet.dia",
+    "index-unit-output-path" : "/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ShareSheet.o",
+    "llvm-bc" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ShareSheet.bc",
+    "object" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ShareSheet.o",
+    "swift-dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ShareSheet.swiftdeps",
+    "swiftmodule" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ShareSheet~partial.swiftmodule"
+  },
+  "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Views/ViewExtensions.swift" : {
+    "const-values" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ViewExtensions.swiftconstvalues",
+    "dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ViewExtensions.d",
+    "diagnostics" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ViewExtensions.dia",
+    "index-unit-output-path" : "/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ViewExtensions.o",
+    "llvm-bc" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ViewExtensions.bc",
+    "object" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ViewExtensions.o",
+    "swift-dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ViewExtensions.swiftdeps",
+    "swiftmodule" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/ViewExtensions~partial.swiftmodule"
+  },
+  "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "const-values" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftconstvalues",
+    "dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/GeneratedAssetSymbols.d",
+    "diagnostics" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/GeneratedAssetSymbols.dia",
+    "index-unit-output-path" : "/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "llvm-bc" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/GeneratedAssetSymbols.bc",
+    "object" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "swift-dependencies" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftdeps",
+    "swiftmodule" : "/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/build/Build/Intermediates.noindex/Flowers.build/Debug-iphonesimulator/Flowers.build/Objects-normal/arm64/GeneratedAssetSymbols~partial.swiftmodule"
+  }
+}

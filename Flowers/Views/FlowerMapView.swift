@@ -46,7 +46,7 @@ struct FlowerMapView: View {
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(.flowerPrimary)
                     Text("Discovery Location")
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.system(size: 16, weight: .light, design: .serif))
                         .foregroundColor(.flowerTextPrimary)
                     Spacer()
                 }
@@ -55,13 +55,13 @@ struct FlowerMapView: View {
                     showingFullMap = true
                 }) {
                     ZStack(alignment: .bottomLeading) {
-                                        Map(coordinateRegion: .constant(region),
-                    interactionModes: [],
-                    annotationItems: [MapFlower(flower: flower)]) { item in
-                    MapAnnotation(coordinate: item.coordinate) {
-                        FlowerMapPin()
-                    }
-                }
+                        Map(coordinateRegion: .constant(region),
+                            interactionModes: [],
+                            annotationItems: [MapFlower(flower: flower)]) { item in
+                            MapAnnotation(coordinate: item.coordinate) {
+                                FlowerMapPin()
+                            }
+                        }
                         .frame(height: 180)
                         .cornerRadius(16)
                         .overlay(
@@ -113,7 +113,7 @@ struct FlowerMapView: View {
                 .buttonStyle(PlainButtonStyle())
             }
             .sheet(isPresented: $showingFullMap) {
-                FullScreenMapView(flower: flower)
+                FullScreenMapView(selectedFlower: flower)
                     .presentationDetents([.large])
                     .presentationCornerRadius(32)
                     .presentationDragIndicator(.hidden)
@@ -134,7 +134,7 @@ struct FlowerMapPin: View {
                 .frame(width: animatePin ? 40 : 20, height: animatePin ? 40 : 20)
                 .opacity(animatePin ? 0 : 1)
             
-            // Pin
+            // Pin with green color
             Image(systemName: "flower.fill")
                 .font(.system(size: 24))
                 .foregroundColor(.flowerPrimary)
@@ -142,8 +142,9 @@ struct FlowerMapPin: View {
                     Circle()
                         .fill(Color.white)
                         .frame(width: 32, height: 32)
+                        .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
                 )
-                .shadow(radius: 4)
+                .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
         }
         .onAppear {
             withAnimation(.easeOut(duration: 2).repeatForever(autoreverses: false)) {
@@ -154,15 +155,18 @@ struct FlowerMapPin: View {
 }
 
 struct FullScreenMapView: View {
-    let flower: AIFlower
+    let selectedFlower: AIFlower
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var store: FlowerStore
     @State private var region: MKCoordinateRegion
+    @State private var flowersWithLocation: [AIFlower] = []
+    @State private var selectedIndex: Int = 0
     
-    init(flower: AIFlower) {
-        self.flower = flower
+    init(selectedFlower: AIFlower) {
+        self.selectedFlower = selectedFlower
         
-        if let lat = flower.discoveryLatitude,
-           let lon = flower.discoveryLongitude {
+        if let lat = selectedFlower.discoveryLatitude,
+           let lon = selectedFlower.discoveryLongitude {
             self._region = State(initialValue: MKCoordinateRegion(
                 center: CLLocationCoordinate2D(latitude: lat, longitude: lon),
                 span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
@@ -181,7 +185,7 @@ struct FullScreenMapView: View {
                 // Full screen map
                 Map(coordinateRegion: $region,
                     showsUserLocation: false,
-                    annotationItems: [MapFlower(flower: flower)]) { item in
+                    annotationItems: flowersWithLocation.map { MapFlower(flower: $0) }) { item in
                     MapAnnotation(coordinate: item.coordinate) {
                         FlowerMapPin()
                     }
@@ -201,76 +205,48 @@ struct FullScreenMapView: View {
                     Spacer()
                 }
                 
-                // Flower info card
+                // Flower cards carousel
                 VStack {
                     Spacer()
                     
-                    VStack(spacing: 16) {
-                        // Flower name and image
-                        HStack(spacing: 16) {
-                            if let imageData = flower.imageData,
-                               let uiImage = UIImage(data: imageData) {
-                                Image(uiImage: uiImage)
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .frame(width: 80, height: 80)
-                                    .cornerRadius(16)
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(flower.name)
-                                    .font(.system(size: 20, weight: .semibold))
-                                    .foregroundColor(.flowerTextPrimary)
-                                
-                                if let locationName = flower.discoveryLocationName {
-                                    HStack(spacing: 4) {
-                                        Image(systemName: "location.fill")
-                                            .font(.system(size: 12))
-                                        Text(locationName)
-                                            .font(.system(size: 14))
-                                    }
-                                    .foregroundColor(.flowerTextSecondary)
-                                }
-                                
-                                HStack(spacing: 4) {
-                                    Image(systemName: "calendar")
-                                        .font(.system(size: 12))
-                                    Text(flower.discoveryDate ?? flower.generatedDate, style: .date)
-                                        .font(.system(size: 14))
-                                    Text("at")
-                                        .font(.system(size: 14))
-                                    Text(flower.discoveryDate ?? flower.generatedDate, style: .time)
-                                        .font(.system(size: 14))
-                                }
-                                .foregroundColor(.flowerTextSecondary)
-                            }
-                            
-                            Spacer()
-                        }
-                        .padding(20)
-                        .background(Color.white)
-                        .cornerRadius(20)
-                        .shadow(radius: 10)
-                        
-                        // Coordinates
-                        if let lat = flower.discoveryLatitude,
-                           let lon = flower.discoveryLongitude {
-                            HStack {
-                                Image(systemName: "location.circle")
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.flowerTextTertiary)
-                                Text(String(format: "%.4f°, %.4f°", lat, lon))
-                                    .font(.system(size: 12, design: .monospaced))
-                                    .foregroundColor(.flowerTextTertiary)
-                            }
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
-                            .background(Color.flowerCardBackground)
-                            .cornerRadius(20)
+                    // TabView for carousel
+                    TabView(selection: $selectedIndex) {
+                        ForEach(Array(flowersWithLocation.enumerated()), id: \.offset) { index, flower in
+                            FlowerMapCard(flower: flower)
+                                .tag(index)
+                                .padding(.horizontal, 20)
                         }
                     }
-                    .padding(20)
-                    .padding(.bottom, 20)
+                    .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+                    .frame(height: 200)
+                    .onChange(of: selectedIndex) { newIndex in
+                        // Animate to the selected flower's location
+                        if newIndex < flowersWithLocation.count {
+                            let flower = flowersWithLocation[newIndex]
+                            if let lat = flower.discoveryLatitude,
+                               let lon = flower.discoveryLongitude {
+                                withAnimation(.easeInOut(duration: 0.5)) {
+                                    region = MKCoordinateRegion(
+                                        center: CLLocationCoordinate2D(latitude: lat, longitude: lon),
+                                        span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Page indicator
+                    if flowersWithLocation.count > 1 {
+                        HStack(spacing: 6) {
+                            ForEach(0..<flowersWithLocation.count, id: \.self) { index in
+                                Circle()
+                                    .fill(index == selectedIndex ? Color.flowerPrimary : Color.flowerPrimary.opacity(0.3))
+                                    .frame(width: 8, height: 8)
+                                    .animation(.easeInOut, value: selectedIndex)
+                            }
+                        }
+                        .padding(.bottom, 20)
+                    }
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
@@ -284,11 +260,94 @@ struct FullScreenMapView: View {
                 }
                 
                 ToolbarItem(placement: .principal) {
-                    Text("Discovery Location")
+                    Text("Discovery Locations")
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundColor(.white)
                 }
             }
         }
+        .onAppear {
+            // Get all flowers with location data
+            flowersWithLocation = store.discoveredFlowers.filter { flower in
+                flower.discoveryLatitude != nil && flower.discoveryLongitude != nil
+            }.sorted(by: { $0.generatedDate > $1.generatedDate })
+            
+            // Find the index of the selected flower
+            if let index = flowersWithLocation.firstIndex(where: { $0.id == selectedFlower.id }) {
+                selectedIndex = index
+            }
+        }
+    }
+}
+
+struct FlowerMapCard: View {
+    let flower: AIFlower
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            // Flower name and image
+            HStack(spacing: 16) {
+                if let imageData = flower.imageData,
+                   let uiImage = UIImage(data: imageData) {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 80, height: 80)
+                        .cornerRadius(16)
+                }
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(flower.name)
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundColor(.flowerTextPrimary)
+                    
+                    if let locationName = flower.discoveryLocationName {
+                        HStack(spacing: 4) {
+                            Image(systemName: "location.fill")
+                                .font(.system(size: 12))
+                            Text(locationName)
+                                .font(.system(size: 14))
+                        }
+                        .foregroundColor(.flowerTextSecondary)
+                    }
+                    
+                    HStack(spacing: 4) {
+                        Image(systemName: "calendar")
+                            .font(.system(size: 12))
+                        Text(flower.discoveryDate ?? flower.generatedDate, style: .date)
+                            .font(.system(size: 14))
+                        Text("at")
+                            .font(.system(size: 14))
+                        Text(flower.discoveryDate ?? flower.generatedDate, style: .time)
+                            .font(.system(size: 14))
+                    }
+                    .foregroundColor(.flowerTextSecondary)
+                }
+                
+                Spacer()
+            }
+            .padding(20)
+            .background(Color.white)
+            .cornerRadius(20)
+            .shadow(radius: 10)
+            
+            // Coordinates
+            if let lat = flower.discoveryLatitude,
+               let lon = flower.discoveryLongitude {
+                HStack {
+                    Image(systemName: "location.circle")
+                        .font(.system(size: 14))
+                        .foregroundColor(.flowerTextTertiary)
+                    Text(String(format: "%.4f°, %.4f°", lat, lon))
+                        .font(.system(size: 12, design: .monospaced))
+                        .foregroundColor(.flowerTextTertiary)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(Color.flowerCardBackground)
+                .cornerRadius(20)
+            }
+        }
+        .padding(.bottom, 20)
     }
 } 

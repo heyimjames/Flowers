@@ -34,9 +34,9 @@ struct FavoritesSheet: View {
                     // Header
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("My Collection")
-                                .font(.system(size: 28, weight: .bold))
-                                .foregroundColor(.flowerTextPrimary)
+                                                Text("My Collection")
+                        .font(.system(size: 28, weight: .light, design: .serif))
+                        .foregroundColor(.flowerTextPrimary)
                             
                             Text("\(flowerStore.totalDiscoveredCount) flowers discovered")
                                 .font(.system(size: 14))
@@ -341,7 +341,7 @@ struct FlowerDetailSheet: View {
                                 // Flower name and basic info
                                 VStack(spacing: 8) {
                                     Text(flowerItem.name)
-                                        .font(.system(size: 32, weight: .medium, design: .serif))
+                                        .font(.system(size: 32, weight: .regular, design: .serif))
                                         .foregroundColor(.flowerTextPrimary)
                                     
                                     if flowerItem.isBouquet, let holidayName = flowerItem.holidayName {
@@ -420,11 +420,6 @@ struct FlowerDetailSheet: View {
                                     }
                                     .padding(.top, 32)
                                     .padding(.horizontal, 24)
-                                    
-                                    // Discovery location map
-                                    FlowerMapView(flower: flowerItem)
-                                        .padding(.top, 20)
-                                        .padding(.horizontal, 24)
                                 } else if index == currentIndex && isLoadingDetails {
                                     // Loading state - only show for current flower
                                     VStack(spacing: 16) {
@@ -701,7 +696,7 @@ struct DetailSection: View {
                     .foregroundColor(.flowerPrimary)
                 
                 Text(title)
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.system(size: 18, weight: .light, design: .serif))
                     .foregroundColor(.flowerTextPrimary)
             }
             

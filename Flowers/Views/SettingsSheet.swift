@@ -15,7 +15,7 @@ struct SettingsSheet: View {
                 // Header
                 HStack {
                     Text("Settings")
-                        .font(.system(size: 28, weight: .bold))
+                        .font(.system(size: 28, weight: .light, design: .serif))
                         .foregroundColor(.flowerTextPrimary)
                     
                     Spacer()
@@ -34,9 +34,9 @@ struct SettingsSheet: View {
                     VStack(spacing: 24) {
                         // API Configuration Section
                         VStack(alignment: .leading, spacing: 16) {
-                            Label("API Configuration", systemImage: "key.fill")
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundColor(.flowerTextPrimary)
+                                                    Label("API Configuration", systemImage: "key.fill")
+                            .font(.system(size: 18, weight: .light, design: .serif))
+                            .foregroundColor(.flowerTextPrimary)
                             
                             // FAL API Key
                             VStack(alignment: .leading, spacing: 8) {
@@ -211,7 +211,7 @@ struct SettingsSheet: View {
     private var iCloudSyncSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("iCloud Sync")
-                .font(.system(size: 16, weight: .semibold))
+                .font(.system(size: 16, weight: .light, design: .serif))
                 .foregroundColor(.flowerTextPrimary)
             
             HStack {
