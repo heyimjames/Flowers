@@ -2,7 +2,7 @@ import SwiftUI
 
 struct SettingsSheet: View {
     @ObservedObject var apiConfig = APIConfiguration.shared
-    @ObservedObject var flowerStore = FlowerStore()
+    @EnvironmentObject var flowerStore: FlowerStore
     @StateObject private var iCloudSync = iCloudSyncManager.shared
     @Environment(\.dismiss) private var dismiss
     @State private var showingAPIKeyInfo = false

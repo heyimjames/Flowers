@@ -64,6 +64,11 @@ class FlowerStore: ObservableObject {
         
         checkForPendingFlower()
         loadNextFlowerTime()
+        
+        // Check if we should have a flower ready based on today's schedule
+        checkForScheduledFlowerToday()
+        
+        // Schedule next flower if needed
         scheduleNextFlowerIfNeeded()
         
         // Check for iCloud data on first launch
@@ -123,30 +128,46 @@ class FlowerStore: ObservableObject {
     
     // MARK: - Daily Flower Scheduling
     func scheduleNextFlowerIfNeeded() {
+        // Check if we already have a pending flower
+        if hasUnrevealedFlower {
+            return
+        }
+        
         // Check if we already scheduled for today
         if let lastScheduled = userDefaults.object(forKey: lastScheduledDateKey) as? Date,
            Calendar.current.isDateInToday(lastScheduled) {
             return
         }
         
-        // Schedule a flower for today at a random time
-        scheduleFlowerForToday()
+        // Get today's scheduled time
+        guard let todayScheduledTime = FlowerNotificationSchedule.getScheduledTime(for: Date()) else { 
+            print("No scheduled time found for today")
+            return 
+        }
+        
+        // If the time hasn't passed yet, schedule it
+        if todayScheduledTime > Date() {
+            scheduleFlowerForToday()
+        } else {
+            // Time has passed, schedule for next available time
+            if let nextTime = FlowerNotificationSchedule.getNextScheduledTime() {
+                Task {
+                    await generateDailyFlowerAndScheduleNotification(at: nextTime)
+                    await MainActor.run {
+                        self.nextFlowerTime = nextTime
+                        self.userDefaults.set(nextTime, forKey: self.nextFlowerTimeKey)
+                    }
+                }
+            }
+        }
     }
     
     func scheduleFlowerForToday() {
-        let calendar = Calendar.current
-        var components = calendar.dateComponents([.year, .month, .day], from: Date())
-        
-        // Random time between 8:00 AM and 10:30 PM (22:30)
-        let startHour = 8
-        let endMinute = 22 * 60 + 30 // 10:30 PM in minutes
-        let startMinute = startHour * 60
-        let randomMinute = Int.random(in: startMinute...endMinute)
-        
-        components.hour = randomMinute / 60
-        components.minute = randomMinute % 60
-        
-        guard let scheduledDate = calendar.date(from: components) else { return }
+        // Get the pre-chosen time for today from our schedule
+        guard let scheduledDate = FlowerNotificationSchedule.getScheduledTime(for: Date()) else { 
+            print("No scheduled time found for today")
+            return 
+        }
         
         // If the time has already passed today, generate the flower now
         if scheduledDate < Date() {
@@ -170,18 +191,11 @@ class FlowerStore: ObservableObject {
         let calendar = Calendar.current
         guard let tomorrow = calendar.date(byAdding: .day, value: 1, to: Date()) else { return }
         
-        var components = calendar.dateComponents([.year, .month, .day], from: tomorrow)
-        
-        // Random time between 8:00 AM and 10:30 PM (22:30)
-        let startHour = 8
-        let endMinute = 22 * 60 + 30 // 10:30 PM in minutes
-        let startMinute = startHour * 60
-        let randomMinute = Int.random(in: startMinute...endMinute)
-        
-        components.hour = randomMinute / 60
-        components.minute = randomMinute % 60
-        
-        guard let scheduledDate = calendar.date(from: components) else { return }
+        // Get the pre-chosen time for tomorrow from our schedule
+        guard let scheduledDate = FlowerNotificationSchedule.getScheduledTime(for: tomorrow) else { 
+            print("No scheduled time found for tomorrow")
+            return 
+        }
         
         // Generate the flower first, then schedule notification with its name
         Task {
@@ -256,7 +270,8 @@ class FlowerStore: ObservableObject {
         content.sound = .default
         content.badge = 1
         
-        let components = Calendar.current.dateComponents([.hour, .minute], from: date)
+        // Convert the Lisbon time to user's local time
+        let components = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: date)
         let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
         
         let request = UNNotificationRequest(
@@ -268,6 +283,8 @@ class FlowerStore: ObservableObject {
         UNUserNotificationCenter.current().add(request) { error in
             if let error = error {
                 print("Error scheduling notification: \(error)")
+            } else {
+                print("Scheduled notification for \(date)")
             }
         }
     }
@@ -324,15 +341,8 @@ class FlowerStore: ObservableObject {
     
     // MARK: - Daily Flower Management
     func loadNextFlowerTime() {
-        if let storedTime = userDefaults.object(forKey: nextFlowerTimeKey) as? Date {
-            // Only keep it if it's in the future
-            if storedTime > Date() {
-                nextFlowerTime = storedTime
-            } else {
-                userDefaults.removeObject(forKey: nextFlowerTimeKey)
-                nextFlowerTime = nil
-            }
-        }
+        // Always use the pre-chosen schedule to determine next flower time
+        nextFlowerTime = FlowerNotificationSchedule.getNextScheduledTime()
     }
     
     func checkForPendingFlower() {
@@ -341,6 +351,32 @@ class FlowerStore: ObservableObject {
            let flower = try? JSONDecoder().decode(AIFlower.self, from: flowerData) {
             pendingFlower = flower
             hasUnrevealedFlower = true
+        }
+    }
+    
+    func checkForScheduledFlowerToday() {
+        // Only check if we don't already have a pending flower
+        guard !hasUnrevealedFlower else { return }
+        
+        // Get today's scheduled time
+        guard let todayScheduledTime = FlowerNotificationSchedule.getScheduledTime(for: Date()) else { return }
+        
+        // If the scheduled time has passed and we haven't generated today's flower yet
+        if todayScheduledTime < Date() {
+            // Check if we've already generated a flower today
+            if let lastScheduled = userDefaults.object(forKey: lastScheduledDateKey) as? Date,
+               Calendar.current.isDateInToday(lastScheduled) {
+                // We've already handled today
+                return
+            }
+            
+            // Generate the flower now since the time has passed
+            Task {
+                await generateDailyFlower()
+                await MainActor.run {
+                    self.userDefaults.set(Date(), forKey: self.lastScheduledDateKey)
+                }
+            }
         }
     }
     
@@ -376,10 +412,15 @@ class FlowerStore: ObservableObject {
         // Clear notification badge
         UNUserNotificationCenter.current().setBadgeCount(0)
         
-        // Clear the next flower time and schedule for tomorrow
-        nextFlowerTime = nil
-        userDefaults.removeObject(forKey: nextFlowerTimeKey)
-        scheduleFlowerForTomorrow()
+        // Get the next scheduled flower time
+        nextFlowerTime = FlowerNotificationSchedule.getNextScheduledTime()
+        
+        // Schedule the next flower if there is one
+        if let nextTime = nextFlowerTime {
+            Task {
+                await generateDailyFlowerAndScheduleNotification(at: nextTime)
+            }
+        }
     }
     
     func generateDailyFlower() {

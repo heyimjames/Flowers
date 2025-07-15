@@ -171,6 +171,7 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showingSettings) {
             SettingsSheet()
+                .environmentObject(flowerStore)
                 .presentationDetents([.large])
                 .presentationCornerRadius(32)
                 .presentationDragIndicator(.hidden)
@@ -428,9 +429,18 @@ struct ContentView: View {
                     Image(systemName: "clock")
                         .font(.system(size: 14))
                         .foregroundColor(.flowerTextSecondary)
-                    Text("Next flower arrives randomly today")
-                        .font(.system(size: 13))
-                        .foregroundColor(.flowerTextSecondary)
+                    if let nextTime = flowerStore.nextFlowerTime {
+                        Text("Next flower arrives in ")
+                            .font(.system(size: 13))
+                            .foregroundColor(.flowerTextSecondary)
+                        + Text(nextTime, style: .relative)
+                            .font(.system(size: 13))
+                            .foregroundColor(.flowerTextSecondary)
+                    } else {
+                        Text("Next flower arrives soon")
+                            .font(.system(size: 13))
+                            .foregroundColor(.flowerTextSecondary)
+                    }
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 56)

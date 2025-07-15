@@ -127,10 +127,8 @@ struct FlowerRevealView: View {
                     } else {
                         // Continue button
                         Button(action: {
-                            // Save the revealed flower
-                            flowerStore.currentFlower = flower
-                            flowerStore.hasUnrevealedFlower = false
-                            flowerStore.pendingFlower = nil
+                            // Use the proper reveal method to handle everything correctly
+                            flowerStore.revealPendingFlower()
                             dismiss()
                         }) {
                             HStack {

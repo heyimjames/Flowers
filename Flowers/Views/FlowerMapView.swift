@@ -1,6 +1,20 @@
 import SwiftUI
 import MapKit
 
+// Helper function to format coordinates
+private func formatCoordinate(_ coordinate: Double, isLatitude: Bool) -> String {
+    let direction: String
+    let absValue = abs(coordinate)
+    
+    if isLatitude {
+        direction = coordinate >= 0 ? "N" : "S"
+    } else {
+        direction = coordinate >= 0 ? "E" : "W"
+    }
+    
+    return String(format: "%.4f°%@", absValue, direction)
+}
+
 // Wrapper for map annotations
 struct MapFlower: Identifiable {
     let id = UUID()
@@ -118,6 +132,23 @@ struct FlowerMapView: View {
                     }
                 }
                 .buttonStyle(PlainButtonStyle())
+                
+                // Coordinates pill
+                if let lat = flower.discoveryLatitude,
+                   let lon = flower.discoveryLongitude {
+                    HStack(spacing: 6) {
+                        Image(systemName: "location.circle.fill")
+                            .font(.system(size: 12))
+                            .foregroundColor(.flowerPrimary)
+                        Text("\(formatCoordinate(lat, isLatitude: true)), \(formatCoordinate(lon, isLatitude: false))")
+                            .font(.system(size: 12, weight: .medium, design: .monospaced))
+                            .foregroundColor(.flowerTextSecondary)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(Color.flowerPrimary.opacity(0.1))
+                    .cornerRadius(20)
+                }
             }
             .sheet(isPresented: $showingFullMap) {
                 FullScreenMapView(selectedFlower: flower)
@@ -333,14 +364,23 @@ struct FlowerMapCard: View {
                         .foregroundColor(.flowerTextSecondary)
                         .lineLimit(2)
                     
-                    if let locationName = flower.discoveryLocationName {
-                        HStack(spacing: 4) {
-                            Image(systemName: "location.fill")
-                                .font(.system(size: 10))
-                            Text(locationName)
-                                .font(.system(size: 12))
+                    VStack(alignment: .leading, spacing: 2) {
+                        if let locationName = flower.discoveryLocationName {
+                            HStack(spacing: 4) {
+                                Image(systemName: "location.fill")
+                                    .font(.system(size: 10))
+                                Text(locationName)
+                                    .font(.system(size: 12))
+                            }
+                            .foregroundColor(.flowerTextTertiary)
                         }
-                        .foregroundColor(.flowerTextTertiary)
+                        
+                        if let lat = flower.discoveryLatitude,
+                           let lon = flower.discoveryLongitude {
+                            Text("\(formatCoordinate(lat, isLatitude: true)), \(formatCoordinate(lon, isLatitude: false))")
+                                .font(.system(size: 11, design: .monospaced))
+                                .foregroundColor(.flowerTextTertiary.opacity(0.8))
+                        }
                     }
                 }
                 
