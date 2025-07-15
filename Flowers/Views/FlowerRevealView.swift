@@ -11,6 +11,7 @@ struct FlowerRevealView: View {
     @State private var shakeOffset: CGFloat = 0
     @State private var isHolding = false
     @State private var holdTimer: Timer?
+    @State private var shakeTimer: Timer?
     @State private var confettiPieces: [ConfettiPiece] = []
     
     var body: some View {
@@ -68,7 +69,7 @@ struct FlowerRevealView: View {
                         if isRevealed {
                             VStack(spacing: 12) {
                                 Text(flower.name)
-                                    .font(.system(size: 28, weight: .semibold, design: .serif))
+                                    .font(.system(size: 28, weight: .light, design: .serif))
                                     .foregroundColor(.flowerTextPrimary)
                                     .multilineTextAlignment(.center)
                                 
@@ -100,15 +101,9 @@ struct FlowerRevealView: View {
                                     startPoint: .leading,
                                     endPoint: .trailing
                                 )
-                                .frame(width: geometry.size.width, height: 64)
-                                .mask(
-                                    HStack(spacing: 0) {
-                                        Rectangle()
-                                            .frame(width: geometry.size.width * holdProgress)
-                                        Spacer(minLength: 0)
-                                    }
-                                )
+                                .frame(width: geometry.size.width * holdProgress, height: 64)
                                 .mask(RoundedRectangle(cornerRadius: 20))
+                                .animation(.linear(duration: 0.1), value: holdProgress)
                             }
                             .frame(height: 64)
                             
@@ -141,7 +136,7 @@ struct FlowerRevealView: View {
                             dismiss()
                         }) {
                             HStack {
-                                Text("Continue to Garden")
+                                Text("Add to Collection")
                                 Image(systemName: "arrow.right")
                             }
                             .font(.system(size: 18, weight: .medium))
@@ -173,39 +168,34 @@ struct FlowerRevealView: View {
         isHolding = true
         holdProgress = 0
         
-        // Start progress timer with smoother animation
+        // Track start time for accurate progress
+        let startTime = Date()
+        
+        // Single timer for both progress and shake
         holdTimer = Timer.scheduledTimer(withTimeInterval: 0.016, repeats: true) { _ in
-            withAnimation(.linear(duration: 0.016)) {
-                holdProgress = min(holdProgress + 0.016 / 3.0, 1.0) // 3 seconds total
+            // Calculate progress based on elapsed time
+            let elapsed = Date().timeIntervalSince(startTime)
+            holdProgress = min(CGFloat(elapsed / 3.0), 1.0)
+            
+            // Update shake
+            if isHolding {
+                let intensity = holdProgress * 5
+                shakeOffset = CGFloat.random(in: -intensity...intensity)
             }
             
+            // Check if complete
             if holdProgress >= 1.0 {
                 revealFlower()
             }
         }
-        
-        // Start shake animation
-        Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { timer in
-            if !isHolding {
-                timer.invalidate()
-                withAnimation(.linear(duration: 0.05)) {
-                    shakeOffset = 0
-                }
-            } else {
-                let intensity = holdProgress * 5
-                withAnimation(.linear(duration: 0.05)) {
-                    shakeOffset = CGFloat.random(in: -intensity...intensity)
-                }
-            }
-        }
-        
-
     }
     
     private func stopHolding() {
         isHolding = false
         holdTimer?.invalidate()
         holdTimer = nil
+        shakeTimer?.invalidate()
+        shakeTimer = nil
         
         withAnimation(.spring()) {
             holdProgress = 0
