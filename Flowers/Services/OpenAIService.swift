@@ -78,9 +78,11 @@ class OpenAIService {
     }
     
     func generateFlowerImage(descriptor: String) async throws -> (UIImage, String) {
-        guard let apiKey = APIConfiguration.shared.currentAPIKey else {
+        guard !APIConfiguration.shared.openAIKey.isEmpty else {
             throw OpenAIError.invalidAPIKey
         }
+        
+        let apiKey = APIConfiguration.shared.openAIKey
         
         // Build the prompt using the consistent structure from PRD
         let prompt = "A single \(descriptor) flower, botanical illustration style, centered on pure white background, soft watercolor texture, delicate petals, elegant stem with leaves, dreamy and ethereal, pastel colors with subtle gradients, professional botanical art, highly detailed, 4K"
@@ -133,34 +135,35 @@ class OpenAIService {
     }
     
     func generateFlowerDetails(for flower: AIFlower) async throws -> FlowerDetails {
-        guard let apiKey = APIConfiguration.shared.currentAPIKey else {
+        guard !APIConfiguration.shared.openAIKey.isEmpty else {
             throw OpenAIError.invalidAPIKey
         }
+        
+        let apiKey = APIConfiguration.shared.openAIKey
         
         // Get current date context
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "MMMM d"
         let currentDate = dateFormatter.string(from: Date())
         
-        let zodiacSign = getCurrentZodiacSign()
         let season = getCurrentSeason()
         
         let systemPrompt = """
-        You are a mystical botanist who creates detailed information about magical flowers. 
+        You are a knowledgeable botanist and naturalist who creates detailed information about rare and beautiful flowers. 
         You should respond with a JSON object containing meaning, properties, origins, detailedDescription, and continent fields.
-        Make the information mystical, poetic, and enchanting. Include references to the current date (\(currentDate)), 
-        season (\(season)), and zodiac period (\(zodiacSign)) when relevant.
+        Make the information scientifically plausible yet poetic, focusing on natural beauty, botanical characteristics, and ecological significance.
+        Include references to the current season (\(season)) when describing blooming patterns or growth cycles.
         The continent should be one of: North America, South America, Europe, Africa, Asia, Oceania, Antarctica.
         """
         
         let userPrompt = """
-        Generate detailed information for a flower called "\(flower.name)" which is described as "\(flower.descriptor)".
+        Generate detailed botanical information for a flower called "\(flower.name)" which is described as "\(flower.descriptor)".
         Include:
-        1. meaning: What this flower symbolizes and represents
-        2. properties: Magical or mystical properties this flower possesses
-        3. origins: Where this flower comes from and its legendary history
-        4. detailedDescription: A rich, poetic description incorporating the current \(zodiacSign) zodiac period and \(season) season
-        5. continent: Which continent this flower originates from
+        1. meaning: Cultural and symbolic significance of this flower in various traditions
+        2. properties: Notable botanical characteristics, growth patterns, and ecological benefits
+        3. origins: Geographic origins and natural habitat, including climate preferences
+        4. detailedDescription: A rich description of its appearance, blooming season (considering it's currently \(season)), fragrance, and how it grows in nature
+        5. continent: Which continent this flower naturally originates from
         """
         
         let request = ChatCompletionRequest(
@@ -212,29 +215,64 @@ class OpenAIService {
         return flowerDetails
     }
     
-    private func getCurrentZodiacSign() -> String {
-        let calendar = Calendar.current
-        let components = calendar.dateComponents([.month, .day], from: Date())
-        
-        guard let month = components.month, let day = components.day else {
-            return "Unknown"
+    func generateFlowerName(descriptor: String) async throws -> String {
+        guard !APIConfiguration.shared.openAIKey.isEmpty else {
+            throw OpenAIError.invalidAPIKey
         }
         
-        switch (month, day) {
-        case (1, 20...31), (2, 1...18): return "Aquarius"
-        case (2, 19...29), (3, 1...20): return "Pisces"
-        case (3, 21...31), (4, 1...19): return "Aries"
-        case (4, 20...30), (5, 1...20): return "Taurus"
-        case (5, 21...31), (6, 1...20): return "Gemini"
-        case (6, 21...30), (7, 1...22): return "Cancer"
-        case (7, 23...31), (8, 1...22): return "Leo"
-        case (8, 23...31), (9, 1...22): return "Virgo"
-        case (9, 23...30), (10, 1...22): return "Libra"
-        case (10, 23...31), (11, 1...21): return "Scorpio"
-        case (11, 22...30), (12, 1...21): return "Sagittarius"
-        case (12, 22...31), (1, 1...19): return "Capricorn"
-        default: return "Unknown"
+        let apiKey = APIConfiguration.shared.openAIKey
+        
+        let systemPrompt = """
+        You are a botanist who names newly discovered flower species. Create elegant, scientifically-plausible names 
+        that sound like they could be real flowers. Use combinations of Latin, Greek roots, or poetic English names.
+        Respond with just the flower name, nothing else.
+        """
+        
+        let userPrompt = """
+        Create a beautiful name for a flower described as: \(descriptor)
+        The name should be 2-3 words maximum and sound like it could be a real flower species.
+        """
+        
+        let request = ChatCompletionRequest(
+            model: "gpt-4o-mini",
+            messages: [
+                ChatCompletionRequest.Message(role: "system", content: systemPrompt),
+                ChatCompletionRequest.Message(role: "user", content: userPrompt)
+            ],
+            temperature: 0.9,
+            response_format: nil
+        )
+        
+        guard let url = URL(string: chatCompletionURL) else {
+            throw OpenAIError.invalidURL
         }
+        
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+        urlRequest.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let encoder = JSONEncoder()
+        urlRequest.httpBody = try encoder.encode(request)
+        
+        let (data, response) = try await URLSession.shared.data(for: urlRequest)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw OpenAIError.networkError("Invalid response")
+        }
+        
+        if httpResponse.statusCode != 200 {
+            throw OpenAIError.networkError("Status code: \(httpResponse.statusCode)")
+        }
+        
+        let decoder = JSONDecoder()
+        let completionResponse = try decoder.decode(ChatCompletionResponse.self, from: data)
+        
+        guard let name = completionResponse.choices.first?.message.content else {
+            throw OpenAIError.invalidResponse
+        }
+        
+        return name.trimmingCharacters(in: .whitespacesAndNewlines)
     }
     
     private func getCurrentSeason() -> String {

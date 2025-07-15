@@ -50,6 +50,14 @@ class APIConfiguration: ObservableObject {
         }
     }
     
+    var hasValidOpenAIKey: Bool {
+        return !openAIKey.isEmpty
+    }
+    
+    var hasValidFalKey: Bool {
+        return !falKey.isEmpty
+    }
+    
     var currentAPIKey: String? {
         switch selectedProvider {
         case .openAI:

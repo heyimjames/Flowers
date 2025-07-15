@@ -1,15 +1,15 @@
 # Flowers App PRD
 
 ## Overview
-Flowers is a beautiful iOS app that generates unique, AI-created flower images daily. Users can discover mystical flowers, learn about their meanings and properties, and build a personal collection. The app acts as a "flower spotter's guide" where users gradually discover and catalog magical flowers from around the world.
+Flowers is a beautiful iOS app that generates unique, AI-created flower images daily. Users can discover rare and beautiful flowers, learn about their botanical characteristics and cultural significance, and build a personal collection. The app acts as a "flower spotter's guide" where users gradually discover and catalog flowers from around the world.
 
 ## Core Features
 
 ### 1. Daily Flower Generation
 - App generates a unique flower each day automatically
 - Uses AI to create beautiful, botanical-style illustrations
-- Each flower has a poetic name and description
-- Flowers are assigned to different continents for discovery tracking
+- Each flower has an elegant, botanically-plausible name
+- Flowers are assigned to different continents based on their natural habitats
 
 ### 2. Flower Discovery & Collection
 - Users build a collection of discovered flowers over time
@@ -19,11 +19,11 @@ Flowers is a beautiful iOS app that generates unique, AI-created flower images d
 
 ### 3. Detailed Flower Information
 - Tap any flower in the collection to reveal detailed information:
-  - **Meaning**: What the flower symbolizes and represents
-  - **Properties**: Magical or mystical properties
-  - **Origins**: Legendary history and where it comes from
-  - **Description**: Rich, poetic description incorporating current zodiac period and season
-- Information is generated using AI with context about current date, season, and zodiac sign
+  - **Meaning**: Cultural and symbolic significance in various traditions
+  - **Properties**: Notable botanical characteristics, growth patterns, and ecological benefits
+  - **Origins**: Geographic origins, natural habitat, and climate preferences
+  - **Description**: Rich description of appearance, blooming season, fragrance, and growth habits
+- Information is generated using AI with context about current season
 
 ### 4. Favorites System
 - Mark flowers as favorites with a heart button
@@ -48,8 +48,8 @@ Flowers is a beautiful iOS app that generates unique, AI-created flower images d
 ## Technical Details
 
 ### API Integration
-- Supports both OpenAI (DALL-E 3) and Fal.ai for image generation
-- Uses OpenAI GPT-4 for generating flower details and information
+- **FAL.ai**: Used exclusively for all flower image generation
+- **OpenAI**: Used for generating flower names and detailed botanical information
 - Graceful fallback to placeholder images when API unavailable
 
 ### Data Persistence
@@ -67,11 +67,12 @@ Flowers is a beautiful iOS app that generates unique, AI-created flower images d
 ## Design Philosophy
 - Clean, minimalist interface focusing on the flowers
 - Botanical illustration style for all generated images
-- Soft watercolor textures and dreamy aesthetics
+- Soft watercolor textures and natural aesthetics
 - Emphasis on discovery and collection mechanics
+- Scientifically-plausible yet beautiful flower descriptions
 
 ## Future Considerations
 - Achievements for discovering certain numbers of flowers
-- Rare flower types with special generation conditions
-- Seasonal events with themed flowers
-- Social features to share collections with friends 
+- Rare flower types based on geographic regions
+- Seasonal flowers that only appear during certain times of year
+- Export collection as a digital field guide 

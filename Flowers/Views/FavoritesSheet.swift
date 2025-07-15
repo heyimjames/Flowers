@@ -201,15 +201,15 @@ struct FlowerDetailSheet: View {
                                 DetailSection(
                                     title: "Meaning",
                                     content: meaning,
-                                    icon: "heart.text.square"
+                                    icon: "book"
                                 )
                             }
                             
                             if let properties = flower.properties {
                                 DetailSection(
-                                    title: "Properties",
+                                    title: "Characteristics",
                                     content: properties,
-                                    icon: "sparkles"
+                                    icon: "leaf"
                                 )
                             }
                             

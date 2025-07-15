@@ -66,23 +66,23 @@ class FlowerStore: ObservableObject {
         
         do {
             let actualDescriptor = descriptor ?? FlowerDescriptors.random()
-            let (image, prompt): (UIImage, String)
             
-            // Use the selected API provider
-            switch apiConfig.selectedProvider {
-            case .openAI:
-                (image, prompt) = try await OpenAIService.shared.generateFlowerImage(descriptor: actualDescriptor)
-            case .fal:
-                (image, prompt) = try await FALService.shared.generateFlowerImage(descriptor: actualDescriptor)
-            }
+            // Always use FAL for image generation
+            let (image, prompt) = try await FALService.shared.generateFlowerImage(descriptor: actualDescriptor)
             
             // Convert UIImage to Data
             guard let imageData = image.jpegData(compressionQuality: 0.9) else {
                 throw NSError(domain: "FlowerStore", code: 0, userInfo: [NSLocalizedDescriptionKey: "Failed to convert image"])
             }
             
-            // Extract flower name from descriptor
-            let name = extractFlowerName(from: actualDescriptor)
+            // Use OpenAI to generate a beautiful flower name
+            let name: String
+            if apiConfig.hasValidOpenAIKey {
+                name = try await OpenAIService.shared.generateFlowerName(descriptor: actualDescriptor)
+            } else {
+                // Fallback to extracting from descriptor if no OpenAI key
+                name = extractFlowerName(from: actualDescriptor)
+            }
             
             var flower = AIFlower(
                 name: name,
@@ -109,11 +109,11 @@ class FlowerStore: ObservableObject {
             
         } catch {
             // If API fails or no API key, fall back to mock
-            if !apiConfig.hasValidAPIKey {
+            if !apiConfig.hasValidFalKey {
                 let flower = createMockFlower(descriptor: descriptor)
                 currentFlower = flower
                 addToDiscoveredFlowers(flower)
-                errorMessage = "No API key configured. Using placeholder images."
+                errorMessage = "No FAL API key configured. Using placeholder images."
             } else {
                 errorMessage = error.localizedDescription
                 // Create a mock flower as fallback

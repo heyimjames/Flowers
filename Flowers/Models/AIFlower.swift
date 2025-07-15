@@ -95,21 +95,26 @@ struct FlowerNameGenerator {
 // Flower descriptor constants
 struct FlowerDescriptors {
     static let descriptors = [
-        "crystal rose with translucent petals",
-        "moonlight orchid with silver edges",
-        "stardust lily with glowing center",
-        "aurora dahlia with rainbow gradients",
-        "velvet iris with deep purple hues",
-        "mystic blossom with ethereal glow",
-        "celestial bloom with star patterns",
-        "ethereal petal with soft pastels",
-        "sapphire lotus with jeweled petals",
-        "golden sunflower with metallic sheen",
-        "frost rose with ice crystal edges",
-        "phoenix lily with flame patterns",
-        "pearl jasmine with opalescent glow",
-        "nebula violet with cosmic swirls",
-        "emerald orchid with jade accents"
+        "delicate alpine rose with morning dew",
+        "tropical orchid with vibrant petals",
+        "wildflower lily from mountain meadows",
+        "sunset dahlia with gradient colors",
+        "deep purple iris with velvety texture",
+        "cherry blossom with delicate pink petals",
+        "garden bloom with layered petals",
+        "meadow flower with soft pastels",
+        "blue lotus floating on water",
+        "golden sunflower facing the sun",
+        "winter rose with frost-kissed edges",
+        "desert lily with resilient petals",
+        "white jasmine with sweet fragrance",
+        "violet with deep purple hues",
+        "rainforest orchid with exotic patterns",
+        "coastal wildflower with salt-spray resilience",
+        "spring tulip with perfect symmetry",
+        "climbing vine flower with delicate tendrils",
+        "pond lily with floating leaves",
+        "mountain wildflower with alpine colors"
     ]
     
     static func random() -> String {
