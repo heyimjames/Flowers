@@ -15,9 +15,13 @@ struct FavoritesSheet: View {
     
     var displayedFlowers: [AIFlower] {
         if showFavoritesOnly {
-            return flowerStore.favorites
+            return flowerStore.favorites.sorted { 
+                ($0.discoveryDate ?? $0.generatedDate) > ($1.discoveryDate ?? $1.generatedDate) 
+            }
         } else {
-            return flowerStore.discoveredFlowers
+            return flowerStore.discoveredFlowers.sorted { 
+                ($0.discoveryDate ?? $0.generatedDate) > ($1.discoveryDate ?? $1.generatedDate) 
+            }
         }
     }
     
@@ -452,7 +456,7 @@ struct FlowerDetailSheet: View {
                                 }
                                 
                                 // Extra bottom padding to prevent clipping
-                                Spacer(minLength: 160)
+                                Color.clear.frame(height: 250)
                             }
                         }
                         .scrollIndicators(.hidden)
@@ -489,6 +493,7 @@ struct FlowerDetailSheet: View {
                         endPoint: .bottom
                     )
                     .frame(height: 100)
+                    .allowsHitTesting(false)
                     
                     // Action buttons
                     VStack(spacing: 12) {

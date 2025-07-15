@@ -500,7 +500,7 @@ class FlowerStore: ObservableObject {
         
         if flower.isFavorite {
             // Make sure we're adding the flower with all its current details
-            favorites.append(flower)
+            favorites.insert(flower, at: 0)
         } else {
             favorites.removeAll { $0.id == flower.id }
         }
@@ -548,7 +548,9 @@ class FlowerStore: ObservableObject {
     private func loadFavorites() {
         if let data = userDefaults.data(forKey: favoritesKey),
            let decoded = try? JSONDecoder().decode([AIFlower].self, from: data) {
-            favorites = decoded
+            favorites = decoded.sorted { 
+                ($0.discoveryDate ?? $0.generatedDate) > ($1.discoveryDate ?? $1.generatedDate) 
+            }
         }
     }
     
@@ -562,7 +564,7 @@ class FlowerStore: ObservableObject {
     func addToDiscoveredFlowers(_ flower: AIFlower) {
         // Check if flower already exists in discovered list
         if !discoveredFlowers.contains(where: { $0.id == flower.id }) {
-            discoveredFlowers.append(flower)
+            discoveredFlowers.insert(flower, at: 0)
             saveDiscoveredFlowers()
         }
     }
@@ -570,7 +572,9 @@ class FlowerStore: ObservableObject {
     private func loadDiscoveredFlowers() {
         if let data = userDefaults.data(forKey: discoveredFlowersKey),
            let decoded = try? JSONDecoder().decode([AIFlower].self, from: data) {
-            discoveredFlowers = decoded
+            discoveredFlowers = decoded.sorted { 
+                ($0.discoveryDate ?? $0.generatedDate) > ($1.discoveryDate ?? $1.generatedDate) 
+            }
         }
     }
     

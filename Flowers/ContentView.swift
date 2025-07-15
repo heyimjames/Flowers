@@ -207,7 +207,14 @@ struct ContentView: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
-                .transition(.scale.combined(with: .opacity))
+                .transition(
+                    .asymmetric(
+                        insertion: .scale(scale: 0.3, anchor: .center)
+                            .combined(with: .opacity)
+                            .combined(with: .move(edge: .bottom)),
+                        removal: .scale.combined(with: .opacity)
+                    )
+                )
                 
                 // Flower name
                 Text(flower.name)
@@ -309,32 +316,7 @@ struct ContentView: View {
                 }
             } else if flowerStore.hasUnrevealedFlower {
                 // Reveal state
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color.flowerPrimary.opacity(0.1),
-                                Color.flowerSecondary.opacity(0.1)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .aspectRatio(1, contentMode: .fit)
-                    .overlay(
-                        VStack(spacing: 16) {
-                            Image(systemName: "gift")
-                                .font(.system(size: 48))
-                                .foregroundColor(.flowerPrimary)
-                            Text("A new flower awaits...")
-                                .font(.system(size: 18, weight: .medium))
-                                .foregroundColor(.flowerTextPrimary)
-                            Text("Tap 'Reveal Flower' below")
-                                .font(.system(size: 14))
-                                .foregroundColor(.flowerTextSecondary)
-                        }
-                    )
-                    .shadow(color: .flowerPrimary.opacity(0.2), radius: 20, y: 10)
+                PulsingFlowerRevealView()
             } else {
                 // Empty state
                 RoundedRectangle(cornerRadius: 20)
@@ -361,18 +343,8 @@ struct ContentView: View {
         HStack(spacing: 16) {
             // Find/Reveal button
             if flowerStore.hasUnrevealedFlower {
-                Button(action: { 
-                    withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
-                        flowerStore.revealPendingFlower()
-                    }
-                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                }) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "gift")
-                        Text("Reveal Flower")
-                    }
-                }
-                .buttonStyle(FlowerPrimaryButtonStyle())
+                RevealFlowerButton(flowerStore: flowerStore)
+                    .frame(maxWidth: .infinity)
             } else if flowerStore.debugAnytimeGenerations {
                 Button(action: { showingGenerator = true }) {
                     HStack(spacing: 8) {
@@ -527,6 +499,46 @@ struct CountdownText: View {
         } else {
             timeRemaining = "\(minutes)m"
         }
+    }
+}
+
+struct PulsingFlowerRevealView: View {
+    @State private var isPulsing = false
+    
+    var body: some View {
+        RoundedRectangle(cornerRadius: 20)
+            .fill(
+                LinearGradient(
+                    colors: [
+                        Color.flowerPrimary.opacity(0.1),
+                        Color.flowerSecondary.opacity(0.1)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .aspectRatio(1, contentMode: .fit)
+            .overlay(
+                VStack(spacing: 16) {
+                    Image(systemName: "gift")
+                        .font(.system(size: 48))
+                        .foregroundColor(.flowerPrimary)
+                        .scaleEffect(isPulsing ? 1.1 : 1.0)
+                    Text("A new flower awaits...")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundColor(.flowerTextPrimary)
+                    Text("Hold 'Reveal Flower' below")
+                        .font(.system(size: 14))
+                        .foregroundColor(.flowerTextSecondary)
+                }
+            )
+            .shadow(color: .flowerPrimary.opacity(0.2), radius: isPulsing ? 25 : 20, y: 10)
+            .scaleEffect(isPulsing ? 1.02 : 1.0)
+            .onAppear {
+                withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
+                    isPulsing = true
+                }
+            }
     }
 }
 
