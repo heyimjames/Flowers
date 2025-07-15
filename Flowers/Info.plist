@@ -3,8 +3,10 @@
 <plist version="1.0">
 <dict>
 	<key>UIBackgroundModes</key>
-	<array>
-		<string>remote-notification</string>
-	</array>
+	<array/>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Save beautiful flower images to your photo library</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Add flower images to your photo library collection</string>
 </dict>
 </plist>
