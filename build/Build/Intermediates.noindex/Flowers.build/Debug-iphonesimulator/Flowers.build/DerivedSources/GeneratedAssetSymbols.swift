@@ -79,6 +79,9 @@ extension DeveloperToolsSupport.ColorResource {
 @available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
 extension DeveloperToolsSupport.ImageResource {
 
+    /// The "FlowersSVG" asset catalog image resource.
+    static let flowersSVG = DeveloperToolsSupport.ImageResource(name: "FlowersSVG", bundle: resourceBundle)
+
     /// The "Icon Flowers" asset catalog image resource.
     static let iconFlowers = DeveloperToolsSupport.ImageResource(name: "Icon Flowers", bundle: resourceBundle)
 
@@ -505,6 +508,15 @@ extension SwiftUI.ShapeStyle where Self == SwiftUI.Color {
 @available(macCatalyst, unavailable)
 extension AppKit.NSImage {
 
+    /// The "FlowersSVG" asset catalog image.
+    static var flowersSVG: AppKit.NSImage {
+#if !targetEnvironment(macCatalyst)
+        .init(resource: .flowersSVG)
+#else
+        .init()
+#endif
+    }
+
     /// The "Icon Flowers" asset catalog image.
     static var iconFlowers: AppKit.NSImage {
 #if !targetEnvironment(macCatalyst)
@@ -521,6 +533,15 @@ extension AppKit.NSImage {
 @available(iOS 17.0, tvOS 17.0, *)
 @available(watchOS, unavailable)
 extension UIKit.UIImage {
+
+    /// The "FlowersSVG" asset catalog image.
+    static var flowersSVG: UIKit.UIImage {
+#if !os(watchOS)
+        .init(resource: .flowersSVG)
+#else
+        .init()
+#endif
+    }
 
     /// The "Icon Flowers" asset catalog image.
     static var iconFlowers: UIKit.UIImage {

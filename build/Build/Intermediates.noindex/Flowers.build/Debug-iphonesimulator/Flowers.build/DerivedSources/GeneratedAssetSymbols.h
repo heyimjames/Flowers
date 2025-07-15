@@ -57,6 +57,9 @@ static NSString * const ACColorNameFlowerTextTertiary AC_SWIFT_PRIVATE = @"Flowe
 /// The "FlowerWarning" asset catalog color resource.
 static NSString * const ACColorNameFlowerWarning AC_SWIFT_PRIVATE = @"FlowerWarning";
 
+/// The "FlowersSVG" asset catalog image resource.
+static NSString * const ACImageNameFlowersSVG AC_SWIFT_PRIVATE = @"FlowersSVG";
+
 /// The "Icon Flowers" asset catalog image resource.
 static NSString * const ACImageNameIconFlowers AC_SWIFT_PRIVATE = @"Icon Flowers";
 

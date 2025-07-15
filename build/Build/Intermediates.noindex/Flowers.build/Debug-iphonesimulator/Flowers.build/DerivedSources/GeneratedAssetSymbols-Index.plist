@@ -171,6 +171,16 @@
 			<key>catalogPath</key>
 			<string>/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Assets.xcassets</string>
 			<key>objcSymbol</key>
+			<string>ACImageNameFlowersSVG</string>
+			<key>relativePath</key>
+			<string>./FlowersSVG.imageset</string>
+			<key>swiftSymbol</key>
+			<string>flowersSVG</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jamesfrewin/XCode Projects/Tests/Test iOS Widget/Flowers/Flowers/Assets.xcassets</string>
+			<key>objcSymbol</key>
 			<string>ACImageNameIconFlowers</string>
 			<key>relativePath</key>
 			<string>./Icon Flowers.imageset</string>

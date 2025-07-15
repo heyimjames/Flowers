@@ -52,8 +52,10 @@ struct ContentView: View {
                 // Navigation bar
                 ZStack {
                     // Centered app title (absolutely centered)
-                    Text("Flowers")
-                        .font(.system(size: 24, weight: .light, design: .serif))
+                    Image("FlowersSVG")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 28)
                         .foregroundColor(.flowerTextPrimary)
                         .frame(maxWidth: .infinity)
                     
