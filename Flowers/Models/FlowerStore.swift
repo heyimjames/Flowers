@@ -23,12 +23,29 @@ class FlowerStore: ObservableObject {
     private let pendingFlowerKey = "pendingFlower"
     private let lastScheduledDateKey = "lastScheduledFlowerDate"
     private let nextFlowerTimeKey = "nextFlowerTime"
-    private let debugAnytimeGenerationsKey = "debugAnytimeGenerations"
+    private let lastMilestoneKey = "lastMilestone"
+    private let showTestFlowerOnNextLaunchKey = "showTestFlowerOnNextLaunch"
     private let apiConfig = APIConfiguration.shared
+    
+    // Milestone thresholds for achievement bouquets
+    private let milestoneThresholds = [10, 25, 50, 100, 250, 500, 1000]
+    
+    // Test mode settings
+    var showTestFlowerOnNextLaunch: Bool {
+        get { userDefaults.bool(forKey: showTestFlowerOnNextLaunchKey) }
+        set { 
+            userDefaults.set(newValue, forKey: showTestFlowerOnNextLaunchKey)
+            objectWillChange.send()
+        }
+    }
     
     // Computed properties for stats
     var totalDiscoveredCount: Int {
         discoveredFlowers.count
+    }
+    
+    var allUsedFlowerNames: Set<String> {
+        Set(discoveredFlowers.map { $0.name })
     }
     
     var continentStats: [Continent: Int] {
@@ -41,13 +58,7 @@ class FlowerStore: ObservableObject {
         return stats
     }
     
-    var debugAnytimeGenerations: Bool {
-        get { userDefaults.bool(forKey: debugAnytimeGenerationsKey) }
-        set { 
-            userDefaults.set(newValue, forKey: debugAnytimeGenerationsKey)
-            objectWillChange.send()
-        }
-    }
+
     
     init() {
         // Check if first time user before loading data
@@ -65,11 +76,22 @@ class FlowerStore: ObservableObject {
         checkForPendingFlower()
         loadNextFlowerTime()
         
-        // Check if we should have a flower ready based on today's schedule
-        checkForScheduledFlowerToday()
-        
-        // Schedule next flower if needed
-        scheduleNextFlowerIfNeeded()
+        // Check if test flower should be shown
+        if showTestFlowerOnNextLaunch {
+            // Reset the flag
+            showTestFlowerOnNextLaunch = false
+            
+            // Generate and show test flower
+            Task {
+                await generateTestFlowerForReveal()
+            }
+        } else {
+            // Check if we should have a flower ready based on today's schedule
+            checkForScheduledFlowerToday()
+            
+            // Schedule next flower if needed
+            scheduleNextFlowerIfNeeded()
+        }
         
         // Check for iCloud data on first launch
         Task { @MainActor in
@@ -350,14 +372,13 @@ class FlowerStore: ObservableObject {
         if let flowerData = userDefaults.data(forKey: pendingFlowerKey),
            let flower = try? JSONDecoder().decode(AIFlower.self, from: flowerData) {
             pendingFlower = flower
-            hasUnrevealedFlower = true
+            // Don't automatically show the reveal screen on app launch
+            // Only show it when explicitly triggered by notification or test
+            hasUnrevealedFlower = false
         }
     }
     
     func checkForScheduledFlowerToday() {
-        // Only check if we don't already have a pending flower
-        guard !hasUnrevealedFlower else { return }
-        
         // Get today's scheduled time
         guard let todayScheduledTime = FlowerNotificationSchedule.getScheduledTime(for: Date()) else { return }
         
@@ -377,6 +398,13 @@ class FlowerStore: ObservableObject {
                     self.userDefaults.set(Date(), forKey: self.lastScheduledDateKey)
                 }
             }
+        }
+    }
+    
+    // Call this when the app becomes active from a notification
+    func showPendingFlowerIfAvailable() {
+        if pendingFlower != nil {
+            hasUnrevealedFlower = true
         }
     }
     
@@ -486,10 +514,16 @@ class FlowerStore: ObservableObject {
             } else if apiConfig.hasValidOpenAIKey {
                 if isFirstFlower {
                     // Generate a Jenny-related name for the first flower
-                    name = try await OpenAIService.shared.generateJennyFlowerName(descriptor: actualDescriptor)
+                    name = try await OpenAIService.shared.generateJennyFlowerName(
+                        descriptor: actualDescriptor,
+                        existingNames: allUsedFlowerNames
+                    )
                     userDefaults.set(true, forKey: "hasGeneratedFirstFlower")
                 } else {
-                    name = try await OpenAIService.shared.generateFlowerName(descriptor: actualDescriptor)
+                    name = try await OpenAIService.shared.generateFlowerName(
+                        descriptor: actualDescriptor,
+                        existingNames: allUsedFlowerNames
+                    )
                 }
             } else {
                 // Fallback to extracting from descriptor if no OpenAI key
@@ -774,6 +808,103 @@ class FlowerStore: ObservableObject {
         if !discoveredFlowers.contains(where: { $0.id == flower.id }) {
             discoveredFlowers.insert(flower, at: 0)
             saveDiscoveredFlowers()
+            
+            // Check for milestone achievements
+            checkForMilestoneAchievement()
+        }
+    }
+    
+    func checkForMilestoneAchievement() {
+        let currentCount = discoveredFlowers.count
+        let lastMilestone = userDefaults.integer(forKey: lastMilestoneKey)
+        
+        // Find the highest milestone we've reached
+        for milestone in milestoneThresholds {
+            if currentCount >= milestone && lastMilestone < milestone {
+                // We've hit a new milestone!
+                userDefaults.set(milestone, forKey: lastMilestoneKey)
+                
+                // Generate achievement bouquet
+                Task {
+                    await generateMilestoneBouquet(for: milestone)
+                }
+                break
+            }
+        }
+    }
+    
+    func generateMilestoneBouquet(for milestone: Int) async {
+        // Generate a special achievement bouquet
+        let descriptor = "luxurious celebratory bouquet with golden accents and sparkling ribbons"
+        
+        do {
+            let (image, prompt) = try await FALService.shared.generateFlowerImage(descriptor: descriptor, isBouquet: true)
+            
+            guard let imageData = image.jpegData(compressionQuality: 0.9) else {
+                throw NSError(domain: "FlowerStore", code: 0, userInfo: [NSLocalizedDescriptionKey: "Failed to convert image"])
+            }
+            
+            // Create milestone flower names based on the achievement
+            let bouquetFlowerNames = [
+                "Golden Achievement Roses",
+                "Celebration Orchids",
+                "Victory Lilies",
+                "Success Peonies",
+                "Milestone Carnations"
+            ]
+            
+            var flower = AIFlower(
+                name: "\(milestone) Flowers Celebration Bouquet",
+                descriptor: descriptor,
+                imageData: imageData,
+                generatedDate: Date(),
+                isFavorite: true, // Auto-favorite milestone bouquets
+                discoveryDate: Date(),
+                contextualGeneration: false,
+                generationContext: nil,
+                isBouquet: true,
+                bouquetFlowers: bouquetFlowerNames,
+                holidayName: "Achievement Milestone",
+                discoveryLatitude: ContextualFlowerGenerator.shared.currentLocation?.coordinate.latitude,
+                discoveryLongitude: ContextualFlowerGenerator.shared.currentLocation?.coordinate.longitude,
+                discoveryLocationName: ContextualFlowerGenerator.shared.currentPlacemark?.locality
+            )
+            
+            // Set continent
+            flower.continent = Continent.allCases.randomElement()
+            
+            // Generate special achievement details
+            if apiConfig.hasValidOpenAIKey {
+                do {
+                    let details = FlowerDetails(
+                        meaning: "This special bouquet commemorates your incredible achievement of discovering \(milestone) flowers. Each bloom represents a moment of wonder and discovery on your journey.",
+                        properties: "A stunning arrangement featuring golden roses symbolizing achievement, shimmering orchids for elegance, and victory lilies representing your dedication to discovery. The arrangement is adorned with celebratory ribbons and golden accents.",
+                        origins: "This achievement bouquet is a tradition dating back to ancient botanical societies, where reaching significant milestones in flower discovery was celebrated with special ceremonial arrangements.",
+                        detailedDescription: "Your dedication to discovering the beauty of nature has reached a remarkable milestone. This celebration bouquet, awarded for discovering \(milestone) unique flowers, stands as a testament to your journey of botanical exploration. May it inspire you to continue discovering the wonders that await.",
+                        continent: flower.continent?.rawValue ?? "Global"
+                    )
+                    
+                    flower.meaning = details.meaning
+                    flower.properties = details.properties
+                    flower.origins = details.origins
+                    flower.detailedDescription = details.detailedDescription
+                } catch {
+                    print("Failed to generate milestone details: \(error)")
+                }
+            }
+            
+            await MainActor.run {
+                // Set as pending flower to show reveal screen
+                self.pendingFlower = flower
+                self.hasUnrevealedFlower = true
+                
+                // Save pending flower
+                if let encoded = try? JSONEncoder().encode(flower) {
+                    self.userDefaults.set(encoded, forKey: self.pendingFlowerKey)
+                }
+            }
+        } catch {
+            print("Failed to generate milestone bouquet: \(error)")
         }
     }
     

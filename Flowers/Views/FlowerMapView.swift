@@ -30,11 +30,13 @@ struct MapFlower: Identifiable {
 
 struct FlowerMapView: View {
     let flower: AIFlower
+    let showCoordinates: Bool
     @State private var showingFullMap = false
     @State private var region: MKCoordinateRegion
     
-    init(flower: AIFlower) {
+    init(flower: AIFlower, showCoordinates: Bool = true) {
         self.flower = flower
+        self.showCoordinates = showCoordinates
         
         // Initialize region with flower's discovery location
         if let lat = flower.discoveryLatitude,
@@ -133,8 +135,9 @@ struct FlowerMapView: View {
                 }
                 .buttonStyle(PlainButtonStyle())
                 
-                // Coordinates pill
-                if let lat = flower.discoveryLatitude,
+                // Coordinates pill (only shown when showCoordinates is true)
+                if showCoordinates,
+                   let lat = flower.discoveryLatitude,
                    let lon = flower.discoveryLongitude {
                     HStack(spacing: 6) {
                         Image(systemName: "location.circle.fill")
@@ -257,43 +260,54 @@ struct FullScreenMapView: View {
                 VStack {
                     Spacer()
                     
-                    // TabView for carousel with extra padding to prevent shadow clipping
-                    TabView(selection: $selectedIndex) {
-                        ForEach(Array(flowersWithLocation.enumerated()), id: \.offset) { index, flower in
-                            FlowerMapCard(flower: flower)
-                                .tag(index)
-                                .padding(.horizontal, 30) // More padding to prevent shadow clipping
-                                .padding(.vertical, 10)
+                    VStack(spacing: 12) {
+                        // TabView for carousel with extra padding to prevent shadow clipping
+                        TabView(selection: $selectedIndex) {
+                            ForEach(Array(flowersWithLocation.enumerated()), id: \.offset) { index, flower in
+                                FlowerMapCard(flower: flower)
+                                    .tag(index)
+                                    .padding(.horizontal, 30) // More padding to prevent shadow clipping
+                                    .padding(.vertical, 10)
+                            }
                         }
-                    }
-                    .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-                    .frame(height: 220) // Increased height for shadow
-                    .onChange(of: selectedIndex) { newIndex in
-                        // Animate to the selected flower's location
-                        if newIndex < flowersWithLocation.count {
-                            let flower = flowersWithLocation[newIndex]
-                            if let lat = flower.discoveryLatitude,
-                               let lon = flower.discoveryLongitude {
-                                withAnimation(.easeInOut(duration: 0.7)) {
-                                    mapRegion = MKCoordinateRegion(
-                                        center: CLLocationCoordinate2D(latitude: lat, longitude: lon),
-                                        span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
-                                    )
+                        .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+                        .frame(height: 180) // Reduced height since coordinates moved out
+                        .onChange(of: selectedIndex) { newIndex in
+                            // Animate to the selected flower's location
+                            if newIndex < flowersWithLocation.count {
+                                let flower = flowersWithLocation[newIndex]
+                                if let lat = flower.discoveryLatitude,
+                                   let lon = flower.discoveryLongitude {
+                                    withAnimation(.easeInOut(duration: 0.7)) {
+                                        mapRegion = MKCoordinateRegion(
+                                            center: CLLocationCoordinate2D(latitude: lat, longitude: lon),
+                                            span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
+                                        )
+                                    }
                                 }
                             }
                         }
-                    }
-                    
-                    // Page indicator
-                    if flowersWithLocation.count > 1 {
-                        HStack(spacing: 6) {
-                            ForEach(0..<flowersWithLocation.count, id: \.self) { index in
-                                Circle()
-                                    .fill(index == selectedIndex ? Color.white : Color.white.opacity(0.5))
-                                    .frame(width: 8, height: 8)
+                        
+                        // Coordinates pill below the card
+                        if selectedIndex < flowersWithLocation.count {
+                            let flower = flowersWithLocation[selectedIndex]
+                            if let lat = flower.discoveryLatitude,
+                               let lon = flower.discoveryLongitude {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "location.circle.fill")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.white.opacity(0.9))
+                                    Text("\(formatCoordinate(lat, isLatitude: true)), \(formatCoordinate(lon, isLatitude: false))")
+                                        .font(.system(size: 12, weight: .medium, design: .monospaced))
+                                        .foregroundColor(.white)
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(Color.black.opacity(0.5))
+                                .cornerRadius(20)
+                                .padding(.bottom, 20)
                             }
                         }
-                        .padding(.bottom, 20)
                     }
                 }
             }
@@ -364,23 +378,14 @@ struct FlowerMapCard: View {
                         .foregroundColor(.flowerTextSecondary)
                         .lineLimit(2)
                     
-                    VStack(alignment: .leading, spacing: 2) {
-                        if let locationName = flower.discoveryLocationName {
-                            HStack(spacing: 4) {
-                                Image(systemName: "location.fill")
-                                    .font(.system(size: 10))
-                                Text(locationName)
-                                    .font(.system(size: 12))
-                            }
-                            .foregroundColor(.flowerTextTertiary)
+                    if let locationName = flower.discoveryLocationName {
+                        HStack(spacing: 4) {
+                            Image(systemName: "location.fill")
+                                .font(.system(size: 10))
+                            Text(locationName)
+                                .font(.system(size: 12))
                         }
-                        
-                        if let lat = flower.discoveryLatitude,
-                           let lon = flower.discoveryLongitude {
-                            Text("\(formatCoordinate(lat, isLatitude: true)), \(formatCoordinate(lon, isLatitude: false))")
-                                .font(.system(size: 11, design: .monospaced))
-                                .foregroundColor(.flowerTextTertiary.opacity(0.8))
-                        }
+                        .foregroundColor(.flowerTextTertiary)
                     }
                 }
                 

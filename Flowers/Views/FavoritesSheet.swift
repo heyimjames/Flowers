@@ -542,7 +542,7 @@ struct FlowerDetailSheet: View {
                                 
                                 // Discovery location map (shown independently of other details)
                                 if flowerItem.discoveryLatitude != nil && flowerItem.discoveryLongitude != nil {
-                                    FlowerMapView(flower: flowerItem)
+                                    FlowerMapView(flower: flowerItem, showCoordinates: false)
                                         .padding(.top, 20)
                                         .padding(.horizontal, 24)
                                 }

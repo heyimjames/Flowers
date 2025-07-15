@@ -7,15 +7,17 @@
 
 import SwiftUI
 import SwiftData
+import UserNotifications
 
 struct ContentView: View {
     @EnvironmentObject var flowerStore: FlowerStore
-    @State private var showingGenerator = false
     @State private var showingFavorites = false
     @State private var showingSettings = false
     @State private var showDiscoveryCount = true
     @State private var showingFlowerDetail = false
     @State private var showingOnboarding = false
+    @Environment(\.scenePhase) var scenePhase
+    @State private var wasInBackground = false
     
     // Timer for pill animation
     let pillAnimationTimer = Timer.publish(every: 5, on: .main, in: .common).autoconnect()
@@ -155,13 +157,6 @@ struct ContentView: View {
             }
             .ignoresSafeArea(edges: .bottom)
         }
-        .sheet(isPresented: $showingGenerator) {
-            GeneratorSheet(flowerStore: flowerStore)
-                .presentationDetents([.large])
-                .presentationCornerRadius(32)
-                .presentationDragIndicator(.hidden)
-                .interactiveDismissDisabled()
-        }
         .sheet(isPresented: $showingFavorites) {
             FavoritesSheet(flowerStore: flowerStore)
                 .presentationDetents([.large])
@@ -207,6 +202,25 @@ struct ContentView: View {
         .fullScreenCover(isPresented: $showingOnboarding) {
             OnboardingView(flowerStore: flowerStore)
         }
+        .onChange(of: scenePhase) { newPhase in
+            switch newPhase {
+            case .background:
+                wasInBackground = true
+            case .active:
+                if wasInBackground {
+                    wasInBackground = false
+                    // Check if we have a pending flower and notification badge
+                    let badgeCount = UIApplication.shared.applicationIconBadgeNumber
+                    if badgeCount > 0 && flowerStore.pendingFlower != nil {
+                        // User likely tapped on notification
+                        flowerStore.showPendingFlowerIfAvailable()
+                    }
+                }
+            default:
+                break
+            }
+        }
+
     }
     
     private var flowerDisplay: some View {
@@ -413,17 +427,8 @@ struct ContentView: View {
     
     private var actionButtons: some View {
         HStack(spacing: 16) {
-            // Find button
-            if flowerStore.debugAnytimeGenerations && !flowerStore.hasUnrevealedFlower {
-                Button(action: { showingGenerator = true }) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "sparkles")
-                        Text("Find Flower")
-                    }
-                }
-                .buttonStyle(FlowerPrimaryButtonStyle())
-                .disabled(flowerStore.isGenerating)
-            } else if !flowerStore.hasUnrevealedFlower {
+            // Next flower timing or empty space
+            if !flowerStore.hasUnrevealedFlower {
                 // Show next flower timing
                 HStack(spacing: 8) {
                     Image(systemName: "clock")
@@ -499,33 +504,20 @@ struct ContentView: View {
             .disabled(flowerStore.currentFlower == nil)
             .accessibilityLabel("Share flower image")
             
-            // Collection button (was favorites)
+            // Collection button
             Button(action: { showingFavorites = true }) {
-                ZStack(alignment: .topTrailing) {
-                    Image(systemName: "rectangle.grid.2x2")
-                        .font(.system(size: 22))
-                        .foregroundColor(.flowerTextSecondary)
-                        .frame(width: 56, height: 56)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.flowerButtonBackground.opacity(0.6))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .strokeBorder(Color.flowerTextTertiary.opacity(0.2), lineWidth: 1)
-                                )
-                        )
-                    
-                    // Badge for favorites count
-                    if flowerStore.favorites.count > 0 {
-                        Text("\(flowerStore.favorites.count)")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(.white)
-                            .frame(width: 20, height: 20)
-                            .background(Color.flowerSecondary)
-                            .clipShape(Circle())
-                            .offset(x: 4, y: -4)
-                    }
-                }
+                Image(systemName: "rectangle.grid.2x2")
+                    .font(.system(size: 22))
+                    .foregroundColor(.flowerTextSecondary)
+                    .frame(width: 56, height: 56)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.flowerButtonBackground.opacity(0.6))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .strokeBorder(Color.flowerTextTertiary.opacity(0.2), lineWidth: 1)
+                            )
+                    )
             }
         }
     }

@@ -11,7 +11,6 @@ struct FlowerRevealView: View {
     @State private var shakeOffset: CGFloat = 0
     @State private var isHolding = false
     @State private var holdTimer: Timer?
-    @State private var hapticTimer: Timer?
     @State private var confettiPieces: [ConfettiPiece] = []
     
     var body: some View {
@@ -21,65 +20,71 @@ struct FlowerRevealView: View {
                 Color.white
                     .ignoresSafeArea()
                 
-                VStack(spacing: 32) {
-                    // Title
-                    VStack(spacing: 8) {
-                        Text("A New Flower Awaits")
-                            .font(.system(size: 32, weight: .light, design: .serif))
-                            .foregroundColor(.flowerTextPrimary)
-                        
-                        Text("Hold to reveal your discovery")
-                            .font(.system(size: 16))
-                            .foregroundColor(.flowerTextSecondary)
-                    }
-                    .padding(.top, 40)
-                    .opacity(isRevealed ? 0 : 1)
-                    
-                    // Flower image with blur/reveal effect
-                    ZStack {
-                        if let imageData = flower.imageData,
-                           let uiImage = UIImage(data: imageData) {
-                            Image(uiImage: uiImage)
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(maxWidth: 300, maxHeight: 300)
-                                .cornerRadius(24)
-                                .blur(radius: isRevealed ? 0 : 25)
-                                .scaleEffect(isRevealed ? 1.1 : 1)
-                                .offset(x: shakeOffset)
-                                .animation(isRevealed ? .spring(response: 0.6, dampingFraction: 0.8) : .linear(duration: 0.1), value: isRevealed)
-                                .animation(.linear(duration: 0.1), value: shakeOffset)
-                        }
-                        
-                        // Confetti overlay
-                        if showConfetti {
-                            ForEach(confettiPieces) { piece in
-                                ConfettiView(piece: piece)
-                            }
-                        }
-                    }
-                    .frame(height: 300)
-                    
-                    if isRevealed {
-                        // Revealed state - show flower info
-                        VStack(spacing: 12) {
-                            Text(flower.name)
-                                .font(.system(size: 28, weight: .semibold, design: .serif))
+                VStack {
+                    // Title at top (only shown when not revealed)
+                    if !isRevealed {
+                        VStack(spacing: 8) {
+                            Text("A Flower for You")
+                                .font(.system(size: 32, weight: .light, design: .serif))
                                 .foregroundColor(.flowerTextPrimary)
-                                .multilineTextAlignment(.center)
                             
-                            Text(flower.descriptor)
+                            Text("Hold to reveal your discovery")
                                 .font(.system(size: 16))
                                 .foregroundColor(.flowerTextSecondary)
-                                .multilineTextAlignment(.center)
-                                .padding(.horizontal, 32)
                         }
-                        .transition(.opacity.combined(with: .scale))
+                        .padding(.top, 80)
+                        .transition(.opacity)
                     }
                     
                     Spacer()
                     
-                    // Action button
+                    // Centered content area
+                    VStack(spacing: 24) {
+                        // Flower image
+                        ZStack {
+                            if let imageData = flower.imageData,
+                               let uiImage = UIImage(data: imageData) {
+                                Image(uiImage: uiImage)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(maxWidth: 300, maxHeight: 300)
+                                    .cornerRadius(24)
+                                    .blur(radius: isRevealed ? 0 : 30)
+                                    .scaleEffect(isRevealed ? 1.05 : 1)
+                                    .offset(x: shakeOffset)
+                                    .animation(isRevealed ? .interpolatingSpring(stiffness: 50, damping: 8) : .linear(duration: 0.05), value: isRevealed)
+                                    .animation(.linear(duration: 0.05), value: shakeOffset)
+                            }
+                            
+                            // Confetti overlay
+                            if showConfetti {
+                                ForEach(confettiPieces) { piece in
+                                    ConfettiView(piece: piece)
+                                }
+                            }
+                        }
+                        
+                        // Flower info (shown when revealed)
+                        if isRevealed {
+                            VStack(spacing: 12) {
+                                Text(flower.name)
+                                    .font(.system(size: 28, weight: .semibold, design: .serif))
+                                    .foregroundColor(.flowerTextPrimary)
+                                    .multilineTextAlignment(.center)
+                                
+                                Text(flower.descriptor)
+                                    .font(.system(size: 16))
+                                    .foregroundColor(.flowerTextSecondary)
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal, 32)
+                            }
+                            .transition(.opacity.combined(with: .scale))
+                        }
+                    }
+                    
+                    Spacer()
+                    
+                    // Action button at bottom
                     if !isRevealed {
                         // Hold to reveal button
                         ZStack {
@@ -88,21 +93,24 @@ struct FlowerRevealView: View {
                                 .fill(Color.flowerPrimary.opacity(0.1))
                                 .frame(height: 64)
                             
-                            // Progress fill
+                            // Progress fill with mask
                             GeometryReader { geometry in
-                                RoundedRectangle(cornerRadius: 20)
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [Color.flowerPrimary, Color.flowerSecondary],
-                                            startPoint: .leading,
-                                            endPoint: .trailing
-                                        )
-                                    )
-                                    .frame(width: geometry.size.width * holdProgress, height: 64)
-                                    .animation(.linear(duration: 0.1), value: holdProgress)
+                                LinearGradient(
+                                    colors: [Color.flowerPrimary, Color.flowerSecondary],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                                .frame(width: geometry.size.width, height: 64)
+                                .mask(
+                                    HStack(spacing: 0) {
+                                        Rectangle()
+                                            .frame(width: geometry.size.width * holdProgress)
+                                        Spacer(minLength: 0)
+                                    }
+                                )
+                                .mask(RoundedRectangle(cornerRadius: 20))
                             }
                             .frame(height: 64)
-                            .cornerRadius(20)
                             
                             // Button content
                             HStack(spacing: 12) {
@@ -116,6 +124,7 @@ struct FlowerRevealView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.horizontal, 32)
+                        .padding(.bottom, 50)
                         .onLongPressGesture(
                             minimumDuration: .infinity,
                             maximumDistance: .infinity,
@@ -143,10 +152,9 @@ struct FlowerRevealView: View {
                             .cornerRadius(16)
                         }
                         .padding(.horizontal, 32)
+                        .padding(.bottom, 50)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
-                    
-                    Spacer()
                 }
             }
             .navigationBarHidden(true)
@@ -165,9 +173,11 @@ struct FlowerRevealView: View {
         isHolding = true
         holdProgress = 0
         
-        // Start progress timer
-        holdTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
-            holdProgress += 0.05 / 3.0 // 3 seconds total
+        // Start progress timer with smoother animation
+        holdTimer = Timer.scheduledTimer(withTimeInterval: 0.016, repeats: true) { _ in
+            withAnimation(.linear(duration: 0.016)) {
+                holdProgress = min(holdProgress + 0.016 / 3.0, 1.0) // 3 seconds total
+            }
             
             if holdProgress >= 1.0 {
                 revealFlower()
@@ -175,39 +185,27 @@ struct FlowerRevealView: View {
         }
         
         // Start shake animation
-        Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
+        Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { timer in
             if !isHolding {
                 timer.invalidate()
-                shakeOffset = 0
+                withAnimation(.linear(duration: 0.05)) {
+                    shakeOffset = 0
+                }
             } else {
                 let intensity = holdProgress * 5
-                shakeOffset = CGFloat.random(in: -intensity...intensity)
+                withAnimation(.linear(duration: 0.05)) {
+                    shakeOffset = CGFloat.random(in: -intensity...intensity)
+                }
             }
         }
         
-        // Start haptic feedback
-        hapticTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
-            let intensity = min(holdProgress, 1.0)
-            
-            if intensity < 0.3 {
-                let impact = UIImpactFeedbackGenerator(style: .light)
-                impact.impactOccurred()
-            } else if intensity < 0.7 {
-                let impact = UIImpactFeedbackGenerator(style: .medium)
-                impact.impactOccurred()
-            } else {
-                let impact = UIImpactFeedbackGenerator(style: .heavy)
-                impact.impactOccurred()
-            }
-        }
+
     }
     
     private func stopHolding() {
         isHolding = false
         holdTimer?.invalidate()
         holdTimer = nil
-        hapticTimer?.invalidate()
-        hapticTimer = nil
         
         withAnimation(.spring()) {
             holdProgress = 0
@@ -218,10 +216,6 @@ struct FlowerRevealView: View {
     private func revealFlower() {
         stopHolding()
         
-        // Success haptic
-        let notification = UINotificationFeedbackGenerator()
-        notification.notificationOccurred(.success)
-        
         // Create confetti
         createConfetti()
         
@@ -231,21 +225,22 @@ struct FlowerRevealView: View {
         }
         
         // Hide confetti after animation
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
             showConfetti = false
             confettiPieces.removeAll()
         }
     }
     
     private func createConfetti() {
-        confettiPieces = (0..<200).map { _ in
+        let colors: [Color] = [.flowerPrimary, .flowerSecondary, .yellow, .pink, .purple, .orange]
+        confettiPieces = (0..<500).map { i in
             ConfettiPiece(
-                color: Bool.random() ? .flowerPrimary : .white,
-                x: CGFloat.random(in: -150...150),
-                y: 0,
-                size: CGFloat.random(in: 4...8),
+                color: colors.randomElement() ?? .flowerPrimary,
+                x: CGFloat.random(in: -200...200),
+                y: CGFloat.random(in: -100...100),
+                size: CGFloat.random(in: 8...16),
                 rotation: Double.random(in: 0...360),
-                velocity: CGFloat.random(in: 200...400)
+                velocity: CGFloat.random(in: 300...600)
             )
         }
     }
@@ -264,22 +259,75 @@ struct ConfettiPiece: Identifiable {
 struct ConfettiView: View {
     let piece: ConfettiPiece
     @State private var offsetY: CGFloat = 0
+    @State private var offsetX: CGFloat = 0
     @State private var opacity: Double = 1
     @State private var rotation: Double = 0
+    @State private var scale: CGFloat = 1
     
     var body: some View {
-        RoundedRectangle(cornerRadius: piece.size / 3)
-            .fill(piece.color)
-            .frame(width: piece.size, height: piece.size * 1.5)
-            .rotationEffect(.degrees(rotation))
-            .offset(x: piece.x, y: piece.y + offsetY)
-            .opacity(opacity)
-            .onAppear {
-                withAnimation(.easeOut(duration: 3)) {
-                    offsetY = piece.velocity
-                    opacity = 0
-                    rotation = piece.rotation + Double.random(in: 180...720)
-                }
+        ZStack {
+            // Different shapes for variety
+            if Int.random(in: 0...2) == 0 {
+                Circle()
+                    .fill(piece.color)
+                    .frame(width: piece.size, height: piece.size)
+            } else if Int.random(in: 0...1) == 0 {
+                Star(corners: 5, smoothness: 0.5)
+                    .fill(piece.color)
+                    .frame(width: piece.size * 1.2, height: piece.size * 1.2)
+            } else {
+                RoundedRectangle(cornerRadius: piece.size / 4)
+                    .fill(piece.color)
+                    .frame(width: piece.size, height: piece.size * 1.3)
             }
+        }
+        .rotationEffect(.degrees(rotation))
+        .scaleEffect(scale)
+        .offset(x: piece.x + offsetX, y: piece.y + offsetY)
+        .opacity(opacity)
+        .onAppear {
+            withAnimation(.easeOut(duration: 4)) {
+                offsetY = piece.velocity
+                offsetX = CGFloat.random(in: -100...100)
+                opacity = 0
+                rotation = piece.rotation + Double.random(in: 360...1080)
+                scale = 0.3
+            }
+        }
+    }
+}
+
+// Star shape for confetti variety
+struct Star: Shape {
+    let corners: Int
+    let smoothness: Double
+    
+    func path(in rect: CGRect) -> Path {
+        guard corners >= 2 else { return Path() }
+        
+        let center = CGPoint(x: rect.width / 2, y: rect.height / 2)
+        var currentAngle = -CGFloat.pi / 2
+        let angleAdjustment = .pi * 2 / CGFloat(corners * 2)
+        let innerRadius = rect.width / 4
+        let outerRadius = rect.width / 2
+        
+        var path = Path()
+        
+        for corner in 0..<corners * 2 {
+            let radius = corner.isMultiple(of: 2) ? outerRadius : innerRadius
+            let x = center.x + cos(currentAngle) * radius
+            let y = center.y + sin(currentAngle) * radius
+            
+            if corner == 0 {
+                path.move(to: CGPoint(x: x, y: y))
+            } else {
+                path.addLine(to: CGPoint(x: x, y: y))
+            }
+            
+            currentAngle += angleAdjustment
+        }
+        
+        path.closeSubpath()
+        return path
     }
 } 

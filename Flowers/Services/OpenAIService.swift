@@ -292,7 +292,7 @@ class OpenAIService {
         }
     }
     
-    func generateFlowerName(descriptor: String) async throws -> String {
+    func generateFlowerName(descriptor: String, existingNames: Set<String> = []) async throws -> String {
         guard !APIConfiguration.shared.openAIKey.isEmpty else {
             throw OpenAIError.invalidAPIKey
         }
@@ -303,56 +303,87 @@ class OpenAIService {
         You are a botanist who names newly discovered flower species. Create elegant, scientifically-plausible names 
         that sound like they could be real flowers. Use combinations of Latin, Greek roots, or poetic English names.
         Respond with just the flower name, nothing else.
+        IMPORTANT: The name must be completely unique and not match any existing flower names.
         """
         
-        let userPrompt = """
+        var userPrompt = """
         Create a beautiful name for a flower described as: \(descriptor)
         The name should be 2-3 words maximum and sound like it could be a real flower species.
         """
         
-        let request = ChatCompletionRequest(
-            model: "gpt-4o-mini",
-            messages: [
-                ChatCompletionRequest.Message(role: "system", content: systemPrompt),
-                ChatCompletionRequest.Message(role: "user", content: userPrompt)
-            ],
-            temperature: 0.9,
-            response_format: nil
-        )
-        
-        guard let url = URL(string: chatCompletionURL) else {
-            throw OpenAIError.invalidURL
+        if !existingNames.isEmpty {
+            userPrompt += """
+            
+            
+            CRITICAL: The name must NOT be any of these already used names:
+            \(existingNames.sorted().joined(separator: ", "))
+            
+            Be creative and generate a completely different, unique name.
+            """
         }
         
-        var urlRequest = URLRequest(url: url)
-        urlRequest.httpMethod = "POST"
-        urlRequest.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        let encoder = JSONEncoder()
-        urlRequest.httpBody = try encoder.encode(request)
-        
-        let (data, response) = try await URLSession.shared.data(for: urlRequest)
-        
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw OpenAIError.networkError("Invalid response")
+        // Try up to 5 times to get a unique name
+        for attempt in 0..<5 {
+            let request = ChatCompletionRequest(
+                model: "gpt-4o-mini",
+                messages: [
+                    ChatCompletionRequest.Message(role: "system", content: systemPrompt),
+                    ChatCompletionRequest.Message(role: "user", content: userPrompt)
+                ],
+                temperature: 0.9 + Double(attempt) * 0.05, // Increase temperature with each attempt for more variety
+                response_format: nil
+            )
+            
+            guard let url = URL(string: chatCompletionURL) else {
+                throw OpenAIError.invalidURL
+            }
+            
+            var urlRequest = URLRequest(url: url)
+            urlRequest.httpMethod = "POST"
+            urlRequest.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+            urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            
+            let encoder = JSONEncoder()
+            urlRequest.httpBody = try encoder.encode(request)
+            
+            let (data, response) = try await URLSession.shared.data(for: urlRequest)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw OpenAIError.networkError("Invalid response")
+            }
+            
+            if httpResponse.statusCode != 200 {
+                throw OpenAIError.networkError("Status code: \(httpResponse.statusCode)")
+            }
+            
+            let decoder = JSONDecoder()
+            let completionResponse = try decoder.decode(ChatCompletionResponse.self, from: data)
+            
+            guard let name = completionResponse.choices.first?.message.content else {
+                throw OpenAIError.invalidResponse
+            }
+            
+            let cleanedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+            
+            // Check if this name is unique
+            if !existingNames.contains(cleanedName) {
+                return cleanedName
+            }
+            
+            // If we're on the last attempt and still getting duplicates, modify the name
+            if attempt == 4 {
+                // Add a unique suffix to ensure uniqueness
+                let suffixes = ["Aurora", "Nova", "Star", "Crystal", "Dream", "Mystic", "Eternal"]
+                let randomSuffix = suffixes.randomElement() ?? "Unique"
+                return "\(cleanedName) \(randomSuffix)"
+            }
         }
         
-        if httpResponse.statusCode != 200 {
-            throw OpenAIError.networkError("Status code: \(httpResponse.statusCode)")
-        }
-        
-        let decoder = JSONDecoder()
-        let completionResponse = try decoder.decode(ChatCompletionResponse.self, from: data)
-        
-        guard let name = completionResponse.choices.first?.message.content else {
-            throw OpenAIError.invalidResponse
-        }
-        
-        return name.trimmingCharacters(in: .whitespacesAndNewlines)
+        // This should never be reached, but just in case
+        return "Unique \(descriptor.capitalized) \(UUID().uuidString.prefix(4))"
     }
     
-    func generateJennyFlowerName(descriptor: String) async throws -> String {
+    func generateJennyFlowerName(descriptor: String, existingNames: Set<String> = []) async throws -> String {
         guard !APIConfiguration.shared.openAIKey.isEmpty else {
             throw OpenAIError.invalidAPIKey
         }
@@ -364,53 +395,84 @@ class OpenAIService {
         Examples: "Jenny's Rose", "Jennifer Lily", "Jenny's Garden Bloom", "Jenniferia elegans".
         The name should sound like it could be a real flower species named after or dedicated to someone named Jenny.
         Respond with just the flower name, nothing else.
+        IMPORTANT: The name must be completely unique and not match any existing flower names.
         """
         
-        let userPrompt = """
+        var userPrompt = """
         Create a beautiful flower name that includes or relates to "Jenny" for a flower described as: \(descriptor)
         The name should be 2-4 words maximum and sound elegant and botanical.
         """
         
-        let request = ChatCompletionRequest(
-            model: "gpt-4o-mini",
-            messages: [
-                ChatCompletionRequest.Message(role: "system", content: systemPrompt),
-                ChatCompletionRequest.Message(role: "user", content: userPrompt)
-            ],
-            temperature: 0.9,
-            response_format: nil
-        )
-        
-        guard let url = URL(string: chatCompletionURL) else {
-            throw OpenAIError.invalidURL
+        if !existingNames.isEmpty {
+            userPrompt += """
+            
+            
+            CRITICAL: The name must NOT be any of these already used names:
+            \(existingNames.sorted().joined(separator: ", "))
+            
+            Be creative and generate a completely different, unique Jenny-themed name.
+            """
         }
         
-        var urlRequest = URLRequest(url: url)
-        urlRequest.httpMethod = "POST"
-        urlRequest.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        let encoder = JSONEncoder()
-        urlRequest.httpBody = try encoder.encode(request)
-        
-        let (data, response) = try await URLSession.shared.data(for: urlRequest)
-        
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw OpenAIError.networkError("Invalid response")
+        // Try up to 5 times to get a unique name
+        for attempt in 0..<5 {
+            let request = ChatCompletionRequest(
+                model: "gpt-4o-mini",
+                messages: [
+                    ChatCompletionRequest.Message(role: "system", content: systemPrompt),
+                    ChatCompletionRequest.Message(role: "user", content: userPrompt)
+                ],
+                temperature: 0.9 + Double(attempt) * 0.05, // Increase temperature with each attempt
+                response_format: nil
+            )
+            
+            guard let url = URL(string: chatCompletionURL) else {
+                throw OpenAIError.invalidURL
+            }
+            
+            var urlRequest = URLRequest(url: url)
+            urlRequest.httpMethod = "POST"
+            urlRequest.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+            urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            
+            let encoder = JSONEncoder()
+            urlRequest.httpBody = try encoder.encode(request)
+            
+            let (data, response) = try await URLSession.shared.data(for: urlRequest)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw OpenAIError.networkError("Invalid response")
+            }
+            
+            if httpResponse.statusCode != 200 {
+                throw OpenAIError.networkError("Status code: \(httpResponse.statusCode)")
+            }
+            
+            let decoder = JSONDecoder()
+            let completionResponse = try decoder.decode(ChatCompletionResponse.self, from: data)
+            
+            guard let name = completionResponse.choices.first?.message.content else {
+                throw OpenAIError.invalidResponse
+            }
+            
+            let cleanedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+            
+            // Check if this name is unique
+            if !existingNames.contains(cleanedName) {
+                return cleanedName
+            }
+            
+            // If we're on the last attempt and still getting duplicates, modify the name
+            if attempt == 4 {
+                // Add a unique Jenny-themed suffix
+                let suffixes = ["Jenny's Dream", "Jenny Aurora", "Jennifer Star", "Jenny's Crystal", "Jenny Nova"]
+                let randomSuffix = suffixes.randomElement() ?? "Jenny's Unique"
+                return "\(randomSuffix) \(descriptor.split(separator: " ").last ?? "Bloom")"
+            }
         }
         
-        if httpResponse.statusCode != 200 {
-            throw OpenAIError.networkError("Status code: \(httpResponse.statusCode)")
-        }
-        
-        let decoder = JSONDecoder()
-        let completionResponse = try decoder.decode(ChatCompletionResponse.self, from: data)
-        
-        guard let name = completionResponse.choices.first?.message.content else {
-            throw OpenAIError.invalidResponse
-        }
-        
-        return name.trimmingCharacters(in: .whitespacesAndNewlines)
+        // This should never be reached, but just in case
+        return "Jenny's \(descriptor.capitalized) \(UUID().uuidString.prefix(4))"
     }
     
     private func getCurrentSeason() -> String {

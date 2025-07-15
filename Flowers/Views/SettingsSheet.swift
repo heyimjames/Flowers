@@ -111,21 +111,6 @@ struct SettingsSheet: View {
                                 .font(.system(size: 18, weight: .semibold))
                                 .foregroundColor(.flowerTextPrimary)
                             
-                            // Anytime Generations Toggle
-                            Toggle(isOn: $flowerStore.debugAnytimeGenerations) {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Anytime Generations")
-                                        .font(.system(size: 16, weight: .medium))
-                                        .foregroundColor(.flowerTextPrimary)
-                                    Text("Show 'Find Flower' button always")
-                                        .font(.system(size: 12))
-                                        .foregroundColor(.flowerTextSecondary)
-                                }
-                            }
-                            .tint(.flowerPrimary)
-                            
-                            Divider()
-                            
                             // Debug Notification Scheduler
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("Test Notification")
@@ -153,31 +138,17 @@ struct SettingsSheet: View {
                             
                             // Test Flower Reveal
                             VStack(alignment: .leading, spacing: 12) {
-                                Text("Test Flower Reveal")
-                                    .font(.system(size: 16, weight: .medium))
-                                    .foregroundColor(.flowerTextPrimary)
-                                
-                                Button(action: {
-                                    // Create a test flower
-                                    Task {
-                                        await flowerStore.generateTestFlowerForReveal()
-                                        // Small delay to ensure the pending flower is set
-                                        try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
-                                        await MainActor.run {
-                                            dismiss()
-                                        }
-                                    }
-                                }) {
-                                    HStack {
-                                        Image(systemName: "sparkles")
-                                        Text("Test 3-Second Hold Reveal")
+                                Toggle(isOn: $flowerStore.showTestFlowerOnNextLaunch) {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Test Flower on Next Launch")
+                                            .font(.system(size: 16, weight: .medium))
+                                            .foregroundColor(.flowerTextPrimary)
+                                        Text("Show the flower reveal screen when you next open the app")
+                                            .font(.system(size: 12))
+                                            .foregroundColor(.flowerTextSecondary)
                                     }
                                 }
-                                .buttonStyle(FlowerPrimaryButtonStyle())
-                                
-                                Text("Creates a test flower and shows the reveal screen")
-                                    .font(.system(size: 12))
-                                    .foregroundColor(.flowerTextSecondary)
+                                .tint(.flowerPrimary)
                             }
                         }
                         .padding(20)
