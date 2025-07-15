@@ -13,6 +13,13 @@ struct FlowerRevealView: View {
     @State private var holdTimer: Timer?
     @State private var shakeTimer: Timer?
     @State private var confettiPieces: [ConfettiPiece] = []
+    @State private var lastHapticLevel = 0
+    
+    // Haptic generators
+    private let lightImpact = UIImpactFeedbackGenerator(style: .light)
+    private let mediumImpact = UIImpactFeedbackGenerator(style: .medium)
+    private let heavyImpact = UIImpactFeedbackGenerator(style: .heavy)
+    private let selectionFeedback = UISelectionFeedbackGenerator()
     
     var body: some View {
         NavigationView {
@@ -73,7 +80,7 @@ struct FlowerRevealView: View {
                                     .foregroundColor(.flowerTextPrimary)
                                     .multilineTextAlignment(.center)
                                 
-                                Text(flower.descriptor)
+                                Text(capitalizeWords(flower.descriptor))
                                     .font(.system(size: 16))
                                     .foregroundColor(.flowerTextSecondary)
                                     .multilineTextAlignment(.center)
@@ -154,6 +161,21 @@ struct FlowerRevealView: View {
             }
             .navigationBarHidden(true)
         }
+        .onAppear {
+            // Prepare haptic generators
+            lightImpact.prepare()
+            mediumImpact.prepare()
+            heavyImpact.prepare()
+            selectionFeedback.prepare()
+        }
+    }
+    
+    private func capitalizeWords(_ text: String) -> String {
+        text.split(separator: " ")
+            .map { word in
+                word.prefix(1).uppercased() + word.dropFirst()
+            }
+            .joined(separator: " ")
     }
     
     private func handlePressing(_ isPressing: Bool) {
@@ -167,6 +189,10 @@ struct FlowerRevealView: View {
     private func startHolding() {
         isHolding = true
         holdProgress = 0
+        lastHapticLevel = 0
+        
+        // Initial haptic
+        lightImpact.impactOccurred()
         
         // Track start time for accurate progress
         let startTime = Date()
@@ -183,9 +209,40 @@ struct FlowerRevealView: View {
                 shakeOffset = CGFloat.random(in: -intensity...intensity)
             }
             
+            // Haptic feedback based on progress
+            handleHapticFeedback()
+            
             // Check if complete
             if holdProgress >= 1.0 {
                 revealFlower()
+            }
+        }
+    }
+    
+    private func handleHapticFeedback() {
+        let currentLevel = Int(holdProgress * 10)
+        
+        if currentLevel > lastHapticLevel {
+            lastHapticLevel = currentLevel
+            
+            switch currentLevel {
+            case 1...3:
+                // Light taps for early progress
+                lightImpact.impactOccurred()
+            case 4...6:
+                // Medium taps for middle progress
+                mediumImpact.impactOccurred()
+            case 7...8:
+                // Heavy taps for near completion
+                heavyImpact.impactOccurred()
+            case 9:
+                // Selection feedback right before reveal
+                selectionFeedback.selectionChanged()
+            case 10:
+                // Final heavy impact
+                heavyImpact.impactOccurred()
+            default:
+                break
             }
         }
     }
@@ -196,6 +253,7 @@ struct FlowerRevealView: View {
         holdTimer = nil
         shakeTimer?.invalidate()
         shakeTimer = nil
+        lastHapticLevel = 0
         
         withAnimation(.spring()) {
             holdProgress = 0

@@ -33,6 +33,7 @@ struct FlowerMapView: View {
     let showCoordinates: Bool
     @State private var showingFullMap = false
     @State private var region: MKCoordinateRegion
+    @EnvironmentObject var flowerStore: FlowerStore
     
     init(flower: AIFlower, showCoordinates: Bool = true) {
         self.flower = flower
@@ -155,7 +156,7 @@ struct FlowerMapView: View {
             }
             .sheet(isPresented: $showingFullMap) {
                 FullScreenMapView(selectedFlower: flower)
-                    .environmentObject(FlowerStore())
+                    .environmentObject(flowerStore)
             }
         }
     }

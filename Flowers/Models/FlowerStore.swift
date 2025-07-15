@@ -78,11 +78,13 @@ class FlowerStore: ObservableObject {
         
         // Check if test flower should be shown
         if showTestFlowerOnNextLaunch {
-            // Reset the flag
-            showTestFlowerOnNextLaunch = false
+            print("Test flower flag detected, creating test flower...")
+            // Reset the flag immediately and synchronously
+            userDefaults.set(false, forKey: showTestFlowerOnNextLaunchKey)
+            userDefaults.synchronize() // Force immediate save
             
             // Generate and show test flower
-            Task {
+            Task { @MainActor in
                 await generateTestFlowerForReveal()
             }
         } else {
@@ -998,5 +1000,42 @@ class FlowerStore: ObservableObject {
             self.pendingFlower = testFlower
             self.hasUnrevealedFlower = true
         }
+    }
+    
+    func resetProfile() {
+        // Clear all stored data
+        userDefaults.removeObject(forKey: favoritesKey)
+        userDefaults.removeObject(forKey: discoveredFlowersKey)
+        userDefaults.removeObject(forKey: dailyFlowerKey)
+        userDefaults.removeObject(forKey: dailyFlowerDateKey)
+        userDefaults.removeObject(forKey: pendingFlowerKey)
+        userDefaults.removeObject(forKey: lastScheduledDateKey)
+        userDefaults.removeObject(forKey: nextFlowerTimeKey)
+        userDefaults.removeObject(forKey: lastMilestoneKey)
+        userDefaults.removeObject(forKey: showTestFlowerOnNextLaunchKey)
+        userDefaults.removeObject(forKey: "hasGeneratedFirstFlower")
+        userDefaults.removeObject(forKey: "hasCompletedOnboarding")
+        userDefaults.removeObject(forKey: "hasReceivedJennyFlower")
+        
+        // Clear shared defaults for widget
+        sharedDefaults?.removeObject(forKey: dailyFlowerKey)
+        
+        // Clear notifications
+        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+        UNUserNotificationCenter.current().removeAllDeliveredNotifications()
+        UNUserNotificationCenter.current().setBadgeCount(0)
+        
+        // Reset all published properties
+        currentFlower = nil
+        favorites = []
+        discoveredFlowers = []
+        isGenerating = false
+        errorMessage = nil
+        hasUnrevealedFlower = false
+        pendingFlower = nil
+        nextFlowerTime = nil
+        
+        // Force UI update
+        objectWillChange.send()
     }
 } 

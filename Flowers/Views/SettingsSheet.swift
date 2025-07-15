@@ -8,6 +8,7 @@ struct SettingsSheet: View {
     @State private var showingAPIKeyInfo = false
     @State private var showingDebugScheduler = false
     @State private var debugNotificationSeconds = 10
+    @State private var showingResetConfirmation = false
     
     var body: some View {
         NavigationView {
@@ -155,6 +156,36 @@ struct SettingsSheet: View {
                         .background(Color.flowerCardBackground)
                         .cornerRadius(16)
                         
+                        // Profile Section
+                        VStack(alignment: .leading, spacing: 16) {
+                            Label("Profile", systemImage: "person.circle.fill")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundColor(.flowerTextPrimary)
+                            
+                            Button(action: {
+                                showingResetConfirmation = true
+                            }) {
+                                HStack {
+                                    Image(systemName: "arrow.counterclockwise.circle")
+                                        .font(.system(size: 20))
+                                        .foregroundColor(.flowerError)
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Reset Profile")
+                                            .font(.system(size: 16, weight: .medium))
+                                            .foregroundColor(.flowerError)
+                                        Text("Start fresh with onboarding and lose all flowers")
+                                            .font(.system(size: 12))
+                                            .foregroundColor(.flowerTextSecondary)
+                                    }
+                                    Spacer()
+                                }
+                                .padding(.vertical, 8)
+                            }
+                        }
+                        .padding(20)
+                        .background(Color.flowerCardBackground)
+                        .cornerRadius(16)
+                        
                         // About Section
                         VStack(alignment: .leading, spacing: 16) {
                             Label("About", systemImage: "info.circle.fill")
@@ -193,6 +224,15 @@ struct SettingsSheet: View {
             Button("OK") { }
         } message: {
             Text("To use AI features, you'll need API keys from:\n\n• FAL.ai for flower images\n• OpenAI for flower names and descriptions\n\nVisit their websites to sign up and get your API keys.")
+        }
+        .alert("Reset Profile", isPresented: $showingResetConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button("Reset", role: .destructive) {
+                flowerStore.resetProfile()
+                dismiss()
+            }
+        } message: {
+            Text("Are you sure you want to reset your profile? This will delete all your discovered flowers and return you to the onboarding flow.")
         }
     }
     
