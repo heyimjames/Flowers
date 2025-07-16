@@ -81,11 +81,10 @@ class OpenAIService {
     }
     
     func generateFlowerImage(descriptor: String) async throws -> (UIImage, String) {
-        guard !APIConfiguration.shared.openAIKey.isEmpty else {
+        let apiKey = APIConfiguration.shared.effectiveOpenAIKey
+        guard !apiKey.isEmpty else {
             throw OpenAIError.invalidAPIKey
         }
-        
-        let apiKey = APIConfiguration.shared.openAIKey
         
         // Build the prompt using the consistent structure from PRD
         let prompt = "ISOLATED on PLAIN WHITE BACKGROUND, a single \(descriptor) flower, NOTHING ELSE IN FRAME, pure white empty background, NO SHADOWS on background, botanical illustration style, soft watercolor texture, delicate petals, elegant stem with leaves, dreamy and ethereal, pastel colors with subtle gradients, professional botanical art, COMPLETELY WHITE BACKGROUND, isolated subject, minimalist presentation, highly detailed, 4K"
@@ -138,11 +137,10 @@ class OpenAIService {
     }
     
     func generateFlowerDetails(for flower: AIFlower, context: FlowerContext? = nil) async throws -> FlowerDetails {
-        guard !APIConfiguration.shared.openAIKey.isEmpty else {
+        let apiKey = APIConfiguration.shared.effectiveOpenAIKey
+        guard !apiKey.isEmpty else {
             throw OpenAIError.invalidAPIKey
         }
-        
-        let apiKey = APIConfiguration.shared.openAIKey
         
         // Get current date context
         let dateFormatter = DateFormatter()
@@ -293,11 +291,10 @@ class OpenAIService {
     }
     
     func generateFlowerName(descriptor: String, existingNames: Set<String> = [], context: FlowerContext? = nil) async throws -> String {
-        guard !APIConfiguration.shared.openAIKey.isEmpty else {
+        let apiKey = APIConfiguration.shared.effectiveOpenAIKey
+        guard !apiKey.isEmpty else {
             throw OpenAIError.invalidAPIKey
         }
-        
-        let apiKey = APIConfiguration.shared.openAIKey
         
         // Randomly decide between Latin names and real-world names (60% Latin, 40% real-world)
         let useRealWorldName = Int.random(in: 1...10) <= 4
@@ -444,11 +441,10 @@ class OpenAIService {
     }
     
     func generateJennyFlowerName(descriptor: String, existingNames: Set<String> = []) async throws -> String {
-        guard !APIConfiguration.shared.openAIKey.isEmpty else {
+        let apiKey = APIConfiguration.shared.effectiveOpenAIKey
+        guard !apiKey.isEmpty else {
             throw OpenAIError.invalidAPIKey
         }
-        
-        let apiKey = APIConfiguration.shared.openAIKey
         
         let systemPrompt = """
         You are a botanist who names newly discovered flower species. Create an elegant name that incorporates "Jenny" or relates to the name Jenny.
@@ -549,7 +545,8 @@ class OpenAIService {
     }
     
     func generateFlowerNotification(flowerName: String, isBouquet: Bool = false, holidayName: String? = nil) async throws -> (title: String, body: String) {
-        guard !APIConfiguration.shared.openAIKey.isEmpty else {
+        let apiKey = APIConfiguration.shared.effectiveOpenAIKey
+        guard !apiKey.isEmpty else {
             throw OpenAIError.invalidAPIKey
         }
         
@@ -604,7 +601,7 @@ class OpenAIService {
         
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "POST"
-        urlRequest.setValue("Bearer \(APIConfiguration.shared.openAIKey)", forHTTPHeaderField: "Authorization")
+        urlRequest.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
         let encoder = JSONEncoder()
@@ -646,11 +643,10 @@ class OpenAIService {
     }
     
     func generateShortDescription(for flower: AIFlower) async throws -> String {
-        guard !APIConfiguration.shared.openAIKey.isEmpty else {
+        let apiKey = APIConfiguration.shared.effectiveOpenAIKey
+        guard !apiKey.isEmpty else {
             throw OpenAIError.invalidAPIKey
         }
-        
-        let apiKey = APIConfiguration.shared.openAIKey
         
         let systemPrompt = """
         You are a botanist who creates concise, beautiful descriptions of flowers for mobile app cards.

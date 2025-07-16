@@ -57,9 +57,24 @@ struct SettingsSheet: View {
                     VStack(spacing: 24) {
                         // API Configuration Section
                         VStack(alignment: .leading, spacing: 16) {
-                                                    Label("API Configuration", systemImage: "key.fill")
-                            .font(.system(size: 18, weight: .light, design: .serif))
-                            .foregroundColor(.flowerTextPrimary)
+                            HStack {
+                                Label("API Configuration", systemImage: "key.fill")
+                                    .font(.system(size: 18, weight: .light, design: .serif))
+                                    .foregroundColor(.flowerTextPrimary)
+                                
+                                Spacer()
+                                
+                                if AppConfig.shared.hasBuiltInKeys {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .font(.system(size: 12))
+                                            .foregroundColor(.green)
+                                        Text("Built-in")
+                                            .font(.system(size: 12))
+                                            .foregroundColor(.flowerTextSecondary)
+                                    }
+                                }
+                            }
                             
                             // FAL API Key
                             VStack(alignment: .leading, spacing: 8) {
@@ -85,6 +100,13 @@ struct SettingsSheet: View {
                                     .onChange(of: apiConfig.openAIKey) { _ in
                                         apiConfig.saveConfiguration()
                                     }
+                            }
+                            
+                            if AppConfig.shared.hasBuiltInKeys {
+                                Text("✨ Built-in API keys are provided. Leave fields empty to use them, or enter your own keys to override.")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.flowerTextSecondary)
+                                    .padding(.top, 8)
                             }
                             
                             Button(action: { showingAPIKeyInfo = true }) {

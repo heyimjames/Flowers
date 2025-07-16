@@ -46,11 +46,12 @@ class FALService {
     }
     
     func generateFlowerImage(descriptor: String, isBouquet: Bool = false, personalMessage: String? = nil) async throws -> (UIImage, String) {
-        guard !APIConfiguration.shared.falKey.isEmpty else {
+        let apiKey = APIConfiguration.shared.effectiveFALKey
+        print("FALService: Using API key: \(apiKey.isEmpty ? "EMPTY" : "Present (\(apiKey.count) chars)")")
+        guard !apiKey.isEmpty else {
+            print("FALService: API key is empty, throwing invalidAPIKey error")
             throw FALError.invalidAPIKey
         }
-        
-        let apiKey = APIConfiguration.shared.falKey
         
         // Build the prompt based on whether it's a bouquet or single flower
         let prompt: String

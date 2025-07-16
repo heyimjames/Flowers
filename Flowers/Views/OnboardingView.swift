@@ -104,11 +104,24 @@ struct OnboardingView: View {
                 ("Forest Guardian", "forest greens with golden accents like sunlight through leaves", "A woodland protector with ancient wisdom")
             ]
             
+            print("OnboardingView: Starting to generate \(starterThemes.count) starter flowers")
+            
+            // Check if API keys are available
+            let hasAPIKeys = AppConfig.shared.hasBuiltInKeys
+            print("OnboardingView: Built-in API keys available: \(hasAPIKeys)")
+            
             for (index, (name, theme, description)) in starterThemes.enumerated() {
+                print("OnboardingView: Generating flower \(index + 1)/\(starterThemes.count): \(name)")
+                
                 do {
                     // Generate image
                     let (image, _) = try await FALService.shared.generateFlowerImage(descriptor: theme)
-                    guard let imageData = image.pngData() else { continue }
+                    guard let imageData = image.pngData() else { 
+                        print("OnboardingView: Failed to convert image to PNG data for \(name)")
+                        continue 
+                    }
+                    
+                    print("OnboardingView: Successfully generated image for \(name)")
                     
                     // Create flower with special first flower tag
                     var flower = AIFlower(
@@ -132,9 +145,33 @@ struct OnboardingView: View {
                     
                     flowers.append(flower)
                 } catch {
-                    print("Failed to generate starter flower \(index): \(error)")
+                    print("OnboardingView: Failed to generate starter flower \(index): \(error)")
+                    
+                    // Create a fallback flower with placeholder data
+                    var flower = AIFlower(
+                        name: name,
+                        descriptor: theme,
+                        imageData: nil, // No image data
+                        generatedDate: Date(),
+                        isFavorite: false,
+                        discoveryDate: Date()
+                    )
+                    
+                    // Add the description as meaning
+                    flower.meaning = description
+                    
+                    // Add location data if available
+                    if let location = ContextualFlowerGenerator.shared.currentLocation {
+                        flower.discoveryLatitude = location.coordinate.latitude
+                        flower.discoveryLongitude = location.coordinate.longitude
+                        flower.discoveryLocationName = ContextualFlowerGenerator.shared.currentPlacemark?.locality
+                    }
+                    
+                    flowers.append(flower)
                 }
             }
+            
+            print("OnboardingView: Generated \(flowers.count) flowers total")
             
             await MainActor.run {
                 self.starterFlowers = flowers
@@ -460,6 +497,23 @@ struct StarterFlowerCard: View {
                     .frame(width: 280, height: 280)
                     .clipped()
                     .cornerRadius(24)
+            } else {
+                // Placeholder when no image is available
+                ZStack {
+                    RoundedRectangle(cornerRadius: 24)
+                        .fill(Color.flowerCardBackground)
+                        .frame(width: 280, height: 280)
+                    
+                    VStack(spacing: 12) {
+                        Image(systemName: "flower.fill")
+                            .font(.system(size: 48))
+                            .foregroundColor(.flowerPrimary.opacity(0.6))
+                        
+                        Text("Loading...")
+                            .font(.system(size: 16))
+                            .foregroundColor(.flowerTextSecondary)
+                    }
+                }
             }
             
             VStack(spacing: 12) {
