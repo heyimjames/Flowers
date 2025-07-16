@@ -505,20 +505,22 @@ struct ContentView: View {
             // Next flower timing or empty space
             if !flowerStore.hasUnrevealedFlower {
                 // Show next flower timing
-                HStack(spacing: 8) {
-                    Image(systemName: "clock")
-                        .font(.system(size: 14))
-                        .foregroundColor(.flowerTextSecondary)
-                    if let nextTime = flowerStore.nextFlowerTime {
-                        Text("Next flower arrives in ")
+                VStack(spacing: 4) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "clock")
+                            .font(.system(size: 14))
+                            .foregroundColor(.flowerTextSecondary)
+                        Text("Next flower arrives")
                             .font(.system(size: 13))
                             .foregroundColor(.flowerTextSecondary)
-                        + Text(nextTime, style: .relative)
-                            .font(.system(size: 13))
+                    }
+                    if let nextTime = flowerStore.nextFlowerTime {
+                        Text("in \(nextTime, style: .relative)")
+                            .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.flowerTextSecondary)
                     } else {
-                        Text("Next flower arrives soon")
-                            .font(.system(size: 13))
+                        Text("soon")
+                            .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.flowerTextSecondary)
                     }
                 }
@@ -541,10 +543,17 @@ struct ContentView: View {
             }) {
                 Image(systemName: flowerStore.currentFlower?.isFavorite == true ? "heart.fill" : "heart")
                     .font(.system(size: 22))
-                    .foregroundColor(flowerStore.currentFlower?.isFavorite == true ? .flowerSecondary : .flowerTextSecondary)
+                    .foregroundColor(
+                        flowerStore.currentFlower == nil ? .flowerTextTertiary.opacity(0.5) : 
+                        (flowerStore.currentFlower?.isFavorite == true ? .flowerPrimary : .flowerTextSecondary)
+                    )
             }
-            .flowerIconButtonStyle(backgroundColor: .flowerButtonBackground, isActive: flowerStore.currentFlower?.isFavorite == true)
+            .flowerIconButtonStyle(
+                backgroundColor: Color.flowerTextTertiary.opacity(0.1), 
+                isActive: flowerStore.currentFlower?.isFavorite == true
+            )
             .disabled(flowerStore.currentFlower == nil)
+            .opacity(flowerStore.currentFlower == nil ? 0.6 : 1.0)
             
             // Share button
             Button(action: {
@@ -552,19 +561,22 @@ struct ContentView: View {
             }) {
                 Image(systemName: "square.and.arrow.up")
                     .font(.system(size: 22))
-                    .foregroundColor(.flowerTextSecondary)
+                    .foregroundColor(
+                        flowerStore.currentFlower == nil ? .flowerTextTertiary.opacity(0.5) : .flowerTextSecondary
+                    )
             }
-            .flowerIconButtonStyle()
+            .flowerIconButtonStyle(backgroundColor: Color.flowerTextTertiary.opacity(0.1))
             .disabled(flowerStore.currentFlower == nil)
+            .opacity(flowerStore.currentFlower == nil ? 0.6 : 1.0)
             .accessibilityLabel("Share flower image")
             
-            // Collection button
+            // Collection button - always active
             Button(action: { showingFavorites = true }) {
-                Image(systemName: "rectangle.grid.2x2")
+                Image(systemName: "rectangle.grid.2x2.fill")
                     .font(.system(size: 22))
-                    .foregroundColor(.flowerTextSecondary)
+                    .foregroundColor(.flowerPrimary)
             }
-            .flowerIconButtonStyle()
+            .flowerIconButtonStyle(backgroundColor: Color.flowerPrimary.opacity(0.1), isActive: true)
         }
     }
     
