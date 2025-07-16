@@ -17,9 +17,6 @@ struct ContentView: View {
     @State private var showingFlowerDetail = false
     @State private var showingOnboarding = false
     @State private var showingShareSheet = false
-    @State private var showingGiftConfirmation = false
-    @State private var giftRecipientName = ""
-    @State private var isProcessingGift = false
     @Environment(\.scenePhase) var scenePhase
     @State private var wasInBackground = false
     @AppStorage("userName") private var userName = ""
@@ -238,19 +235,6 @@ struct ContentView: View {
             if let flower = flowerStore.currentFlower {
                 ShareSheet(flower: flower)
                     .ignoresSafeArea()
-            }
-        }
-        .sheet(isPresented: $showingGiftConfirmation) {
-            if let flower = flowerStore.currentFlower {
-                GiftFlowerSheet(
-                    flower: flower,
-                    userName: $userName,
-                    onGiftConfirmed: { recipientName in
-                        Task {
-                            await giftFlower(to: recipientName)
-                        }
-                    }
-                )
             }
         }
 
@@ -610,57 +594,12 @@ struct ContentView: View {
                             )
                     )
             }
-            
-            // Gift button (only for giftable flowers)
-            if let flower = flowerStore.currentFlower, flower.isGiftable {
-                Button(action: {
-                    showingGiftConfirmation = true
-                }) {
-                    Image(systemName: "gift")
-                        .font(.system(size: 22))
-                        .foregroundColor(.flowerPrimary)
-                        .frame(width: 56, height: 56)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.flowerPrimary.opacity(0.1))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .strokeBorder(Color.flowerPrimary.opacity(0.3), lineWidth: 1)
-                                )
-                        )
-                }
-            }
         }
     }
     
     private func shareFlower() {
         guard flowerStore.currentFlower != nil else { return }
         showingShareSheet = true
-    }
-    
-    private func giftFlower(to recipientName: String) async {
-        guard let flower = flowerStore.currentFlower else { return }
-        
-        await MainActor.run {
-            isProcessingGift = true
-        }
-        
-        // Remove the flower from collection
-        flowerStore.removeFlower(flower)
-        
-        // Show success feedback
-        await MainActor.run {
-            isProcessingGift = false
-            
-            // Show success message
-            let successMessage = "Your \(flower.name) has been gifted successfully!"
-            
-            // You could show an alert or toast here
-            print(successMessage)
-            
-            // Haptic feedback
-            UINotificationFeedbackGenerator().notificationOccurred(.success)
-        }
     }
 }
 

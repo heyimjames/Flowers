@@ -348,6 +348,8 @@ struct FlowerDetailSheet: View {
     @State private var detailsError: String?
     @State private var saveImageAlert = false
     @State private var saveImageSuccess = false
+    @State private var showingGiftSheet = false
+    @AppStorage("userName") private var userName = ""
     
     init(flower: AIFlower, flowerStore: FlowerStore, allFlowers: [AIFlower], currentIndex: Int) {
         self._flower = State(initialValue: flower)
@@ -638,6 +640,25 @@ struct FlowerDetailSheet: View {
                                     )
                             }
                             .accessibilityLabel("Share flower image")
+                            
+                            // Gift button (only for giftable flowers)
+                            if flower.isGiftable {
+                                Button(action: { showingGiftSheet = true }) {
+                                    Image(systemName: "gift")
+                                        .font(.system(size: 20))
+                                        .foregroundColor(.flowerPrimary)
+                                        .frame(width: 52, height: 52)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 12)
+                                                .fill(Color.flowerPrimary.opacity(0.1))
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 12)
+                                                        .strokeBorder(Color.flowerPrimary.opacity(0.2), lineWidth: 1)
+                                                )
+                                        )
+                                }
+                                .accessibilityLabel("Gift flower")
+                            }
                         }
                         
                         // Discard button
@@ -685,6 +706,17 @@ struct FlowerDetailSheet: View {
             } else {
                 Text("Please allow photo library access in Settings to save images.")
             }
+        }
+        .fullScreenCover(isPresented: $showingGiftSheet) {
+            GiftFlowerSheet(
+                flower: flower,
+                userName: $userName,
+                onGiftConfirmed: { recipientName in
+                    Task {
+                        await giftFlower(to: recipientName)
+                    }
+                }
+            )
         }
         .onAppear {
             // Load details if not already loaded
@@ -758,7 +790,23 @@ struct FlowerDetailSheet: View {
         }
     }
     
-
+    private func giftFlower(to recipientName: String) async {
+        // Remove the flower from collection
+        flowerStore.removeFlower(flower)
+        
+        // Show success feedback
+        await MainActor.run {
+            // Show success message
+            let successMessage = "Your \(flower.name) has been gifted successfully!"
+            print(successMessage)
+            
+            // Haptic feedback
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+            
+            // Dismiss the detail view
+            dismiss()
+        }
+    }
 }
 
 struct DetailSection: View {

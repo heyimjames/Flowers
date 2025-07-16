@@ -76,6 +76,10 @@ struct GiftFlowerSheet: View {
                                     .submitLabel(.done)
                                     .autocorrectionDisabled()
                                     .textInputAutocapitalization(.words)
+                                    .onSubmit {
+                                        // Ensure the name is saved
+                                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                                    }
                                 
                                 Text("This will be shown in the flower's ownership history")
                                     .font(.system(size: 12))
@@ -136,8 +140,6 @@ struct GiftFlowerSheet: View {
                 }
             }
         }
-        .presentationDetents([.medium])
-        .presentationDragIndicator(.visible)
         .alert("Name Required", isPresented: $showingNamePrompt) {
             Button("OK") { }
         } message: {
@@ -146,9 +148,11 @@ struct GiftFlowerSheet: View {
     }
     
     private func shareFlowerDocument() async {
+        print("ShareFlowerDocument called - userName: \(userName)")
         do {
             // Get current location
             let locationName = await LocationManager.shared.getCurrentLocationName()
+            print("Got location: \(locationName)")
             
             // Export flower
             let fileURL = try FlowerTransferService.shared.exportFlower(
@@ -196,8 +200,14 @@ struct GiftFlowerSheet: View {
                 }
                 
                 if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                   let rootViewController = windowScene.windows.first?.rootViewController {
-                    rootViewController.present(activityVC, animated: true)
+                   let window = windowScene.windows.first,
+                   let rootViewController = window.rootViewController {
+                    // Find the topmost presented view controller
+                    var topViewController = rootViewController
+                    while let presented = topViewController.presentedViewController {
+                        topViewController = presented
+                    }
+                    topViewController.present(activityVC, animated: true)
                 }
             }
         } catch {
