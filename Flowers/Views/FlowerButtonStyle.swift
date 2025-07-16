@@ -13,46 +13,20 @@ struct FlowerButtonStyle: ButtonStyle {
     
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 16, weight: .medium))
-            .foregroundColor(.white) // White text for good contrast on dark buttons
+            .font(.system(size: 17, weight: .semibold))
+            .foregroundColor(.white)
             .frame(maxWidth: .infinity)
             .frame(height: 56)
             .background(
-                ZStack {
-                    // Material blur background
-                    RoundedRectangle(cornerRadius: 28)
-                        .fill(.thickMaterial)
-                    
-                    // Green brand tint overlay
-                    RoundedRectangle(cornerRadius: 28)
-                        .fill(Color.flowerPrimary.opacity(0.4))
-                    
-                    // Inner glow effect
-                    RoundedRectangle(cornerRadius: 28)
-                        .strokeBorder(
-                            LinearGradient(
-                                colors: [
-                                    Color.white.opacity(0.15), // Subtle highlight at top
-                                    Color.white.opacity(0.05), // Very subtle at middle
-                                    Color.black.opacity(0.2)   // Darker shadow at bottom
-                                ],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            ),
-                            lineWidth: 0.5
-                        )
-                    
-                    // Outer border
-                    RoundedRectangle(cornerRadius: 28)
-                        .strokeBorder(
-                            Color.flowerPrimary.opacity(0.3),
-                            lineWidth: 1
-                        )
-                }
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(color)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(configuration.isPressed ? Color.black.opacity(0.1) : Color.clear)
+                    )
             )
-            .cornerRadius(28)
-            .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
-            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
+            .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
+            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
     }
 }
 
@@ -61,45 +35,23 @@ struct FlowerSecondaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: 16, weight: .medium))
-            .foregroundColor(.white) // White text for good contrast on dark buttons
+            .foregroundColor(Color(.systemGray))
             .frame(maxWidth: .infinity)
             .frame(height: 56)
             .background(
-                ZStack {
-                    // Material blur background
-                    RoundedRectangle(cornerRadius: 28)
-                        .fill(.thickMaterial)
-                    
-                    // Green brand tint overlay (slightly lighter than primary)
-                    RoundedRectangle(cornerRadius: 28)
-                        .fill(Color.flowerPrimary.opacity(0.3))
-                    
-                    // Inner glow effect
-                    RoundedRectangle(cornerRadius: 28)
-                        .strokeBorder(
-                            LinearGradient(
-                                colors: [
-                                    Color.white.opacity(0.1), // Subtle highlight at top
-                                    Color.white.opacity(0.03), // Very subtle at middle
-                                    Color.black.opacity(0.15)   // Darker shadow at bottom
-                                ],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            ),
-                            lineWidth: 0.5
-                        )
-                    
-                    // Outer border
-                    RoundedRectangle(cornerRadius: 28)
-                        .strokeBorder(
-                            Color.flowerPrimary.opacity(0.25),
-                            lineWidth: 1
-                        )
-                }
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color(.systemGray6))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .strokeBorder(Color(.systemGray4), lineWidth: 1)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(configuration.isPressed ? Color.black.opacity(0.05) : Color.clear)
+                    )
             )
-            .cornerRadius(28)
-            .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
-            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
+            .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
+            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
     }
 }
 
@@ -107,50 +59,30 @@ struct FlowerSecondaryButtonStyle: ButtonStyle {
 struct FlowerIconButtonStyle: ButtonStyle {
     let backgroundColor: Color
     let isActive: Bool
+    let isPrimary: Bool
     
-    init(backgroundColor: Color = .flowerButtonBackground, isActive: Bool = false) {
+    init(backgroundColor: Color = .flowerButtonBackground, isActive: Bool = false, isPrimary: Bool = false) {
         self.backgroundColor = backgroundColor
         self.isActive = isActive
+        self.isPrimary = isPrimary
     }
     
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .foregroundColor(.white) // White icon for good contrast on dark buttons
+            .foregroundColor(isPrimary ? .white : Color(.systemGray))
             .frame(width: 56, height: 56)
             .background(
-                ZStack {
-                    // Material blur background
-                    Circle()
-                        .fill(.thickMaterial)
-                    
-                    // Green brand tint overlay
-                    Circle()
-                        .fill(Color.flowerPrimary.opacity(0.4))
-                    
-                    // Inner glow effect
-                    Circle()
-                        .strokeBorder(
-                            LinearGradient(
-                                colors: [
-                                    Color.white.opacity(0.1), // Subtle highlight at top
-                                    Color.white.opacity(0.03), // Very subtle at middle
-                                    Color.black.opacity(0.15)   // Darker shadow at bottom
-                                ],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            ),
-                            lineWidth: 0.5
-                        )
-                    
-                    // Outer border
-                    Circle()
-                        .strokeBorder(
-                            Color.flowerPrimary.opacity(0.25),
-                            lineWidth: 1
-                        )
-                }
+                Circle()
+                    .fill(isPrimary ? Color.flowerPrimary : Color(.systemGray6))
+                    .overlay(
+                        Circle()
+                            .strokeBorder(isPrimary ? Color.clear : Color(.systemGray4), lineWidth: 1)
+                    )
+                    .overlay(
+                        Circle()
+                            .fill(configuration.isPressed ? Color.black.opacity(isPrimary ? 0.1 : 0.05) : Color.clear)
+                    )
             )
-            .clipShape(Circle())
             .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
             .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
     }
@@ -166,7 +98,7 @@ extension View {
         self.buttonStyle(FlowerSecondaryButtonStyle())
     }
     
-    func flowerIconButtonStyle(backgroundColor: Color = .flowerButtonBackground, isActive: Bool = false) -> some View {
-        self.buttonStyle(FlowerIconButtonStyle(backgroundColor: backgroundColor, isActive: isActive))
+    func flowerIconButtonStyle(backgroundColor: Color = .flowerButtonBackground, isActive: Bool = false, isPrimary: Bool = false) -> some View {
+        self.buttonStyle(FlowerIconButtonStyle(backgroundColor: backgroundColor, isActive: isActive, isPrimary: isPrimary))
     }
 }
