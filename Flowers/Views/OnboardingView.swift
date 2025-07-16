@@ -163,6 +163,9 @@ struct OnboardingView: View {
         // Mark onboarding as complete
         UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
         
+        // Schedule the next flower for new users
+        flowerStore.scheduleNextFlowerIfNeeded()
+        
         // Dismiss onboarding
         dismiss()
     }

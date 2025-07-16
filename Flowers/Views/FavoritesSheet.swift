@@ -175,23 +175,29 @@ struct FavoritesSheet: View {
                     
                     if displayedFlowers.isEmpty {
                         // Empty state
-                        Spacer()
-                        
-                        VStack(spacing: 16) {
-                            Image(systemName: showFavoritesOnly ? "heart.circle" : "sparkles.rectangle.stack")
-                                .font(.system(size: 64))
+                        VStack(spacing: 20) {
+                            Image(systemName: showFavoritesOnly ? "heart.slash" : "flower")
+                                .font(.system(size: 60))
                                 .foregroundColor(.flowerTextTertiary)
                             
-                            Text(showFavoritesOnly ? "No favorites yet" : "No flowers discovered yet")
-                                .font(.system(size: 18, weight: .medium))
-                                .foregroundColor(.flowerTextSecondary)
+                            Text(showFavoritesOnly ? "No favorites yet" : "Your collection is empty")
+                                .font(.system(size: 20, weight: .medium))
+                                .foregroundColor(.flowerTextPrimary)
                             
-                            Text(showFavoritesOnly ? "Tap the heart to save flowers" : "Generate flowers to start your collection")
-                                .font(.system(size: 14))
-                                .foregroundColor(.flowerTextTertiary)
+                            if showFavoritesOnly {
+                                Text("Tap the heart on flowers you love")
+                                    .font(.system(size: 16))
+                                    .foregroundColor(.flowerTextSecondary)
+                                    .multilineTextAlignment(.center)
+                            } else {
+                                Text("Start your journey by discovering flowers")
+                                    .font(.system(size: 16))
+                                    .foregroundColor(.flowerTextSecondary)
+                                    .multilineTextAlignment(.center)
+                            }
                         }
-                        
-                        Spacer()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .padding(.vertical, 100)
                     } else {
                         // Flowers grid
                         ScrollView {

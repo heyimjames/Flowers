@@ -63,15 +63,16 @@ class FlowerStore: ObservableObject {
     
     init() {
         // Check if first time user before loading data
-        let isFirstTimeUser = !UserDefaults.standard.bool(forKey: "hasReceivedJennyFlower")
+        let isFirstTimeUser = !UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
         
         loadFavorites()
         loadDiscoveredFlowers()
         
-        // Add Jenny flower for first-time users
+        // Add Jenny flower for first-time users IMMEDIATELY
         if isFirstTimeUser &&
            !discoveredFlowers.contains(where: { $0.name == "Jennifer's Blessing" }) {
-            addJennyFlower()
+            // Create Jenny flower synchronously to ensure it's there when onboarding starts
+            createJennyFlowerSynchronously()
         }
         
         checkForPendingFlower()
@@ -88,8 +89,9 @@ class FlowerStore: ObservableObject {
             Task { @MainActor in
                 await generateTestFlowerForReveal()
             }
-        } else {
-            // Check if we should have a flower ready based on today's schedule
+        } else if !isFirstTimeUser {
+            // Only check for scheduled flowers if not a first-time user
+            // This prevents new users from getting flowers for past dates
             checkForScheduledFlowerToday()
             
             // Schedule next flower if needed
@@ -147,6 +149,92 @@ class FlowerStore: ObservableObject {
                 }
             } catch {
                 print("Failed to create Jenny flower: \(error)")
+            }
+        }
+    }
+    
+    private func createJennyFlowerSynchronously() {
+        // Use a placeholder image for Jenny flower to ensure it's available immediately
+        let jennyFlower = AIFlower(
+            name: "Jennifer's Blessing",
+            descriptor: "elegant pink and white rose with delicate petals, soft romantic colors, graceful and beautiful",
+            imageData: UIImage(systemName: "flower.fill")?.pngData(), // Placeholder initially
+            generatedDate: Date(timeIntervalSince1970: 1669334400), // Nov 25, 2022
+            isFavorite: true, // Auto-favorite this special flower
+            meaning: "A symbol of kindness, beauty, and joy. This flower represents the light that special people bring into our lives.",
+            properties: "This special flower is a personal gift to you from James, the creator of this app, named in celebration of his fiancée Jenny. Her kindness, beauty, and humor light up the lives of everyone she meets. Like this flower, she brings joy wherever she goes. 💝",
+            origins: "First discovered in Canary Wharf, London, where love bloomed alongside the Thames.",
+            detailedDescription: "Jennifer's Blessing is more than just a flower – it's a gift from the app's creator to you. James named this flower after his fiancée Jenny, whose remarkable ability to brighten any space she inhabits mirrors this flower's beauty. It stands as a testament to love and the joy that special people bring into our world. Consider this flower a personal welcome gift as you begin your journey.",
+            continent: nil,
+            discoveryDate: Date(timeIntervalSince1970: 1669334400),
+            contextualGeneration: false,
+            generationContext: nil,
+            isBouquet: false,
+            bouquetFlowers: nil,
+            holidayName: nil,
+            discoveryLatitude: 51.5054, // Canary Wharf coordinates
+            discoveryLongitude: -0.0235,
+            discoveryLocationName: "Canary Wharf, London"
+        )
+        
+        // Add to discovered flowers immediately
+        self.discoveredFlowers.insert(jennyFlower, at: 0)
+        self.favorites.insert(jennyFlower, at: 0)
+        self.saveDiscoveredFlowers()
+        self.saveFavorites()
+        
+        // Mark as received
+        UserDefaults.standard.set(true, forKey: "hasReceivedJennyFlower")
+        
+        // Generate the actual image asynchronously to replace the placeholder
+        Task {
+            do {
+                let descriptor = "elegant pink and white rose with delicate petals, soft romantic colors, graceful and beautiful"
+                let (image, _) = try await FALService.shared.generateFlowerImage(descriptor: descriptor)
+                guard let imageData = image.pngData() else { return }
+                
+                await MainActor.run {
+                    // Find and update the Jenny flower with the real image
+                    if let index = self.discoveredFlowers.firstIndex(where: { $0.name == "Jennifer's Blessing" }) {
+                        let oldFlower = self.discoveredFlowers[index]
+                        
+                        // Create a new flower with updated imageData
+                        let updatedFlower = AIFlower(
+                            id: oldFlower.id,
+                            name: oldFlower.name,
+                            descriptor: oldFlower.descriptor,
+                            imageData: imageData,
+                            generatedDate: oldFlower.generatedDate,
+                            isFavorite: oldFlower.isFavorite,
+                            meaning: oldFlower.meaning,
+                            properties: oldFlower.properties,
+                            origins: oldFlower.origins,
+                            detailedDescription: oldFlower.detailedDescription,
+                            continent: oldFlower.continent,
+                            discoveryDate: oldFlower.discoveryDate,
+                            contextualGeneration: oldFlower.contextualGeneration,
+                            generationContext: oldFlower.generationContext,
+                            isBouquet: oldFlower.isBouquet,
+                            bouquetFlowers: oldFlower.bouquetFlowers,
+                            holidayName: oldFlower.holidayName,
+                            discoveryLatitude: oldFlower.discoveryLatitude,
+                            discoveryLongitude: oldFlower.discoveryLongitude,
+                            discoveryLocationName: oldFlower.discoveryLocationName
+                        )
+                        
+                        self.discoveredFlowers[index] = updatedFlower
+                        
+                        // Update in favorites too
+                        if let favIndex = self.favorites.firstIndex(where: { $0.name == "Jennifer's Blessing" }) {
+                            self.favorites[favIndex] = updatedFlower
+                        }
+                        
+                        self.saveDiscoveredFlowers()
+                        self.saveFavorites()
+                    }
+                }
+            } catch {
+                print("Failed to generate real image for Jenny flower: \(error)")
             }
         }
     }

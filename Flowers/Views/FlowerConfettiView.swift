@@ -231,8 +231,8 @@ class FlowerConfettiUIView: UIView {
         isUserInteractionEnabled = false
         
         let emitter = CAEmitterLayer()
-        emitter.emitterPosition = CGPoint(x: bounds.width / 2, y: -100)
-        emitter.emitterSize = CGSize(width: bounds.width * 1.5, height: 1)
+        emitter.emitterPosition = CGPoint(x: UIScreen.main.bounds.width / 2, y: -100)
+        emitter.emitterSize = CGSize(width: UIScreen.main.bounds.width * 1.5, height: 1)
         emitter.emitterShape = .line
         
         // Create multiple cells with different colors and properties
@@ -278,6 +278,13 @@ class FlowerConfettiUIView: UIView {
         emitter.emitterCells = cells
         layer.addSublayer(emitter)
         self.emitterLayer = emitter
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        // Update emitter position when bounds change
+        emitterLayer?.emitterPosition = CGPoint(x: bounds.width / 2, y: -100)
+        emitterLayer?.emitterSize = CGSize(width: bounds.width * 1.5, height: 1)
     }
     
     func startConfetti() {
