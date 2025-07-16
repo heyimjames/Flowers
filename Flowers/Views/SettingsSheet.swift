@@ -9,6 +9,21 @@ struct SettingsSheet: View {
     @State private var showingDebugScheduler = false
     @State private var debugNotificationSeconds = 10
     @State private var showingResetConfirmation = false
+    @State private var showingICloudRestoreConfirmation = false
+    @State private var isRestoringFromICloud = false
+    @State private var restoreResult: RestoreResult?
+    
+    enum RestoreResult: Identifiable {
+        case success(flowersCount: Int)
+        case failure(error: String)
+        
+        var id: String {
+            switch self {
+            case .success: return "success"
+            case .failure: return "failure"
+            }
+        }
+    }
     
     var body: some View {
         NavigationView {
@@ -234,6 +249,32 @@ struct SettingsSheet: View {
         } message: {
             Text("Are you sure you want to reset your profile? This will delete all your discovered flowers and return you to the onboarding flow.")
         }
+        .alert("Restore from iCloud?", isPresented: $showingICloudRestoreConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button("Restore") {
+                Task {
+                    await performICloudRestore()
+                }
+            }
+        } message: {
+            Text("This will merge your iCloud backup with your current collection. Any flowers in your iCloud backup that aren't in your current collection will be added.")
+        }
+        .alert(item: $restoreResult) { result in
+            switch result {
+            case .success(let count):
+                return Alert(
+                    title: Text("Restore Complete"),
+                    message: Text("Successfully restored \(count) flowers from iCloud."),
+                    dismissButton: .default(Text("OK"))
+                )
+            case .failure(let error):
+                return Alert(
+                    title: Text("Restore Failed"),
+                    message: Text("Could not restore from iCloud: \(error)"),
+                    dismissButton: .default(Text("OK"))
+                )
+            }
+        }
     }
     
     private func requestNotificationPermission() {
@@ -247,6 +288,38 @@ struct SettingsSheet: View {
     private func scheduleDebugNotification() {
         flowerStore.scheduleDebugNotification(in: debugNotificationSeconds)
         dismiss()
+    }
+    
+    private func performICloudRestore() async {
+        // Set loading state
+        await MainActor.run {
+            isRestoringFromICloud = true
+            restoreResult = nil
+        }
+        
+        do {
+            // Get the count of flowers before restore
+            let flowersBeforeRestore = await MainActor.run { flowerStore.discoveredFlowers.count }
+            
+            // Perform the restore
+            await iCloudSync.mergeWithICloudData(flowerStore: flowerStore)
+            
+            // Get the count after restore
+            let flowersAfterRestore = await MainActor.run { flowerStore.discoveredFlowers.count }
+            
+            // Calculate how many were restored
+            let restoredCount = flowersAfterRestore - flowersBeforeRestore
+            
+            await MainActor.run {
+                isRestoringFromICloud = false
+                restoreResult = .success(flowersCount: max(0, restoredCount))
+            }
+        } catch {
+            await MainActor.run {
+                isRestoringFromICloud = false
+                restoreResult = .failure(error: error.localizedDescription)
+            }
+        }
     }
     
     // MARK: - iCloud Sync Section
@@ -301,7 +374,30 @@ struct SettingsSheet: View {
                     }
                 }
                 .buttonStyle(FlowerButtonStyle())
-                .disabled(iCloudSync.syncStatus == .syncing)
+                .disabled(iCloudSync.syncStatus == .syncing || isRestoringFromICloud)
+                
+                // Restore from iCloud button
+                Button(action: {
+                    showingICloudRestoreConfirmation = true
+                }) {
+                    HStack {
+                        Image(systemName: "icloud.and.arrow.down")
+                        Text("Restore from iCloud")
+                    }
+                }
+                .buttonStyle(FlowerSecondaryButtonStyle())
+                .disabled(iCloudSync.syncStatus == .syncing || isRestoringFromICloud)
+                
+                if isRestoringFromICloud {
+                    HStack {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                        Text("Restoring...")
+                            .font(.system(size: 14))
+                            .foregroundColor(.flowerTextSecondary)
+                    }
+                    .padding(.top, 8)
+                }
                 
                 Text("Your flowers are automatically backed up to iCloud")
                     .font(.system(size: 12))
