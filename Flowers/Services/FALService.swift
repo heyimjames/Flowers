@@ -55,9 +55,9 @@ class FALService {
         // Build the prompt based on whether it's a bouquet or single flower
         let prompt: String
         if isBouquet {
-            prompt = "A beautiful bouquet of \(descriptor), arranged in elegant botanical illustration style, centered on pure white background, soft watercolor texture, multiple flower types harmoniously arranged, wrapped with delicate ribbon, dreamy and ethereal, pastel colors with subtle gradients, professional botanical art, highly detailed, 4K"
+            prompt = "ISOLATED on PLAIN WHITE BACKGROUND, a beautiful bouquet of \(descriptor), NOTHING ELSE IN FRAME, pure white empty background, NO SHADOWS on background, elegant botanical illustration style, soft watercolor texture, multiple flower types harmoniously arranged, wrapped with delicate ribbon, dreamy and ethereal, pastel colors with subtle gradients, professional botanical art, COMPLETELY WHITE BACKGROUND, isolated subject, minimalist presentation, highly detailed flowers, 4K"
         } else {
-            prompt = "A single \(descriptor) flower, botanical illustration style, centered on pure white background, soft watercolor texture, delicate petals, elegant stem with leaves, dreamy and ethereal, pastel colors with subtle gradients, professional botanical art, highly detailed, 4K"
+            prompt = "ISOLATED on PLAIN WHITE BACKGROUND, a single \(descriptor) flower, NOTHING ELSE IN FRAME, pure white empty background, NO SHADOWS on background, botanical illustration style, soft watercolor texture, delicate petals, elegant stem with leaves, dreamy and ethereal, pastel colors with subtle gradients, professional botanical art, COMPLETELY WHITE BACKGROUND, isolated subject, minimalist presentation, highly detailed, 4K"
         }
         
         let request = ImageGenerationRequest(prompt: prompt)

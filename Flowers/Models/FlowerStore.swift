@@ -81,9 +81,8 @@ class FlowerStore: ObservableObject {
         // Check if test flower should be shown
         if showTestFlowerOnNextLaunch {
             print("Test flower flag detected, creating test flower...")
-            // Reset the flag immediately and synchronously
-            userDefaults.set(false, forKey: showTestFlowerOnNextLaunchKey)
-            userDefaults.synchronize() // Force immediate save
+            // Reset the flag immediately BEFORE generating to prevent multiple triggers
+            self.showTestFlowerOnNextLaunch = false
             
             // Generate and show test flower
             Task { @MainActor in
@@ -242,13 +241,12 @@ class FlowerStore: ObservableObject {
     // MARK: - Daily Flower Scheduling
     func scheduleNextFlowerIfNeeded() {
         // Check if we already have a pending flower
-        if hasUnrevealedFlower {
+        if hasUnrevealedFlower || pendingFlower != nil {
             return
         }
         
-        // Check if we already scheduled for today
-        if let lastScheduled = userDefaults.object(forKey: lastScheduledDateKey) as? Date,
-           Calendar.current.isDateInToday(lastScheduled) {
+        // Check if we've already shown a flower today
+        if hasShownFlowerToday() {
             return
         }
         
@@ -321,7 +319,7 @@ class FlowerStore: ObservableObject {
     
     func generateDailyFlowerAndScheduleNotification(at date: Date) async {
         // Check if we already have a pending flower
-        if hasUnrevealedFlower {
+        if hasUnrevealedFlower || pendingFlower != nil {
             // Already have a flower waiting, just reschedule the notification
             guard let flower = pendingFlower else { return }
             
@@ -344,6 +342,12 @@ class FlowerStore: ObservableObject {
             }
             
             scheduleFlowerNotification(at: date, title: notificationTitle, body: notificationBody)
+            return
+        }
+        
+        // Additional safety check - don't generate if we've shown a flower today
+        if hasShownFlowerToday() {
+            print("Already shown a flower today, skipping generation")
             return
         }
         
@@ -464,12 +468,24 @@ class FlowerStore: ObservableObject {
            let flower = try? JSONDecoder().decode(AIFlower.self, from: flowerData) {
             pendingFlower = flower
             // Don't automatically show the reveal screen on app launch
-            // Only show it when explicitly triggered by notification or test
+            // Only show it when explicitly triggered by notification tap or test mode
             hasUnrevealedFlower = false
+            
+            // Clear any stale pending flower from previous days
+            if !Calendar.current.isDateInToday(flower.generatedDate) {
+                // This is an old flower, clear it
+                pendingFlower = nil
+                userDefaults.removeObject(forKey: pendingFlowerKey)
+            }
         }
     }
     
     func checkForScheduledFlowerToday() {
+        // Don't generate if we already have a pending flower
+        if pendingFlower != nil {
+            return
+        }
+        
         // Get today's scheduled time
         guard let todayScheduledTime = FlowerNotificationSchedule.getScheduledTime(for: Date()) else { return }
         
@@ -479,6 +495,14 @@ class FlowerStore: ObservableObject {
             if let lastScheduled = userDefaults.object(forKey: lastScheduledDateKey) as? Date,
                Calendar.current.isDateInToday(lastScheduled) {
                 // We've already handled today
+                return
+            }
+            
+            // Check if we've already revealed a flower today
+            if let lastFlower = currentFlower, 
+               let discoveryDate = lastFlower.discoveryDate,
+               Calendar.current.isDateInToday(discoveryDate) {
+                // User already revealed today's flower
                 return
             }
             
@@ -824,6 +848,31 @@ class FlowerStore: ObservableObject {
         return image.pngData()
     }
     
+    // MARK: - Helper Methods
+    
+    private func hasShownFlowerToday() -> Bool {
+        // Check if we have a current flower that was discovered today
+        if let currentFlower = currentFlower,
+           let discoveryDate = currentFlower.discoveryDate,
+           Calendar.current.isDateInToday(discoveryDate) {
+            return true
+        }
+        
+        // Check if we have a pending flower from today
+        if let pendingFlower = pendingFlower,
+           Calendar.current.isDateInToday(pendingFlower.generatedDate) {
+            return true
+        }
+        
+        // Check the last scheduled date
+        if let lastScheduled = userDefaults.object(forKey: lastScheduledDateKey) as? Date,
+           Calendar.current.isDateInToday(lastScheduled) {
+            return true
+        }
+        
+        return false
+    }
+    
     // MARK: - Favorites Management
     func toggleFavorite() {
         guard var flower = currentFlower else { return }
@@ -1123,6 +1172,10 @@ class FlowerStore: ObservableObject {
         hasUnrevealedFlower = false
         pendingFlower = nil
         nextFlowerTime = nil
+        
+        // Add Jennifer's Blessing for the fresh start
+        createJennyFlowerSynchronously()
+        
         shouldShowOnboarding = true // Set this to true after reset
         
         // Force UI update
