@@ -376,6 +376,34 @@ struct SettingsSheet: View {
                             .font(.system(size: 12))
                             .foregroundColor(.flowerTextSecondary)
                     }
+                    
+                    // Sync statistics
+                    if iCloudSync.syncedFlowersCount > 0 {
+                        HStack(spacing: 12) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "flower")
+                                    .font(.system(size: 11))
+                                    .foregroundColor(.flowerPrimary)
+                                Text("\(iCloudSync.syncedFlowersCount) flowers")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.flowerTextSecondary)
+                            }
+                            
+                            Text("•")
+                                .font(.system(size: 12))
+                                .foregroundColor(.flowerTextTertiary)
+                            
+                            HStack(spacing: 4) {
+                                Image(systemName: "internaldrive")
+                                    .font(.system(size: 11))
+                                    .foregroundColor(.flowerPrimary)
+                                Text(iCloudSync.formattedDataSize)
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.flowerTextSecondary)
+                            }
+                        }
+                        .padding(.top, 2)
+                    }
                 }
                 
                 Spacer()

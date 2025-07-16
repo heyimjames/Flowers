@@ -7,6 +7,8 @@ class iCloudSyncManager: ObservableObject {
     @Published var iCloudAvailable = false
     @Published var syncStatus: SyncStatus = .idle
     @Published var lastSyncDate: Date?
+    @Published var syncedFlowersCount: Int = 0
+    @Published var syncedDataSize: Int64 = 0 // in bytes
     
     private let iCloudContainerURL: URL?
     private let flowersFileName = "flowers_collection.json"
@@ -38,6 +40,11 @@ class iCloudSyncManager: ObservableObject {
             
             setupMetadataQuery()
             startPeriodicSync()
+            
+            // Load initial sync stats
+            Task {
+                await updateSyncStats()
+            }
         } else {
             self.iCloudContainerURL = nil
             self.iCloudAvailable = false
@@ -106,7 +113,52 @@ class iCloudSyncManager: ObservableObject {
         }
     }
     
-    private func startPeriodicSync() {
+    // MARK: - Sync Statistics
+    
+    func updateSyncStats() async {
+        guard let containerURL = iCloudContainerURL else { return }
+        
+        let flowersURL = containerURL.appendingPathComponent(flowersFileName)
+        
+        do {
+            // Check if file exists
+            if FileManager.default.fileExists(atPath: flowersURL.path) {
+                // Get file size
+                let attributes = try FileManager.default.attributesOfItem(atPath: flowersURL.path)
+                let fileSize = attributes[.size] as? Int64 ?? 0
+                
+                // Read and count flowers
+                let data = try Data(contentsOf: flowersURL)
+                let flowers = try JSONDecoder().decode([AIFlower].self, from: data)
+                
+                await MainActor.run {
+                    self.syncedDataSize = fileSize
+                    self.syncedFlowersCount = flowers.count
+                }
+            } else {
+                await MainActor.run {
+                    self.syncedDataSize = 0
+                    self.syncedFlowersCount = 0
+                }
+            }
+        } catch {
+            print("Error updating sync stats: \(error)")
+            await MainActor.run {
+                self.syncedDataSize = 0
+                self.syncedFlowersCount = 0
+            }
+        }
+    }
+    
+    var formattedDataSize: String {
+        let formatter = ByteCountFormatter()
+        formatter.countStyle = .file
+        return formatter.string(fromByteCount: syncedDataSize)
+    }
+    
+    // MARK: - Automatic Sync
+    
+    func startPeriodicSync() {
         // Sync every 5 minutes when app is active
         syncTimer = Timer.scheduledTimer(withTimeInterval: 300, repeats: true) { _ in
             Task {
@@ -182,6 +234,9 @@ class iCloudSyncManager: ObservableObject {
                 self.lastSyncDate = Date()
                 UserDefaults.standard.set(self.lastSyncDate, forKey: "lastICloudSync")
             }
+            
+            // Update sync statistics
+            await updateSyncStats()
             
             print("Successfully synced \(flowers.count) flowers to iCloud")
             
