@@ -1,17 +1,70 @@
 import SwiftUI
 import UIKit
 
+// Smooth progress tracking using DisplayLink
+class HoldProgressTracker: ObservableObject {
+    @Published var progress: CGFloat = 0
+    @Published var shakeOffset: CGFloat = 0
+    
+    private var displayLink: CADisplayLink?
+    private var startTime: Date?
+    private let duration: TimeInterval = 3.0
+    private var isActive = false
+    
+    func start() {
+        guard !isActive else { return }
+        isActive = true
+        startTime = Date()
+        progress = 0
+        
+        displayLink?.invalidate()
+        displayLink = CADisplayLink(target: self, selector: #selector(updateProgress))
+        displayLink?.add(to: .main, forMode: .common)
+    }
+    
+    func stop() {
+        isActive = false
+        displayLink?.invalidate()
+        displayLink = nil
+        startTime = nil
+        
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+            progress = 0
+            shakeOffset = 0
+        }
+    }
+    
+    @objc private func updateProgress() {
+        guard let startTime = startTime, isActive else { return }
+        
+        let elapsed = Date().timeIntervalSince(startTime)
+        let newProgress = min(CGFloat(elapsed / duration), 1.0)
+        
+        // Update progress without animation for smoothness
+        progress = newProgress
+        
+        // Update shake with smooth interpolation
+        if newProgress < 1.0 {
+            let intensity = newProgress * 3
+            let time = elapsed * 10
+            shakeOffset = sin(time) * intensity + cos(time * 1.5) * intensity * 0.5
+        } else {
+            shakeOffset = 0
+        }
+    }
+    
+    deinit {
+        displayLink?.invalidate()
+    }
+}
+
 struct FlowerRevealView: View {
     let flower: AIFlower
     @EnvironmentObject var flowerStore: FlowerStore
     @Environment(\.dismiss) private var dismiss
     @State private var isRevealed = false
     @State private var showConfetti = false
-    @State private var holdProgress: CGFloat = 0
-    @State private var shakeOffset: CGFloat = 0
-    @State private var isHolding = false
-    @State private var holdTimer: Timer?
-    @State private var shakeTimer: Timer?
+    @StateObject private var progressTracker = HoldProgressTracker()
     @State private var lastHapticLevel = 0
     
     // Haptic generators
@@ -58,9 +111,8 @@ struct FlowerRevealView: View {
                                     .cornerRadius(24)
                                     .blur(radius: isRevealed ? 0 : 30)
                                     .scaleEffect(isRevealed ? 1.05 : 1)
-                                    .offset(x: shakeOffset)
-                                    .animation(isRevealed ? .interpolatingSpring(stiffness: 50, damping: 8) : .linear(duration: 0.05), value: isRevealed)
-                                    .animation(.linear(duration: 0.05), value: shakeOffset)
+                                    .offset(x: progressTracker.shakeOffset)
+                                    .animation(isRevealed ? .interpolatingSpring(stiffness: 50, damping: 8) : nil, value: isRevealed)
                             }
                         }
                         
@@ -86,47 +138,15 @@ struct FlowerRevealView: View {
                     
                     // Action button at bottom
                     if !isRevealed {
-                        // Hold to reveal button
-                        ZStack {
-                            // Progress background
-                            RoundedRectangle(cornerRadius: 20)
-                                .fill(Color.flowerPrimary.opacity(0.1))
-                                .frame(height: 64)
-                            
-                            // Progress fill with mask
-                            GeometryReader { geometry in
-                                LinearGradient(
-                                    colors: [Color.flowerPrimary, Color.flowerSecondary],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                                .frame(width: geometry.size.width * holdProgress, height: 64)
-                                .mask(RoundedRectangle(cornerRadius: 20))
-                                .animation(.linear(duration: 0.1), value: holdProgress)
+                        // Hold to reveal button with proper masking
+                        HoldToRevealButton(
+                            progress: progressTracker.progress,
+                            onPressChanged: { isPressing in
+                                handlePressing(isPressing)
                             }
-                            .frame(height: 64)
-                            
-                            // Button content
-                            HStack(spacing: 12) {
-                                Image(systemName: isHolding ? "gift.fill" : "gift")
-                                    .font(.system(size: 20, weight: .medium))
-                                Text("Hold to Reveal")
-                                    .font(.system(size: 18, weight: .semibold))
-                            }
-                            .foregroundColor(holdProgress > 0.5 ? .white : .flowerPrimary)
-                            .animation(.easeInOut, value: holdProgress)
-                        }
-                        .frame(maxWidth: .infinity)
+                        )
                         .padding(.horizontal, 32)
                         .padding(.bottom, 50)
-                        .onLongPressGesture(
-                            minimumDuration: .infinity,
-                            maximumDistance: .infinity,
-                            pressing: { isPressing in
-                                handlePressing(isPressing)
-                            },
-                            perform: {}
-                        )
                     } else {
                         // Continue button
                         Button(action: {
@@ -161,6 +181,12 @@ struct FlowerRevealView: View {
             heavyImpact.prepare()
             selectionFeedback.prepare()
         }
+        .onChange(of: progressTracker.progress) { newProgress in
+            handleHapticFeedback(newProgress)
+            if newProgress >= 1.0 {
+                revealFlower()
+            }
+        }
     }
     
     private func capitalizeWords(_ text: String) -> String {
@@ -173,47 +199,16 @@ struct FlowerRevealView: View {
     
     private func handlePressing(_ isPressing: Bool) {
         if isPressing && !isRevealed {
-            startHolding()
+            progressTracker.start()
+            lastHapticLevel = 0
+            lightImpact.impactOccurred()
         } else {
-            stopHolding()
+            progressTracker.stop()
         }
     }
     
-    private func startHolding() {
-        isHolding = true
-        holdProgress = 0
-        lastHapticLevel = 0
-        
-        // Initial haptic
-        lightImpact.impactOccurred()
-        
-        // Track start time for accurate progress
-        let startTime = Date()
-        
-        // Single timer for both progress and shake
-        holdTimer = Timer.scheduledTimer(withTimeInterval: 0.016, repeats: true) { _ in
-            // Calculate progress based on elapsed time
-            let elapsed = Date().timeIntervalSince(startTime)
-            holdProgress = min(CGFloat(elapsed / 3.0), 1.0)
-            
-            // Update shake
-            if isHolding {
-                let intensity = holdProgress * 5
-                shakeOffset = CGFloat.random(in: -intensity...intensity)
-            }
-            
-            // Haptic feedback based on progress
-            handleHapticFeedback()
-            
-            // Check if complete
-            if holdProgress >= 1.0 {
-                revealFlower()
-            }
-        }
-    }
-    
-    private func handleHapticFeedback() {
-        let currentLevel = Int(holdProgress * 10)
+    private func handleHapticFeedback(_ progress: CGFloat) {
+        let currentLevel = Int(progress * 10)
         
         if currentLevel > lastHapticLevel {
             lastHapticLevel = currentLevel
@@ -240,22 +235,8 @@ struct FlowerRevealView: View {
         }
     }
     
-    private func stopHolding() {
-        isHolding = false
-        holdTimer?.invalidate()
-        holdTimer = nil
-        shakeTimer?.invalidate()
-        shakeTimer = nil
-        lastHapticLevel = 0
-        
-        withAnimation(.spring()) {
-            holdProgress = 0
-            shakeOffset = 0
-        }
-    }
-    
     private func revealFlower() {
-        stopHolding()
+        progressTracker.stop()
         
         withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
             isRevealed = true
@@ -263,6 +244,56 @@ struct FlowerRevealView: View {
         }
     }
     
+}
+
+// Custom button component with proper masking
+struct HoldToRevealButton: View {
+    let progress: CGFloat
+    let onPressChanged: (Bool) -> Void
+    
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                // Background
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(Color.flowerPrimary.opacity(0.1))
+                
+                // Progress fill properly masked
+                LinearGradient(
+                    colors: [Color.flowerPrimary, Color.flowerSecondary],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+                .mask(
+                    // Use a shape that fills from left to right
+                    HStack(spacing: 0) {
+                        Rectangle()
+                            .frame(width: geometry.size.width * progress)
+                        Spacer()
+                    }
+                )
+                .mask(RoundedRectangle(cornerRadius: 20))
+                
+                // Button content
+                HStack(spacing: 12) {
+                    Image(systemName: progress > 0 ? "gift.fill" : "gift")
+                        .font(.system(size: 20, weight: .medium))
+                    Text("Hold to Reveal")
+                        .font(.system(size: 18, weight: .semibold))
+                }
+                .foregroundColor(progress > 0.5 ? .white : .flowerPrimary)
+                .animation(.easeInOut(duration: 0.2), value: progress > 0.5)
+            }
+        }
+        .frame(height: 64)
+        .contentShape(RoundedRectangle(cornerRadius: 20))
+        .onLongPressGesture(
+            minimumDuration: .infinity,
+            maximumDistance: .infinity,
+            pressing: onPressChanged,
+            perform: {}
+        )
+    }
 }
 
  

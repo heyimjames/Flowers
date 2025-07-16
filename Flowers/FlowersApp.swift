@@ -12,6 +12,9 @@ import UserNotifications
 struct FlowersApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var flowerStore = FlowerStore()
+    @State private var showingImportConfirmation = false
+    @State private var importedFlower: AIFlower?
+    @State private var importedSenderInfo: FlowerOwner?
     let contextualGenerator = ContextualFlowerGenerator.shared
     
     var body: some Scene {
@@ -35,6 +38,41 @@ struct FlowersApp: App {
                             .environmentObject(flowerStore)
                     }
                 }
+                .onOpenURL { url in
+                    handleIncomingFile(url)
+                }
+                .sheet(isPresented: $showingImportConfirmation) {
+                    if let flower = importedFlower, let sender = importedSenderInfo {
+                        ReceivedFlowerSheet(
+                            flower: flower,
+                            sender: sender,
+                            onAccept: {
+                                flowerStore.addReceivedFlower(flower)
+                                showingImportConfirmation = false
+                                importedFlower = nil
+                                importedSenderInfo = nil
+                            },
+                            onReject: {
+                                showingImportConfirmation = false
+                                importedFlower = nil
+                                importedSenderInfo = nil
+                            }
+                        )
+                    }
+                }
+        }
+    }
+    
+    private func handleIncomingFile(_ url: URL) {
+        guard url.pathExtension == "flower" else { return }
+        
+        do {
+            let (flower, senderInfo) = try FlowerTransferService.shared.importFlower(from: url)
+            importedFlower = flower
+            importedSenderInfo = senderInfo
+            showingImportConfirmation = true
+        } catch {
+            print("Failed to import flower: \(error)")
         }
     }
 }

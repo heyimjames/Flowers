@@ -1,7 +1,45 @@
 import Foundation
 import SwiftUI
+import MapKit
 
-struct AIFlower: Identifiable, Codable {
+// MARK: - Ownership Tracking
+struct FlowerOwner: Codable, Equatable {
+    let id: UUID
+    let name: String
+    let deviceID: String
+    let transferDate: Date
+    let location: String?
+    
+    init(name: String, deviceID: String = UIDevice.current.identifierForVendor?.uuidString ?? "Unknown", transferDate: Date = Date(), location: String? = nil) {
+        self.id = UUID()
+        self.name = name
+        self.deviceID = deviceID
+        self.transferDate = transferDate
+        self.location = location
+    }
+}
+
+struct TransferMetadata: Codable {
+    let transferID: UUID
+    let transferDate: Date
+    let senderInfo: FlowerOwner
+    
+    init(senderInfo: FlowerOwner) {
+        self.transferID = UUID()
+        self.transferDate = Date()
+        self.senderInfo = senderInfo
+    }
+}
+
+// MARK: - Flower Document for Transfer
+struct FlowerDocument: Codable {
+    let flower: AIFlower
+    let transferMetadata: TransferMetadata
+    let version: Int = 1 // For future compatibility
+}
+
+// MARK: - Main AIFlower Model
+struct AIFlower: Identifiable, Codable, Equatable {
     let id: UUID
     let name: String
     let descriptor: String
@@ -25,6 +63,12 @@ struct AIFlower: Identifiable, Codable {
     var discoveryLongitude: Double? // Longitude where flower was discovered
     var discoveryLocationName: String? // Human-readable location name
     
+    // Ownership tracking
+    var originalOwner: FlowerOwner?
+    var ownershipHistory: [FlowerOwner]
+    var transferToken: String? // One-time use token for transfers
+    var isGiftable: Bool // Whether this flower can be gifted (false for special flowers)
+    
     init(id: UUID = UUID(), 
          name: String, 
          descriptor: String, 
@@ -44,7 +88,11 @@ struct AIFlower: Identifiable, Codable {
          holidayName: String? = nil,
          discoveryLatitude: Double? = nil,
          discoveryLongitude: Double? = nil,
-         discoveryLocationName: String? = nil) {
+         discoveryLocationName: String? = nil,
+         originalOwner: FlowerOwner? = nil,
+         ownershipHistory: [FlowerOwner] = [],
+         transferToken: String? = nil,
+         isGiftable: Bool = true) {
         self.id = id
         self.name = name
         self.descriptor = descriptor
@@ -65,6 +113,10 @@ struct AIFlower: Identifiable, Codable {
         self.discoveryLatitude = discoveryLatitude
         self.discoveryLongitude = discoveryLongitude
         self.discoveryLocationName = discoveryLocationName
+        self.originalOwner = originalOwner
+        self.ownershipHistory = ownershipHistory
+        self.transferToken = transferToken
+        self.isGiftable = isGiftable
     }
     
     // Sample flower for preview/placeholder
@@ -75,6 +127,49 @@ struct AIFlower: Identifiable, Codable {
             imageData: nil,
             isFavorite: false
         )
+    }
+}
+
+// MARK: - Ownership Transfer Methods
+extension AIFlower {
+    mutating func prepareForTransfer(from owner: FlowerOwner) -> TransferMetadata {
+        // Add current owner to history if this is the first transfer
+        if ownershipHistory.isEmpty && originalOwner == nil {
+            originalOwner = owner
+        } else {
+            // Add to ownership history
+            ownershipHistory.append(owner)
+        }
+        
+        // Generate one-time transfer token
+        transferToken = UUID().uuidString
+        
+        // Create transfer metadata
+        return TransferMetadata(senderInfo: owner)
+    }
+    
+    mutating func completeTransfer() {
+        // Clear transfer token after successful transfer
+        transferToken = nil
+    }
+    
+    mutating func cancelTransfer() {
+        // Remove the last owner if transfer was cancelled
+        if !ownershipHistory.isEmpty {
+            ownershipHistory.removeLast()
+        }
+        transferToken = nil
+    }
+    
+    var hasOwnershipHistory: Bool {
+        return originalOwner != nil || !ownershipHistory.isEmpty
+    }
+    
+    var currentOwnerCount: Int {
+        var count = 0
+        if originalOwner != nil { count += 1 }
+        count += ownershipHistory.count
+        return count + 1 // Plus current owner
     }
 }
 

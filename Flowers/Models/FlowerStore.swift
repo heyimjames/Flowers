@@ -221,7 +221,8 @@ class FlowerStore: ObservableObject {
                     holidayName: nil,
                     discoveryLatitude: 51.5054, // Canary Wharf coordinates
                     discoveryLongitude: -0.0235,
-                    discoveryLocationName: "Canary Wharf, London"
+                    discoveryLocationName: "Canary Wharf, London",
+                    isGiftable: false // Special flower cannot be gifted
                 )
                 
                 await MainActor.run {
@@ -259,9 +260,10 @@ class FlowerStore: ObservableObject {
             isBouquet: false,
             bouquetFlowers: nil,
             holidayName: nil,
-            discoveryLatitude: 51.5054, // Canary Wharf coordinates
-            discoveryLongitude: -0.0235,
-            discoveryLocationName: "Canary Wharf, London"
+            discoveryLatitude: 51.5055, // London coordinates
+            discoveryLongitude: -0.0196,
+            discoveryLocationName: "Canary Wharf, London",
+            isGiftable: false // Special flower cannot be gifted
         )
         
         // Add to discovered flowers immediately
@@ -1026,14 +1028,50 @@ class FlowerStore: ObservableObject {
         // Remove from discovered flowers
         discoveredFlowers.removeAll { $0.id == flower.id }
         
-        // Clear current flower if it's the one being deleted
+        // Clear from current if needed
         if currentFlower?.id == flower.id {
             currentFlower = nil
         }
         
-        // Save both collections
+        // Save changes
         saveFavorites()
         saveDiscoveredFlowers()
+    }
+    
+    func removeFlower(_ flower: AIFlower) {
+        // This is used when gifting a flower - it's permanently removed
+        deleteFlower(flower)
+        
+        // Sync to iCloud after removal
+        Task {
+            await iCloudSyncManager.shared.syncToICloud()
+        }
+    }
+    
+    func addReceivedFlower(_ flower: AIFlower) {
+        // Add to discovered flowers
+        var receivedFlower = flower
+        receivedFlower.discoveryDate = Date()
+        receivedFlower.isFavorite = false // Reset favorite status for new owner
+        
+        // Add to collection
+        discoveredFlowers.insert(receivedFlower, at: 0)
+        
+        // Set as current flower
+        currentFlower = receivedFlower
+        
+        // Save and sync
+        saveDiscoveredFlowers()
+        Task {
+            await iCloudSyncManager.shared.syncToICloud()
+        }
+        
+        // Show success notification
+        let message = "You received \(flower.name) from \(flower.ownershipHistory.last?.name ?? flower.originalOwner?.name ?? "someone special")"
+        print(message)
+        
+        // Haptic feedback
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
     }
     
     // MARK: - Public Refresh Method

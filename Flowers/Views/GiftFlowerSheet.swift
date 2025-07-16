@@ -1,0 +1,207 @@
+import SwiftUI
+
+struct GiftFlowerSheet: View {
+    let flower: AIFlower
+    @Binding var userName: String
+    let onGiftConfirmed: (String) -> Void
+    
+    @Environment(\.dismiss) var dismiss
+    @State private var recipientName = ""
+    @State private var isNameEntered = false
+    @State private var showingNamePrompt = false
+    
+    var body: some View {
+        NavigationView {
+            ZStack {
+                Color.flowerSheetBackground.ignoresSafeArea()
+                
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // Flower preview
+                        VStack(spacing: 16) {
+                            if let imageData = flower.imageData,
+                               let image = UIImage(data: imageData) {
+                                Image(uiImage: image)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 200, height: 200)
+                                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 16)
+                                            .strokeBorder(Color.flowerDivider, lineWidth: 1)
+                                    )
+                            }
+                            
+                            Text(flower.name)
+                                .font(.system(size: 20, weight: .semibold))
+                                .foregroundColor(.flowerTextPrimary)
+                        }
+                        .padding(.top, 8)
+                        
+                        // Warning message
+                        VStack(spacing: 16) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.system(size: 32))
+                                .foregroundColor(.flowerWarning)
+                            
+                            Text("Gift This Flower?")
+                                .font(.system(size: 22, weight: .bold))
+                                .foregroundColor(.flowerTextPrimary)
+                            
+                            Text("Once you gift this flower, it will be permanently removed from your collection and transferred to the recipient.")
+                                .font(.system(size: 15))
+                                .foregroundColor(.flowerTextSecondary)
+                                .multilineTextAlignment(.center)
+                                .lineSpacing(4)
+                                .padding(.horizontal, 24)
+                            
+                            if flower.hasOwnershipHistory {
+                                Text("This flower has \(flower.currentOwnerCount) previous owner\(flower.currentOwnerCount == 1 ? "" : "s"). Its history will be preserved.")
+                                    .font(.system(size: 13))
+                                    .foregroundColor(.flowerTextTertiary)
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal, 24)
+                            }
+                        }
+                        
+                        // Your name input (if not set)
+                        if userName.isEmpty {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Your Name")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(.flowerTextSecondary)
+                                
+                                TextField("Enter your name", text: $userName)
+                                    .textFieldStyle(FlowerTextFieldStyle())
+                                    .submitLabel(.done)
+                                    .autocorrectionDisabled()
+                                    .textInputAutocapitalization(.words)
+                                
+                                Text("This will be shown in the flower's ownership history")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.flowerTextTertiary)
+                            }
+                            .padding(.horizontal, 24)
+                        }
+                        
+                        // Action buttons
+                        VStack(spacing: 12) {
+                            Button(action: {
+                                // Check if user name is set
+                                if userName.isEmpty {
+                                    showingNamePrompt = true
+                                } else {
+                                    // Show native share sheet
+                                    Task {
+                                        await shareFlowerDocument()
+                                    }
+                                }
+                            }) {
+                                HStack {
+                                    Image(systemName: "gift")
+                                    Text("Gift via AirDrop")
+                                }
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 56)
+                                .background(Color.flowerPrimary)
+                                .cornerRadius(16)
+                            }
+                            .disabled(userName.isEmpty)
+                            
+                            Button(action: {
+                                dismiss()
+                            }) {
+                                Text("Cancel")
+                                    .font(.system(size: 16, weight: .medium))
+                                    .foregroundColor(.flowerTextSecondary)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 56)
+                                    .background(Color.flowerButtonBackground)
+                                    .cornerRadius(16)
+                            }
+                        }
+                        .padding(.horizontal, 24)
+                        .padding(.bottom, 24)
+                    }
+                }
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text("Gift Flower")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundColor(.flowerTextPrimary)
+                }
+            }
+        }
+        .presentationDetents([.medium])
+        .presentationDragIndicator(.visible)
+        .alert("Name Required", isPresented: $showingNamePrompt) {
+            Button("OK") { }
+        } message: {
+            Text("Please enter your name to include in the flower's ownership history.")
+        }
+    }
+    
+    private func shareFlowerDocument() async {
+        do {
+            // Get current location
+            let locationName = await LocationManager.shared.getCurrentLocationName()
+            
+            // Export flower
+            let fileURL = try FlowerTransferService.shared.exportFlower(
+                flower,
+                senderName: userName,
+                senderLocation: locationName
+            )
+            
+            // Present share sheet
+            await MainActor.run {
+                let activityVC = UIActivityViewController(
+                    activityItems: [fileURL],
+                    applicationActivities: nil
+                )
+                
+                // Configure for AirDrop
+                activityVC.excludedActivityTypes = [
+                    .postToFacebook,
+                    .postToTwitter,
+                    .postToWeibo,
+                    .message,
+                    .mail,
+                    .print,
+                    .copyToPasteboard,
+                    .assignToContact,
+                    .saveToCameraRoll,
+                    .addToReadingList,
+                    .postToFlickr,
+                    .postToVimeo,
+                    .postToTencentWeibo,
+                    .markupAsPDF,
+                    .openInIBooks
+                ]
+                
+                // Completion handler
+                activityVC.completionWithItemsHandler = { activityType, completed, returnedItems, error in
+                    if completed {
+                        // Gift was successfully sent
+                        dismiss()
+                        onGiftConfirmed(userName)
+                    }
+                    
+                    // Clean up
+                    FlowerTransferService.shared.cleanupTemporaryFiles()
+                }
+                
+                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                   let rootViewController = windowScene.windows.first?.rootViewController {
+                    rootViewController.present(activityVC, animated: true)
+                }
+            }
+        } catch {
+            print("Failed to prepare flower for transfer: \(error)")
+        }
+    }
+} 

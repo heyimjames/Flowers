@@ -17,8 +17,12 @@ struct ContentView: View {
     @State private var showingFlowerDetail = false
     @State private var showingOnboarding = false
     @State private var showingShareSheet = false
+    @State private var showingGiftConfirmation = false
+    @State private var giftRecipientName = ""
+    @State private var isProcessingGift = false
     @Environment(\.scenePhase) var scenePhase
     @State private var wasInBackground = false
+    @AppStorage("userName") private var userName = ""
     
     // Timer for pill animation
     let pillAnimationTimer = Timer.publish(every: 5, on: .main, in: .common).autoconnect()
@@ -236,6 +240,19 @@ struct ContentView: View {
                     .ignoresSafeArea()
             }
         }
+        .sheet(isPresented: $showingGiftConfirmation) {
+            if let flower = flowerStore.currentFlower {
+                GiftFlowerSheet(
+                    flower: flower,
+                    userName: $userName,
+                    onGiftConfirmed: { recipientName in
+                        Task {
+                            await giftFlower(to: recipientName)
+                        }
+                    }
+                )
+            }
+        }
 
     }
     
@@ -363,6 +380,64 @@ struct ContentView: View {
                                     .font(.system(size: 13))
                                     .foregroundColor(.flowerTextSecondary)
                             }
+                        }
+                        
+                        // Ownership History
+                        if flower.hasOwnershipHistory {
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "person.2")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.flowerPrimary)
+                                    Text("Ownership History")
+                                        .font(.system(size: 14, weight: .medium))
+                                        .foregroundColor(.flowerTextPrimary)
+                                }
+                                
+                                VStack(alignment: .leading, spacing: 6) {
+                                    // Original owner
+                                    if let original = flower.originalOwner {
+                                        HStack(spacing: 4) {
+                                            Text("🌱")
+                                                .font(.system(size: 12))
+                                            Text("Originally grown by \(original.name)")
+                                                .font(.system(size: 12))
+                                                .foregroundColor(.flowerTextSecondary)
+                                        }
+                                        if let location = original.location {
+                                            Text("\(original.transferDate.formatted(date: .abbreviated, time: .omitted)) • \(location)")
+                                                .font(.system(size: 11))
+                                                .foregroundColor(.flowerTextTertiary)
+                                                .padding(.leading, 20)
+                                        }
+                                    }
+                                    
+                                    // Previous owners
+                                    if !flower.ownershipHistory.isEmpty {
+                                        Text("🤝 Previously owned by:")
+                                            .font(.system(size: 12))
+                                            .foregroundColor(.flowerTextSecondary)
+                                        
+                                        ForEach(flower.ownershipHistory, id: \.id) { owner in
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text("• \(owner.name)")
+                                                    .font(.system(size: 12))
+                                                    .foregroundColor(.flowerTextSecondary)
+                                                    .padding(.leading, 12)
+                                                
+                                                if let location = owner.location {
+                                                    Text("\(owner.transferDate.formatted(date: .abbreviated, time: .omitted)) • \(location)")
+                                                        .font(.system(size: 11))
+                                                        .foregroundColor(.flowerTextTertiary)
+                                                        .padding(.leading, 24)
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                .padding(.top, 4)
+                            }
+                            .padding(.top, 8)
                         }
                     }
                     .padding(.horizontal, 20)
@@ -535,12 +610,57 @@ struct ContentView: View {
                             )
                     )
             }
+            
+            // Gift button (only for giftable flowers)
+            if let flower = flowerStore.currentFlower, flower.isGiftable {
+                Button(action: {
+                    showingGiftConfirmation = true
+                }) {
+                    Image(systemName: "gift")
+                        .font(.system(size: 22))
+                        .foregroundColor(.flowerPrimary)
+                        .frame(width: 56, height: 56)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.flowerPrimary.opacity(0.1))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .strokeBorder(Color.flowerPrimary.opacity(0.3), lineWidth: 1)
+                                )
+                        )
+                }
+            }
         }
     }
     
     private func shareFlower() {
         guard flowerStore.currentFlower != nil else { return }
         showingShareSheet = true
+    }
+    
+    private func giftFlower(to recipientName: String) async {
+        guard let flower = flowerStore.currentFlower else { return }
+        
+        await MainActor.run {
+            isProcessingGift = true
+        }
+        
+        // Remove the flower from collection
+        flowerStore.removeFlower(flower)
+        
+        // Show success feedback
+        await MainActor.run {
+            isProcessingGift = false
+            
+            // Show success message
+            let successMessage = "Your \(flower.name) has been gifted successfully!"
+            
+            // You could show an alert or toast here
+            print(successMessage)
+            
+            // Haptic feedback
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+        }
     }
 }
 

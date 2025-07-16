@@ -12,5 +12,42 @@
 	<string>Get notified when your daily flower blooms</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Your location helps create flowers inspired by your surroundings - like local colors, regional themes, and seasonal elements unique to where you are.</string>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Flower Document</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>com.october.flowers.flower</string>
+			</array>
+		</dict>
+	</array>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Flower Document</string>
+			<key>UTTypeIcons</key>
+			<dict/>
+			<key>UTTypeIdentifier</key>
+			<string>com.october.flowers.flower</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>flower</string>
+				</array>
+			</dict>
+		</dict>
+	</array>
 </dict>
 </plist>
