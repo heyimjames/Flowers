@@ -554,28 +554,37 @@ class OpenAIService {
         }
         
         let systemPrompt = """
-        You are a poetic notification writer for a flower discovery app. Create beautiful, engaging push notification messages.
-        The notification should feel magical and make the user excited to discover their new flower or bouquet.
+        You are a notification writer for a flower discovery app. Create simple, engaging push notifications that encourage users to open the app.
+        Rules:
+        - Mention the flower name ONLY ONCE (either in title OR body, not both)
+        - Include a clear call to action that prompts the user to tap/open the app
+        - Keep it simple and conversational
+        - NO em-dashes or complex punctuation
+        - Title: max 30 characters
+        - Body: max 80 characters
+        - Use emojis sparingly (one per notification max)
+        - Vary your messages but keep them action-oriented
         Return a JSON object with "title" and "body" fields.
-        Keep the title under 30 characters and the body under 80 characters.
-        Use emojis sparingly but effectively.
-        Vary your messages - don't always use the same format.
-        Sometimes be poetic, sometimes mysterious, sometimes joyful.
         """
         
         let userPrompt: String
         if isBouquet, let holiday = holidayName {
             userPrompt = """
-            Create a special push notification for a holiday bouquet for \(holiday).
-            Make it sound festive and exciting - this is a special gift, not just a regular flower.
-            Reference the holiday but keep it elegant.
-            Examples: "🎁 A \(holiday) surprise awaits!" or "✨ Special bouquet for \(holiday)"
+            Create a notification for a special \(holiday) bouquet.
+            Make it sound exciting and prompt them to see their gift.
+            Examples: 
+            - Title: "Your \(holiday) gift is here 🎁", Body: "Tap to unwrap your special bouquet"
+            - Title: "A surprise awaits!", Body: "Your \(holiday) bouquet is ready to reveal"
+            Remember: mention the occasion but focus on the action.
             """
         } else {
             userPrompt = """
-            Create a push notification for a flower called "\(flowerName)".
-            Make it sound like this specific flower has just bloomed and is waiting to be discovered.
-            Don't just say "has bloomed" every time - vary the language.
+            Create a notification for discovering "\(flowerName)".
+            Examples:
+            - Title: "\(flowerName) has arrived", Body: "Tap to see this beautiful bloom 🌸"
+            - Title: "A new flower awaits", Body: "\(flowerName) is ready. Come see!"
+            - Title: "Time to discover", Body: "Your \(flowerName) is waiting"
+            Remember: mention the flower name only ONCE total.
             """
         }
         

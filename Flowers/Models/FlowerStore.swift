@@ -412,8 +412,8 @@ class FlowerStore: ObservableObject {
             guard let flower = pendingFlower else { return }
             
             // Generate notification for existing flower
-            var notificationTitle = "Your Daily Flower Has Bloomed! 🌸"
-            var notificationBody = "\(flower.name) has been discovered and is waiting for you."
+            var notificationTitle = "A new flower awaits 🌸"
+            var notificationBody = "\(flower.name) is ready. Tap to discover its beauty."
             
             if apiConfig.hasValidOpenAIKey {
                 do {
@@ -446,8 +446,8 @@ class FlowerStore: ObservableObject {
         guard let flower = pendingFlower else { return }
         
         // Generate custom notification message using OpenAI if available
-        var notificationTitle = "Your Daily Flower Has Bloomed! 🌸"
-        var notificationBody = "\(flower.name) has been discovered and is waiting for you."
+        var notificationTitle = "A new flower awaits 🌸"
+        var notificationBody = "\(flower.name) is ready. Tap to discover its beauty."
         
         if apiConfig.hasValidOpenAIKey {
             do {
@@ -504,8 +504,8 @@ class FlowerStore: ObservableObject {
             guard let flower = pendingFlower else { return }
             
             // Generate custom notification message
-            var notificationTitle = "Your Daily Flower Has Bloomed! 🌸"
-            var notificationBody = "\(flower.name) has been discovered and is waiting for you."
+            var notificationTitle = "A new flower awaits 🌸"
+            var notificationBody = "\(flower.name) is ready. Tap to discover its beauty."
             
             if apiConfig.hasValidOpenAIKey {
                 do {
