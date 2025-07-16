@@ -495,9 +495,6 @@ struct ContentView: View {
                     )
             }
         }
-        .animation(.spring(response: 0.6, dampingFraction: 0.8), value: flowerStore.currentFlower?.id)
-        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: flowerStore.currentFlower?.meaning)
-        .animation(.spring(response: 0.5, dampingFraction: 0.8), value: flowerStore.hasUnrevealedFlower)
     }
     
     private var actionButtons: some View {
