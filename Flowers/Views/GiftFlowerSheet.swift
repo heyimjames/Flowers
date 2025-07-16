@@ -16,29 +16,37 @@ struct GiftFlowerSheet: View {
             ZStack {
                 Color.flowerSheetBackground.ignoresSafeArea()
                 
-                ScrollView {
-                    VStack(spacing: 24) {
-                        // Flower preview
-                        VStack(spacing: 16) {
+                VStack(spacing: 0) {
+                    // Centered flower image and name
+                    VStack(spacing: 0) {
+                        Spacer()
+                        
+                        VStack(spacing: 20) {
                             if let imageData = flower.imageData,
                                let image = UIImage(data: imageData) {
                                 Image(uiImage: image)
                                     .resizable()
                                     .scaledToFill()
-                                    .frame(width: 200, height: 200)
-                                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                                    .frame(width: 280, height: 280)
+                                    .clipShape(RoundedRectangle(cornerRadius: 20))
                                     .overlay(
-                                        RoundedRectangle(cornerRadius: 16)
+                                        RoundedRectangle(cornerRadius: 20)
                                             .strokeBorder(Color.flowerDivider, lineWidth: 1)
                                     )
                             }
                             
                             Text(flower.name)
-                                .font(.system(size: 20, weight: .semibold))
+                                .font(.system(size: 28, weight: .light, design: .serif))
                                 .foregroundColor(.flowerTextPrimary)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 24)
                         }
-                        .padding(.top, 8)
                         
+                        Spacer()
+                    }
+                    
+                    // Bottom content
+                    VStack(spacing: 24) {
                         // Warning message
                         VStack(spacing: 16) {
                             Image(systemName: "exclamationmark.triangle.fill")
@@ -118,7 +126,7 @@ struct GiftFlowerSheet: View {
                             .flowerSecondaryButtonStyle()
                         }
                         .padding(.horizontal, 24)
-                        .padding(.bottom, 24)
+                        .padding(.bottom, 40)
                     }
                 }
             }

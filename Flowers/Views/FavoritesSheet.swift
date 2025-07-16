@@ -235,9 +235,10 @@ struct FavoritesSheet: View {
                     allFlowers: displayedFlowers,
                     currentIndex: displayedFlowers.firstIndex(where: { $0.id == flower.id }) ?? 0
                 )
-                    .presentationDetents([.large])
-                    .presentationCornerRadius(32)
-                    .presentationDragIndicator(.visible)
+                .presentationDetents([.large])
+                .presentationCornerRadius(32)
+                .presentationDragIndicator(.visible)
+                .presentationBackground(Color.flowerSheetBackground)
             }
         }
     }
@@ -584,26 +585,8 @@ struct FlowerDetailSheet: View {
             .background(Color.white)
             .navigationBarHidden(true)
             .overlay(alignment: .bottom) {
-                // Gradient fade with action buttons
-                VStack(spacing: 0) {
-                    // Multi-layer gradient for smooth fade
-                    LinearGradient(
-                        colors: [
-                            Color.white.opacity(0),
-                            Color.white.opacity(0.3),
-                            Color.white.opacity(0.6),
-                            Color.white.opacity(0.85),
-                            Color.white.opacity(0.95),
-                            Color.white
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    .frame(height: 100)
-                    .allowsHitTesting(false)
-                    
-                    // Action buttons
-                    VStack(spacing: 12) {
+                // Action buttons without gradient fade
+                VStack(spacing: 12) {
                         HStack(spacing: 16) {
                             Button(action: saveToPhotos) {
                                 HStack(spacing: 8) {
@@ -612,33 +595,15 @@ struct FlowerDetailSheet: View {
                                     Text("Save Image")
                                         .font(.system(size: 16, weight: .medium))
                                 }
-                                .foregroundColor(.flowerPrimary)
-                                .frame(height: 52)
-                                .frame(maxWidth: .infinity)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .fill(Color.flowerPrimary.opacity(0.1))
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 12)
-                                                .strokeBorder(Color.flowerPrimary.opacity(0.2), lineWidth: 1)
-                                        )
-                                )
                             }
+                            .flowerButtonStyle()
                             
                             Button(action: shareFlower) {
                                 Image(systemName: "square.and.arrow.up")
                                     .font(.system(size: 20))
                                     .foregroundColor(.flowerPrimary)
-                                    .frame(width: 52, height: 52)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 12)
-                                            .fill(Color.flowerPrimary.opacity(0.1))
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 12)
-                                                    .strokeBorder(Color.flowerPrimary.opacity(0.2), lineWidth: 1)
-                                            )
-                                    )
                             }
+                            .flowerIconButtonStyle(backgroundColor: .flowerPrimary)
                             .accessibilityLabel("Share flower image")
                             
                             // Gift button (only for giftable flowers)
@@ -647,16 +612,8 @@ struct FlowerDetailSheet: View {
                                     Image(systemName: "gift")
                                         .font(.system(size: 20))
                                         .foregroundColor(.flowerPrimary)
-                                        .frame(width: 52, height: 52)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 12)
-                                                .fill(Color.flowerPrimary.opacity(0.1))
-                                                .overlay(
-                                                    RoundedRectangle(cornerRadius: 12)
-                                                        .strokeBorder(Color.flowerPrimary.opacity(0.2), lineWidth: 1)
-                                                )
-                                        )
                                 }
+                                .flowerIconButtonStyle(backgroundColor: .flowerPrimary)
                                 .accessibilityLabel("Gift flower")
                             }
                         }
@@ -669,27 +626,15 @@ struct FlowerDetailSheet: View {
                                 Text("Return to Garden")
                                     .font(.system(size: 15))
                             }
-                            .foregroundColor(.flowerTextSecondary)
-                            .frame(height: 44)
-                            .frame(maxWidth: .infinity)
-                            .background(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .fill(Color.gray.opacity(0.15))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 12)
-                                            .strokeBorder(Color.gray.opacity(0.2), lineWidth: 1)
-                                    )
-                            )
                         }
+                        .flowerSecondaryButtonStyle()
                     }
                     .padding(.horizontal, 24)
                     .padding(.bottom, 40)
-                    .background(Color.white)
                 }
                 .ignoresSafeArea(edges: .bottom)
             }
-        }
-        .alert("Return to Garden?", isPresented: $showingDeleteAlert) {
+            .alert("Return to Garden?", isPresented: $showingDeleteAlert) {
             Button("Keep Flower", role: .cancel) { }
             Button("Return to Garden", role: .destructive) {
                 flowerStore.deleteFlower(flower)
@@ -724,7 +669,7 @@ struct FlowerDetailSheet: View {
                 loadFlowerDetails()
             }
         }
-    }
+        }
     
     private func loadFlowerDetails() {
         isLoadingDetails = true
