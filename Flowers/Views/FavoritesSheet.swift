@@ -362,7 +362,13 @@ struct FlowerDetailSheet: View {
     var body: some View {
         NavigationView {
             ZStack {
-                Color.white.ignoresSafeArea()
+                // Background gradient
+                LinearGradient(
+                    colors: [Color.flowerBackground, Color.flowerBackgroundSecondary],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea()
                 
                 TabView(selection: $currentIndex) {
                     ForEach(Array(allFlowers.enumerated()), id: \.element.id) { index, flowerItem in
@@ -372,9 +378,9 @@ struct FlowerDetailSheet: View {
                                 if let imageData = flowerItem.imageData,
                                    let uiImage = UIImage(data: imageData) {
                                     ZStack {
-                                        // Soft white gradient for edge blending
+                                        // Soft gradient for edge blending
                                         RadialGradient(
-                                            colors: [Color.white.opacity(0), Color.white],
+                                            colors: [Color.clear, Color.flowerBackground.opacity(0.8)],
                                             center: .center,
                                             startRadius: UIScreen.main.bounds.width * 0.4,
                                             endRadius: UIScreen.main.bounds.width * 0.6
@@ -389,7 +395,7 @@ struct FlowerDetailSheet: View {
                                                 RoundedRectangle(cornerRadius: 20)
                                                     .stroke(
                                                         LinearGradient(
-                                                            colors: [Color.white.opacity(0.8), Color.white.opacity(0)],
+                                                            colors: [Color.flowerBackground.opacity(0.6), Color.clear],
                                                             startPoint: .top,
                                                             endPoint: .bottom
                                                         ),
