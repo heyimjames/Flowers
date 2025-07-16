@@ -5,14 +5,14 @@ import UIKit
 class FlowerConfettiUIView: UIView {
     private var emitterLayer: CAEmitterLayer?
     private let colors: [UIColor] = [
-        UIColor(red: 255/255, green: 105/255, blue: 180/255, alpha: 1), // Hot Pink
-        UIColor(red: 147/255, green: 112/255, blue: 219/255, alpha: 1), // Medium Purple
-        UIColor(red: 255/255, green: 215/255, blue: 0/255, alpha: 1),   // Gold
-        UIColor(red: 50/255, green: 205/255, blue: 50/255, alpha: 1),   // Lime Green
-        UIColor(red: 255/255, green: 69/255, blue: 0/255, alpha: 1),    // Red Orange
-        UIColor(red: 0/255, green: 191/255, blue: 255/255, alpha: 1),   // Deep Sky Blue
-        UIColor(red: 255/255, green: 20/255, blue: 147/255, alpha: 1),  // Deep Pink
-        UIColor(red: 138/255, green: 43/255, blue: 226/255, alpha: 1)   // Blue Violet
+        UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1), // Pure White
+        UIColor(red: 240/255, green: 255/255, blue: 240/255, alpha: 1), // Honeydew (very light green)
+        UIColor(red: 144/255, green: 238/255, blue: 144/255, alpha: 1), // Light Green
+        UIColor(red: 60/255, green: 179/255, blue: 113/255, alpha: 1),  // Medium Sea Green
+        UIColor(red: 34/255, green: 139/255, blue: 34/255, alpha: 1),   // Forest Green
+        UIColor(red: 189/255, green: 252/255, blue: 201/255, alpha: 1), // Mint Green
+        UIColor(red: 143/255, green: 188/255, blue: 143/255, alpha: 1), // Dark Sea Green
+        UIColor(red: 245/255, green: 245/255, blue: 245/255, alpha: 1)  // White Smoke
     ]
     
     override init(frame: CGRect) {
