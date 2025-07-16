@@ -15,6 +15,24 @@ private func formatCoordinate(_ coordinate: Double, isLatitude: Bool) -> String 
     return String(format: "%.4f°%@", absValue, direction)
 }
 
+// Helper function to format flower description
+private func formatFlowerDescription(_ description: String) -> String {
+    let trimmed = description.trimmingCharacters(in: .whitespacesAndNewlines)
+    if trimmed.isEmpty { return "" }
+    
+    // Capitalize first letter and make the rest lowercase, then capitalize sentences
+    let lowercased = trimmed.lowercased()
+    let capitalized = lowercased.prefix(1).capitalized + lowercased.dropFirst()
+    
+    // Basic sentence capitalization (after periods)
+    let sentences = capitalized.components(separatedBy: ". ")
+    let formatted = sentences.map { sentence in
+        sentence.isEmpty ? "" : sentence.prefix(1).capitalized + sentence.dropFirst()
+    }.joined(separator: ". ")
+    
+    return formatted
+}
+
 // Wrapper for map annotations
 struct MapFlower: Identifiable {
     let id = UUID()
@@ -157,6 +175,7 @@ struct FlowerMapView: View {
             .sheet(isPresented: $showingFullMap) {
                 FullScreenMapView(selectedFlower: flower)
                     .environmentObject(flowerStore)
+                    .presentationCornerRadius(32)
             }
         }
     }
@@ -355,6 +374,8 @@ struct FullScreenMapView: View {
 
 struct FlowerMapCard: View {
     let flower: AIFlower
+    @State private var displayDescription: String = ""
+    @State private var isLoadingDescription = false
     
     var body: some View {
         VStack(spacing: 12) {
@@ -373,11 +394,24 @@ struct FlowerMapCard: View {
                     Text(flower.name)
                         .font(.system(size: 18, weight: .medium, design: .serif))
                         .foregroundColor(.flowerTextPrimary)
+                        .lineLimit(1)
                     
-                    Text(flower.descriptor)
-                        .font(.system(size: 14))
-                        .foregroundColor(.flowerTextSecondary)
-                        .lineLimit(2)
+                    if isLoadingDescription {
+                        HStack(spacing: 6) {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                            Text("Generating...")
+                                .font(.system(size: 14))
+                                .foregroundColor(.flowerTextSecondary)
+                        }
+                    } else {
+                        Text(displayDescription)
+                            .font(.system(size: 14))
+                            .foregroundColor(.flowerTextSecondary)
+                            .lineLimit(2)
+                            .multilineTextAlignment(.leading)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
                     
                     if let locationName = flower.discoveryLocationName {
                         HStack(spacing: 4) {
@@ -385,17 +419,64 @@ struct FlowerMapCard: View {
                                 .font(.system(size: 10))
                             Text(locationName)
                                 .font(.system(size: 12))
+                                .lineLimit(1)
                         }
                         .foregroundColor(.flowerTextTertiary)
                     }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 
-                Spacer()
+                Spacer(minLength: 8)
             }
             .padding(16)
         }
         .background(Color.white)
         .cornerRadius(16)
         .shadow(color: .black.opacity(0.08), radius: 6, x: 0, y: 3)
+        .onAppear {
+            loadDescription()
+        }
+    }
+    
+    private func loadDescription() {
+        // Check if we already have a short description
+        if let shortDesc = flower.shortDescription, !shortDesc.isEmpty {
+            displayDescription = shortDesc
+            return
+        }
+        
+        // Use formatted original description as fallback
+        displayDescription = formatFlowerDescription(flower.descriptor)
+        
+        // Generate a better description in the background
+        Task {
+            await generateShortDescription()
+        }
+    }
+    
+    private func generateShortDescription() async {
+        // Don't generate if we already have a good short description
+        if let shortDesc = flower.shortDescription, !shortDesc.isEmpty {
+            return
+        }
+        
+        isLoadingDescription = true
+        
+        do {
+            let shortDesc = try await OpenAIService.shared.generateShortDescription(for: flower)
+            
+            // Update the flower object with the new short description
+            // Note: This is a temporary solution - ideally we'd update the flower in the store
+            await MainActor.run {
+                displayDescription = shortDesc
+                isLoadingDescription = false
+            }
+            
+        } catch {
+            print("Failed to generate short description: \(error)")
+            await MainActor.run {
+                isLoadingDescription = false
+            }
+        }
     }
 } 

@@ -430,6 +430,7 @@ struct FlowerDetailSheet: View {
                                     Text(flowerItem.name)
                                         .font(.system(size: 32, weight: .regular, design: .serif))
                                         .foregroundColor(.flowerTextPrimary)
+                                        .multilineTextAlignment(.center)
                                     
                                     if flowerItem.isBouquet, let holidayName = flowerItem.holidayName {
                                         HStack(spacing: 6) {
@@ -650,7 +651,7 @@ struct FlowerDetailSheet: View {
                             HStack(spacing: 8) {
                                 Image(systemName: "sparkles.slash")
                                     .font(.system(size: 16))
-                                Text("Return to Garden")
+                                Text("Return Flower to Garden")
                                     .font(.system(size: 15))
                             }
                         }

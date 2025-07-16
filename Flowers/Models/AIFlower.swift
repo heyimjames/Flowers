@@ -52,6 +52,7 @@ struct AIFlower: Identifiable, Codable, Equatable {
     var properties: String?
     var origins: String?
     var detailedDescription: String?
+    var shortDescription: String? // AI-generated short description for map cards
     var continent: Continent?
     var discoveryDate: Date? // When the user "discovered" this flower
     var contextualGeneration: Bool = false // Whether this flower used contextual generation
@@ -79,6 +80,7 @@ struct AIFlower: Identifiable, Codable, Equatable {
          properties: String? = nil,
          origins: String? = nil,
          detailedDescription: String? = nil,
+         shortDescription: String? = nil,
          continent: Continent? = nil,
          discoveryDate: Date? = nil,
          contextualGeneration: Bool = false,
@@ -103,6 +105,7 @@ struct AIFlower: Identifiable, Codable, Equatable {
         self.properties = properties
         self.origins = origins
         self.detailedDescription = detailedDescription
+        self.shortDescription = shortDescription
         self.continent = continent
         self.discoveryDate = discoveryDate
         self.contextualGeneration = contextualGeneration

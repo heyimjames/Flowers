@@ -36,7 +36,7 @@ class FlowerTransferService: NSObject {
     }
     
     // MARK: - Export Flower for Transfer
-    func exportFlower(_ flower: AIFlower, senderName: String, senderLocation: String?) throws -> URL {
+    func exportFlower(_ flower: AIFlower, senderName: String = "Anonymous", senderLocation: String? = nil) throws -> URL {
         var flowerToTransfer = flower
         
         // Create owner info for current user
@@ -55,23 +55,31 @@ class FlowerTransferService: NSObject {
             transferMetadata: metadata
         )
         
-        // Encode to JSON
+        // Encode to JSON with pretty printing
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
+        encoder.outputFormatting = .prettyPrinted
         
         guard let data = try? encoder.encode(document) else {
             throw TransferError.encodingError
         }
         
-        // Create temporary file
+        // Create temporary file with sanitized name
         let tempDir = FileManager.default.temporaryDirectory
-        let fileName = "\(flower.name.replacingOccurrences(of: " ", with: "_")).flower"
+        let sanitizedName = sanitizeFileName(flower.name)
+        let fileName = "\(sanitizedName).flower"
         let fileURL = tempDir.appendingPathComponent(fileName)
         
         // Write data to file
         try data.write(to: fileURL)
         
+        print("FlowerTransferService: Exported flower '\(flower.name)' to \(fileURL.path)")
         return fileURL
+    }
+    
+    // MARK: - Convenience Export Method
+    func exportFlower(_ flower: AIFlower) throws -> URL {
+        return try exportFlower(flower, senderName: "Anonymous", senderLocation: nil)
     }
     
     // MARK: - Import Received Flower
@@ -99,6 +107,12 @@ class FlowerTransferService: NSObject {
         receivedFlower.completeTransfer()
         
         return (receivedFlower, document.transferMetadata.senderInfo)
+    }
+    
+    // MARK: - Helper Methods
+    private func sanitizeFileName(_ name: String) -> String {
+        let invalidChars = CharacterSet(charactersIn: "/<>:\\|?*\"")
+        return name.components(separatedBy: invalidChars).joined(separator: "_")
     }
     
     // MARK: - Clean up temporary files

@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct SettingsSheet: View {
     @ObservedObject var apiConfig = APIConfiguration.shared
@@ -14,6 +15,10 @@ struct SettingsSheet: View {
     @State private var restoreResult: RestoreResult?
     @AppStorage("notificationsEnabled") private var notificationsEnabled = false
     @State private var notificationPermissionGranted = false
+    @State private var showingFileImporter = false
+    @State private var importedFlower: AIFlower?
+    @State private var importedSenderInfo: FlowerOwner?
+    @State private var showingImportConfirmation = false
     
     enum RestoreResult: Identifiable {
         case success(flowersCount: Int)
@@ -336,6 +341,40 @@ struct SettingsSheet: View {
                 }
             }
         }
+        .fileImporter(
+            isPresented: $showingFileImporter,
+            allowedContentTypes: [UTType(filenameExtension: "flower") ?? UTType.data],
+            allowsMultipleSelection: false
+        ) { result in
+            switch result {
+            case .success(let urls):
+                if let url = urls.first {
+                    importFlowerFile(from: url)
+                }
+            case .failure(let error):
+                print("File import failed: \(error)")
+            }
+        }
+        .sheet(isPresented: $showingImportConfirmation) {
+            if let flower = importedFlower, let sender = importedSenderInfo {
+                ReceivedFlowerSheet(
+                    flower: flower,
+                    sender: sender,
+                    onAccept: {
+                        flowerStore.addReceivedFlower(flower)
+                        showingImportConfirmation = false
+                        importedFlower = nil
+                        importedSenderInfo = nil
+                        dismiss()
+                    },
+                    onReject: {
+                        showingImportConfirmation = false
+                        importedFlower = nil
+                        importedSenderInfo = nil
+                    }
+                )
+            }
+        }
     }
     
     private func requestNotificationPermission() {
@@ -414,6 +453,18 @@ struct SettingsSheet: View {
         await MainActor.run {
             isRestoringFromICloud = false
             restoreResult = .success(flowersCount: max(0, restoredCount))
+        }
+    }
+    
+    private func importFlowerFile(from url: URL) {
+        do {
+            let (flower, senderInfo) = try FlowerTransferService.shared.importFlower(from: url)
+            importedFlower = flower
+            importedSenderInfo = senderInfo
+            showingImportConfirmation = true
+        } catch {
+            print("Failed to import flower: \(error)")
+            // TODO: Show error alert to user
         }
     }
     
@@ -535,7 +586,23 @@ struct SettingsSheet: View {
                 }) {
                     HStack {
                         Image(systemName: "icloud.and.arrow.down")
+                            .foregroundColor(.flowerPrimary)
                         Text("Restore from iCloud")
+                            .foregroundColor(.flowerPrimary)
+                    }
+                }
+                .flowerSecondaryButtonStyle()
+                .disabled(iCloudSync.syncStatus == .syncing || isRestoringFromICloud)
+                
+                // Import from Files button
+                Button(action: {
+                    showingFileImporter = true
+                }) {
+                    HStack {
+                        Image(systemName: "folder.badge.plus")
+                            .foregroundColor(.flowerPrimary)
+                        Text("Import from Files")
+                            .foregroundColor(.flowerPrimary)
                     }
                 }
                 .flowerSecondaryButtonStyle()

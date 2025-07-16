@@ -644,4 +644,83 @@ class OpenAIService {
         
         return (title: title, body: body)
     }
+    
+    func generateShortDescription(for flower: AIFlower) async throws -> String {
+        guard !APIConfiguration.shared.openAIKey.isEmpty else {
+            throw OpenAIError.invalidAPIKey
+        }
+        
+        let apiKey = APIConfiguration.shared.openAIKey
+        
+        let systemPrompt = """
+        You are a botanist who creates concise, beautiful descriptions of flowers for mobile app cards.
+        Create a short, elegant description that fits in exactly 2 lines on a mobile screen (approximately 60-80 characters total).
+        
+        Requirements:
+        - Maximum 2 lines of text
+        - Approximately 60-80 characters total
+        - Sentence case (proper capitalization)
+        - Poetic and beautiful language
+        - Focus on visual characteristics and essence
+        - No technical jargon
+        - End with a period
+        
+        Example good responses:
+        "Delicate petals dance in morning light, whispering secrets of spring's gentle embrace."
+        "Vibrant blooms herald summer's arrival with bold colors and sweet fragrance."
+        """
+        
+        let userPrompt = """
+        Flower name: \(flower.name)
+        Original description: \(flower.descriptor)
+        
+        Create a short, poetic description that captures the essence of this flower in exactly 2 lines.
+        """
+        
+        let request = ChatCompletionRequest(
+            model: "gpt-3.5-turbo",
+            messages: [
+                ChatCompletionRequest.Message(role: "system", content: systemPrompt),
+                ChatCompletionRequest.Message(role: "user", content: userPrompt)
+            ],
+            temperature: 0.7,
+            response_format: nil
+        )
+        
+        guard let url = URL(string: chatCompletionURL) else {
+            throw OpenAIError.invalidURL
+        }
+        
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+        urlRequest.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let encoder = JSONEncoder()
+        urlRequest.httpBody = try encoder.encode(request)
+        
+        let (data, response) = try await URLSession.shared.data(for: urlRequest)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw OpenAIError.networkError("Invalid response")
+        }
+        
+        if httpResponse.statusCode != 200 {
+            if let errorData = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let error = errorData["error"] as? [String: Any],
+               let message = error["message"] as? String {
+                throw OpenAIError.networkError(message)
+            }
+            throw OpenAIError.networkError("Status code: \(httpResponse.statusCode)")
+        }
+        
+        let decoder = JSONDecoder()
+        let completionResponse = try decoder.decode(ChatCompletionResponse.self, from: data)
+        
+        guard let shortDescription = completionResponse.choices.first?.message.content else {
+            throw OpenAIError.invalidResponse
+        }
+        
+        return shortDescription.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
 } 
