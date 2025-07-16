@@ -9,6 +9,7 @@ struct GiftFlowerSheet: View {
     @State private var recipientName = ""
     @State private var isNameEntered = false
     @State private var showingNamePrompt = false
+    @State private var transferDidComplete = false
     
     var body: some View {
         NavigationView {
@@ -145,6 +146,15 @@ struct GiftFlowerSheet: View {
         } message: {
             Text("Please enter your name to include in the flower's ownership history.")
         }
+        .onDisappear {
+            // Only trigger the callback if transfer actually completed
+            if transferDidComplete {
+                print("Sheet dismissed after successful transfer - removing flower from collection")
+                onGiftConfirmed(userName)
+            } else {
+                print("Sheet dismissed without transfer - keeping flower in collection")
+            }
+        }
     }
     
     private func shareFlowerDocument() async {
@@ -189,14 +199,35 @@ struct GiftFlowerSheet: View {
                 
                 // Completion handler
                 activityVC.completionWithItemsHandler = { activityType, completed, returnedItems, error in
-                    if completed {
-                        // Gift was successfully sent
-                        dismiss()
-                        onGiftConfirmed(userName)
-                    }
+                    print("Activity completion: type=\(String(describing: activityType)), completed=\(completed), error=\(String(describing: error))")
                     
-                    // Clean up
+                    // Clean up temporary files first
                     FlowerTransferService.shared.cleanupTemporaryFiles()
+                    
+                    // Check if transfer actually completed
+                    if completed && error == nil && activityType != nil {
+                        // Gift was successfully sent via a specific activity (not cancelled)
+                        print("Gift completed successfully via \(activityType!)")
+                        
+                        // Check if it was actually sent via AirDrop or another sharing method
+                        let airdropType = UIActivity.ActivityType(rawValue: "com.apple.UIKit.activity.AirDrop")
+                        if activityType == airdropType || activityType == .mail || activityType == .message {
+                            transferDidComplete = true
+                            print("Transfer confirmed via recognized activity type")
+                        }
+                        
+                        // Dismiss after marking completion
+                        dismiss()
+                    } else if completed == false || activityType == nil {
+                        // User cancelled or no activity was selected
+                        print("Gift cancelled by user or no activity selected")
+                        // Just dismiss without removing flower
+                        dismiss()
+                    } else if let error = error {
+                        print("Gift failed with error: \(error)")
+                        // Just dismiss without removing flower
+                        dismiss()
+                    }
                 }
                 
                 if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
