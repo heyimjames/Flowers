@@ -220,10 +220,18 @@ struct HowItWorksPageView: View {
                 )
                 
                 FeatureRow(
-                    icon: "map",
-                    title: "Location Inspired",
-                    description: "Flowers influenced by your surroundings",
+                    icon: "location.fill",
+                    title: "Uniquely Yours",
+                    description: "Flowers adapt to your location, season & time",
                     delay: 0.2,
+                    appeared: featuresAppeared
+                )
+                
+                FeatureRow(
+                    icon: "sparkle",
+                    title: "Contextual Magic",
+                    description: "Each flower reflects your city, weather & calendar",
+                    delay: 0.3,
                     appeared: featuresAppeared
                 )
                 
@@ -231,7 +239,7 @@ struct HowItWorksPageView: View {
                     icon: "heart.fill",
                     title: "Build Your Garden",
                     description: "Save favorites and grow your collection",
-                    delay: 0.3,
+                    delay: 0.4,
                     appeared: featuresAppeared
                 )
                 
@@ -239,7 +247,7 @@ struct HowItWorksPageView: View {
                     icon: "bell.fill",
                     title: "Gentle Reminders",
                     description: "Notifications when new flowers bloom",
-                    delay: 0.4,
+                    delay: 0.5,
                     appeared: featuresAppeared
                 )
             }
@@ -317,7 +325,7 @@ struct LocationPermissionPageView: View {
                     .foregroundColor(.flowerTextPrimary)
                     .multilineTextAlignment(.center)
                 
-                Text("Allow location access to discover flowers inspired by your surroundings, weather, and local seasons")
+                Text("Allow location access to create flowers that reflect your city's unique character, local weather patterns, and seasonal changes")
                     .font(.system(size: 16))
                     .foregroundColor(.flowerTextSecondary)
                     .multilineTextAlignment(.center)
