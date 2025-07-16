@@ -588,11 +588,32 @@ struct FlowerDetailSheet: View {
                     }
                 }
             }
-            .background(Color.white)
+            .background(
+                LinearGradient(
+                    colors: [Color.flowerBackground, Color.flowerBackgroundSecondary],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
             .navigationBarHidden(true)
             .overlay(alignment: .bottom) {
-                // Action buttons without gradient fade
-                VStack(spacing: 12) {
+                // Action buttons with progressive blur
+                ZStack {
+                    // Progressive blur background
+                    LinearGradient(
+                        gradient: Gradient(stops: [
+                            .init(color: Color.flowerBackground.opacity(0), location: 0),
+                            .init(color: Color.flowerBackground.opacity(0.8), location: 0.4),
+                            .init(color: Color.flowerBackground.opacity(0.95), location: 0.7),
+                            .init(color: Color.flowerBackground, location: 1)
+                        ]),
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .frame(height: 200)
+                    .allowsHitTesting(false)
+                    
+                    VStack(spacing: 12) {
                         HStack(spacing: 16) {
                             Button(action: saveToPhotos) {
                                 HStack(spacing: 8) {
@@ -638,6 +659,7 @@ struct FlowerDetailSheet: View {
                     .padding(.horizontal, 24)
                     .padding(.bottom, 40)
                 }
+                }
                 .ignoresSafeArea(edges: .bottom)
             }
             .alert("Return to Garden?", isPresented: $showingDeleteAlert) {
@@ -670,10 +692,8 @@ struct FlowerDetailSheet: View {
             )
         }
         .onAppear {
-            // Load details if not already loaded
-            if flower.meaning == nil {
-                loadFlowerDetails()
-            }
+            // Don't auto-load details to prevent slow sheet appearance
+            // User can tap "Reveal Details" button if they want to see more
         }
         }
     

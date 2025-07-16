@@ -267,6 +267,7 @@ struct ContentView: View {
                     showingFlowerDetail = true
                 }
                 .contentShape(Rectangle()) // Makes entire area tappable
+                .id(flower.id) // Prevent unnecessary re-renders
                 .transition(
                     .asymmetric(
                         insertion: .scale(scale: 0.3, anchor: .center)
@@ -278,9 +279,10 @@ struct ContentView: View {
                 
                 // Flower/Bouquet name
                 VStack(spacing: 8) {
-                                    Text(flower.name)
-                    .font(.system(size: 28, weight: .regular, design: .serif))
-                    .foregroundColor(.flowerTextPrimary)
+                    Text(flower.name)
+                        .font(.system(size: 28, weight: .regular, design: .serif))
+                        .foregroundColor(.flowerTextPrimary)
+                        .multilineTextAlignment(.center)
                     
                     if flower.isBouquet, let holidayName = flower.holidayName {
                         HStack(spacing: 6) {

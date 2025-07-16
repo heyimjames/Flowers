@@ -1085,16 +1085,21 @@ class FlowerStore: ObservableObject {
     }
     
     private func loadFavorites() {
-        if let data = userDefaults.data(forKey: favoritesKey),
-           let decoded = try? JSONDecoder().decode([AIFlower].self, from: data) {
-            favorites = decoded.sorted { 
-                ($0.discoveryDate ?? $0.generatedDate) > ($1.discoveryDate ?? $1.generatedDate) 
+        if let data = userDefaults.data(forKey: favoritesKey) {
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            if let decoded = try? decoder.decode([AIFlower].self, from: data) {
+                favorites = decoded.sorted { 
+                    ($0.discoveryDate ?? $0.generatedDate) > ($1.discoveryDate ?? $1.generatedDate) 
+                }
             }
         }
     }
     
     private func saveFavorites() {
-        if let encoded = try? JSONEncoder().encode(favorites) {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        if let encoded = try? encoder.encode(favorites) {
             userDefaults.set(encoded, forKey: favoritesKey)
         }
     }
@@ -1217,16 +1222,21 @@ class FlowerStore: ObservableObject {
     }
     
     private func loadDiscoveredFlowers() {
-        if let data = userDefaults.data(forKey: discoveredFlowersKey),
-           let decoded = try? JSONDecoder().decode([AIFlower].self, from: data) {
-            discoveredFlowers = decoded.sorted { 
-                ($0.discoveryDate ?? $0.generatedDate) > ($1.discoveryDate ?? $1.generatedDate) 
+        if let data = userDefaults.data(forKey: discoveredFlowersKey) {
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            if let decoded = try? decoder.decode([AIFlower].self, from: data) {
+                discoveredFlowers = decoded.sorted { 
+                    ($0.discoveryDate ?? $0.generatedDate) > ($1.discoveryDate ?? $1.generatedDate) 
+                }
             }
         }
     }
     
     private func saveDiscoveredFlowers() {
-        if let encoded = try? JSONEncoder().encode(discoveredFlowers) {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        if let encoded = try? encoder.encode(discoveredFlowers) {
             userDefaults.set(encoded, forKey: discoveredFlowersKey)
         }
         

@@ -143,6 +143,7 @@ struct SettingsSheet: View {
                                         .foregroundColor(.flowerTextSecondary)
                                 }
                             }
+                            .tint(.flowerPrimary)
                             .onChange(of: notificationsEnabled) { _, newValue in
                                 if newValue {
                                     requestNotificationPermission()
@@ -324,6 +325,16 @@ struct SettingsSheet: View {
         }
         .onAppear {
             checkNotificationPermissionStatus()
+            
+            // Update iCloud sync stats when view appears
+            Task {
+                await iCloudSync.updateSyncStats()
+                
+                // Force a sync to ensure data is up to date
+                if iCloudSync.iCloudAvailable {
+                    await iCloudSync.syncToICloud()
+                }
+            }
         }
     }
     
@@ -406,6 +417,29 @@ struct SettingsSheet: View {
         }
     }
     
+    // MARK: - Helper Functions
+    private func formattedSyncTime(_ date: Date) -> String {
+        let calendar = Calendar.current
+        let now = Date()
+        
+        if calendar.isDateInToday(date) {
+            let formatter = DateFormatter()
+            formatter.dateStyle = .none
+            formatter.timeStyle = .short
+            return "Today at \(formatter.string(from: date))"
+        } else if calendar.isDateInYesterday(date) {
+            let formatter = DateFormatter()
+            formatter.dateStyle = .none
+            formatter.timeStyle = .short
+            return "Yesterday at \(formatter.string(from: date))"
+        } else {
+            let formatter = DateFormatter()
+            formatter.dateStyle = .short
+            formatter.timeStyle = .short
+            return formatter.string(from: date)
+        }
+    }
+    
     // MARK: - iCloud Sync Section
     private var iCloudSyncSection: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -424,7 +458,7 @@ struct SettingsSheet: View {
                         .foregroundColor(.flowerTextPrimary)
                     
                     if let lastSync = iCloudSync.lastSyncDate {
-                        Text("Last synced \(lastSync, style: .relative) ago")
+                        Text("Last synced \(formattedSyncTime(lastSync))")
                             .font(.system(size: 12))
                             .foregroundColor(.flowerTextSecondary)
                     } else {
@@ -434,7 +468,7 @@ struct SettingsSheet: View {
                     }
                     
                     // Sync statistics
-                    if iCloudSync.syncedFlowersCount > 0 {
+                    if iCloudSync.iCloudAvailable {
                         HStack(spacing: 12) {
                             HStack(spacing: 4) {
                                 Image(systemName: "flower")
@@ -485,7 +519,7 @@ struct SettingsSheet: View {
                             .rotationEffect(iCloudSync.syncStatus == .syncing ? .degrees(360) : .degrees(0))
                             .animation(
                                 iCloudSync.syncStatus == .syncing ?
-                                Animation.linear(duration: 1.0).repeatForever(autoreverses: false) :
+                                Animation.linear(duration: 0.8).repeatForever(autoreverses: false) :
                                 .default,
                                 value: iCloudSync.syncStatus
                             )

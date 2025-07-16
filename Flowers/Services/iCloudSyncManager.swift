@@ -116,9 +116,13 @@ class iCloudSyncManager: ObservableObject {
     // MARK: - Sync Statistics
     
     func updateSyncStats() async {
-        guard let containerURL = iCloudContainerURL else { return }
+        guard let containerURL = iCloudContainerURL else { 
+            print("iCloudSyncManager: No container URL available")
+            return 
+        }
         
         let flowersURL = containerURL.appendingPathComponent(flowersFileName)
+        print("iCloudSyncManager: Checking sync stats at: \(flowersURL.path)")
         
         do {
             // Check if file exists
@@ -129,11 +133,14 @@ class iCloudSyncManager: ObservableObject {
                 
                 // Read and count flowers
                 let data = try Data(contentsOf: flowersURL)
-                let flowers = try JSONDecoder().decode([AIFlower].self, from: data)
+                let decoder = JSONDecoder()
+                decoder.dateDecodingStrategy = .iso8601
+                let flowers = try decoder.decode([AIFlower].self, from: data)
                 
                 await MainActor.run {
                     self.syncedDataSize = fileSize
                     self.syncedFlowersCount = flowers.count
+                    print("iCloudSyncManager: Updated stats - \(flowers.count) flowers, \(fileSize) bytes")
                 }
             } else {
                 await MainActor.run {
@@ -179,14 +186,23 @@ class iCloudSyncManager: ObservableObject {
             self.syncStatus = .syncing
         }
         
+        // Ensure minimum sync duration for better UX (3+ rotations at 0.8s each)
+        let startTime = Date()
+        let minimumSyncDuration: TimeInterval = 2.5
+        
         do {
             // Get current flowers from UserDefaults
             let flowers = await MainActor.run { () -> [AIFlower] in
                 let userDefaults = UserDefaults.standard
-                if let data = userDefaults.data(forKey: "discoveredFlowers"),
-                   let decoded = try? JSONDecoder().decode([AIFlower].self, from: data) {
-                    return decoded
+                if let data = userDefaults.data(forKey: "discoveredFlowers") {
+                    let decoder = JSONDecoder()
+                    decoder.dateDecodingStrategy = .iso8601
+                    if let decoded = try? decoder.decode([AIFlower].self, from: data) {
+                        print("iCloudSyncManager: Found \(decoded.count) flowers to sync")
+                        return decoded
+                    }
                 }
+                print("iCloudSyncManager: No flowers found in UserDefaults")
                 return []
             }
             
@@ -228,6 +244,12 @@ class iCloudSyncManager: ObservableObject {
                 throw error
             }
             
+            // Ensure minimum sync duration has passed
+            let elapsed = Date().timeIntervalSince(startTime)
+            if elapsed < minimumSyncDuration {
+                try await Task.sleep(nanoseconds: UInt64((minimumSyncDuration - elapsed) * 1_000_000_000))
+            }
+            
             // Update sync status
             await MainActor.run {
                 self.syncStatus = .success
@@ -238,7 +260,7 @@ class iCloudSyncManager: ObservableObject {
             // Update sync statistics
             await updateSyncStats()
             
-            print("Successfully synced \(flowers.count) flowers to iCloud")
+            print("Successfully synced \(flowers.count) flowers to iCloud at: \(flowersURL.path)")
             
         } catch {
             await MainActor.run {
