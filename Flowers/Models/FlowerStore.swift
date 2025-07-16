@@ -59,6 +59,92 @@ class FlowerStore: ObservableObject {
         return stats
     }
     
+    var discoveryLocationStats: [String: Int] {
+        var stats: [String: Int] = [:]
+        for flower in discoveredFlowers {
+            // Use discovery location name if available, otherwise determine from coordinates
+            if let locationName = flower.discoveryLocationName {
+                // Extract city/country from location name
+                let locationKey = extractLocationKey(from: locationName)
+                stats[locationKey, default: 0] += 1
+            } else if let lat = flower.discoveryLatitude, let lon = flower.discoveryLongitude {
+                // Determine continent from coordinates
+                let continent = continentFromCoordinates(latitude: lat, longitude: lon)
+                stats[continent.rawValue, default: 0] += 1
+            }
+        }
+        return stats
+    }
+    
+    private func extractLocationKey(from locationName: String) -> String {
+        // Extract the most relevant part of the location name
+        // Format is typically "City, State/Province, Country"
+        let components = locationName.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+        
+        // If we have a city and country, use "City, Country"
+        if components.count >= 2 {
+            if components.count == 3 {
+                // Format: City, State, Country - use City, Country
+                return "\(components[0]), \(components[2])"
+            } else {
+                // Format: City, Country - use as is
+                return "\(components[0]), \(components[1])"
+            }
+        } else {
+            // Just use the full location name if we can't parse it
+            return locationName
+        }
+    }
+    
+    private func continentFromCoordinates(latitude: Double, longitude: Double) -> Continent {
+        // Simplified continent detection based on coordinates
+        // This is a rough approximation
+        
+        // Antarctica (below -60 latitude)
+        if latitude < -60 {
+            return .antarctica
+        }
+        
+        // Africa (roughly -35 to 37 latitude, -20 to 55 longitude)
+        if latitude >= -35 && latitude <= 37 && longitude >= -20 && longitude <= 55 {
+            return .africa
+        }
+        
+        // Europe (roughly 35 to 71 latitude, -10 to 60 longitude)
+        if latitude >= 35 && latitude <= 71 && longitude >= -10 && longitude <= 60 {
+            return .europe
+        }
+        
+        // Asia (roughly -10 to 71 latitude, 60 to 180 longitude)
+        if latitude >= -10 && latitude <= 71 && longitude >= 60 && longitude <= 180 {
+            return .asia
+        }
+        
+        // Oceania (roughly -50 to -10 latitude, 110 to 180 longitude)
+        if latitude >= -50 && latitude <= -10 && longitude >= 110 && longitude <= 180 {
+            return .oceania
+        }
+        
+        // South America (roughly -55 to 12 latitude, -80 to -35 longitude)
+        if latitude >= -55 && latitude <= 12 && longitude >= -80 && longitude <= -35 {
+            return .southAmerica
+        }
+        
+        // North America (roughly 15 to 71 latitude, -170 to -50 longitude)
+        if latitude >= 15 && latitude <= 71 && longitude >= -170 && longitude <= -50 {
+            return .northAmerica
+        }
+        
+        // Default fallback based on simple longitude
+        if longitude < -30 {
+            return latitude > 0 ? .northAmerica : .southAmerica
+        } else if longitude < 60 {
+            return latitude > 0 ? .europe : .africa
+        } else {
+            return latitude > 0 ? .asia : .oceania
+        }
+    }
+    
 
     
     init() {
@@ -602,7 +688,11 @@ class FlowerStore: ObservableObject {
             }
             
             // Always use FAL for image generation
-            let (image, prompt) = try await FALService.shared.generateFlowerImage(descriptor: actualDescriptor, isBouquet: isBouquet)
+            let (image, prompt) = try await FALService.shared.generateFlowerImage(
+                descriptor: actualDescriptor, 
+                isBouquet: isBouquet,
+                personalMessage: holiday?.personalMessage
+            )
             
             // Convert UIImage to Data
             guard let imageData = image.jpegData(compressionQuality: 0.9) else {
@@ -618,7 +708,9 @@ class FlowerStore: ObservableObject {
             
             if isBouquet {
                 // Generate bouquet name
-                if let holidayName = holiday?.name {
+                if let customName = holiday?.customFlowerName {
+                    name = customName
+                } else if let holidayName = holiday?.name {
                     name = "\(holidayName) Bouquet"
                 } else {
                     name = "Special Occasion Bouquet"
@@ -637,7 +729,8 @@ class FlowerStore: ObservableObject {
                 } else {
                     name = try await OpenAIService.shared.generateFlowerName(
                         descriptor: actualDescriptor,
-                        existingNames: allUsedFlowerNames
+                        existingNames: allUsedFlowerNames,
+                        context: flowerContext
                     )
                 }
             } else {
@@ -650,9 +743,24 @@ class FlowerStore: ObservableObject {
                 }
             }
             
-            // Capture current location if available
-            let currentLocation = ContextualFlowerGenerator.shared.currentLocation
-            let currentPlacemark = ContextualFlowerGenerator.shared.currentPlacemark
+            // Determine location to use
+            let latitude: Double?
+            let longitude: Double?
+            let locationName: String?
+            
+            if let customLocation = holiday?.customLocation {
+                // Use custom holiday location
+                latitude = customLocation.latitude
+                longitude = customLocation.longitude
+                locationName = customLocation.name
+            } else {
+                // Use current location
+                let currentLocation = ContextualFlowerGenerator.shared.currentLocation
+                let currentPlacemark = ContextualFlowerGenerator.shared.currentPlacemark
+                latitude = currentLocation?.coordinate.latitude
+                longitude = currentLocation?.coordinate.longitude
+                locationName = currentPlacemark?.locality ?? currentPlacemark?.name
+            }
             
             var flower = AIFlower(
                 name: name,
@@ -666,9 +774,9 @@ class FlowerStore: ObservableObject {
                 isBouquet: isBouquet,
                 bouquetFlowers: bouquetFlowerNames,
                 holidayName: holiday?.name,
-                discoveryLatitude: currentLocation?.coordinate.latitude,
-                discoveryLongitude: currentLocation?.coordinate.longitude,
-                discoveryLocationName: currentPlacemark?.locality ?? currentPlacemark?.name
+                discoveryLatitude: latitude,
+                discoveryLongitude: longitude,
+                discoveryLocationName: locationName
             )
             
             // Get a random continent for now (will be replaced by AI-generated continent)
@@ -687,6 +795,11 @@ class FlowerStore: ObservableObject {
                     // Add contextual meaning if available
                     if let contextualMeaning = flowerContext?.generateContextualMeaning() {
                         flower.meaning = (flower.meaning ?? "") + " " + contextualMeaning
+                    }
+                    
+                    // Add personal message to properties if this is a special holiday flower
+                    if let personalMessage = holiday?.personalMessage {
+                        flower.properties = (flower.properties ?? "") + "\n\n" + personalMessage
                     }
                 } catch {
                     // Continue without details if generation fails

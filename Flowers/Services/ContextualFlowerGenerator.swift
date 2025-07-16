@@ -212,25 +212,110 @@ class ContextualFlowerGenerator: NSObject, ObservableObject, CLLocationManagerDe
     
     func getCurrentHoliday() -> Holiday? {
         let calendar = Calendar.current
-        let components = calendar.dateComponents([.month, .day], from: Date())
-        
-        guard let month = components.month, let day = components.day else { return nil }
+        let today = Date()
+        let components = calendar.dateComponents([.month, .day, .year], from: today)
+        guard let month = components.month, let day = components.day, let year = components.year else { return nil }
         
         // Major holidays with flower-relevant themes and special bouquet flags
         let holidays: [(month: Int, day: Int, holiday: Holiday)] = [
+            // Regular holidays
             (1, 1, Holiday(name: "New Year", descriptor: "celebration sparkle", isBouquetWorthy: true, bouquetTheme: "fresh beginnings with white and gold")),
             (2, 14, Holiday(name: "Valentine's Day", descriptor: "romantic red heart", isBouquetWorthy: true, bouquetTheme: "love and passion with red roses and pink lilies")),
             (3, 17, Holiday(name: "St. Patrick's Day", descriptor: "lucky emerald shamrock", isBouquetWorthy: true, bouquetTheme: "Irish luck with green carnations and white roses")),
             (3, 8, Holiday(name: "International Women's Day", descriptor: "empowering purple", isBouquetWorthy: true, bouquetTheme: "strength and beauty with purple orchids and yellow tulips")),
             (5, 1, Holiday(name: "May Day", descriptor: "spring festival", isBouquetWorthy: true, bouquetTheme: "spring celebration with mixed wildflowers")),
-            (5, 12, Holiday(name: "Mother's Day", descriptor: "maternal love", isBouquetWorthy: true, bouquetTheme: "appreciation with pink peonies and white gardenias")),  // Second Sunday of May (approximate)
-            (6, 16, Holiday(name: "Father's Day", descriptor: "paternal strength", isBouquetWorthy: true, bouquetTheme: "strength with sunflowers and blue delphiniums")),  // Third Sunday of June (approximate)
+            
+            // Personal special dates
+            (5, 12, Holiday(
+                name: "Yvonne's Birthday", 
+                descriptor: "maternal love and appreciation", 
+                isBouquetWorthy: true, 
+                bouquetTheme: "elegant spring flowers in soft pastels to celebrate a wonderful mother",
+                customLocation: (51.7520, -1.2577, "Oxford, United Kingdom"),
+                personalMessage: "A special bouquet to celebrate Yvonne, James' wonderful mother, on her birthday. Her love, wisdom, and kindness have shaped the person he has become. These flowers represent the gratitude and love for a mother who has given so much.",
+                customFlowerName: "Yvonne's Birthday Bouquet"
+            )),
+            
+            (5, 17, Holiday(
+                name: "Jenny's Birthday", 
+                descriptor: "birthday celebration", 
+                isBouquetWorthy: true, 
+                bouquetTheme: "stunning Copo De Leite (Arum Lily) flowers native to Brazil, pure white with elegant curves",
+                customLocation: (-23.5505, -46.6333, "São Paulo, Brazil"),
+                personalMessage: "A breathtaking bouquet of Copo De Leite flowers to celebrate Jenny, James' beloved fiancée, on her special day. These elegant Brazilian lilies represent the pure love and joy she brings to life. Happy Birthday to the most wonderful person who makes every day brighter!",
+                customFlowerName: "Jenny's Birthday Copo De Leite"
+            )),
+            
+            (6, 16, Holiday(name: "Father's Day", descriptor: "paternal strength", isBouquetWorthy: true, bouquetTheme: "strength with sunflowers and blue delphiniums")),
+            
+            (7, 23, Holiday(
+                name: "Ita's Memorial", 
+                descriptor: "remembrance and love", 
+                isBouquetWorthy: true, 
+                bouquetTheme: "beautiful Brazilian-themed flowers in vibrant green, blue and yellow, honoring a beloved grandmother",
+                customLocation: (-23.5505, -46.6333, "São Paulo, Brazil"),
+                personalMessage: "A special Brazilian bouquet to celebrate and remember Ita, Jenny's amazing grandmother, on her birthday. Her spirit lives on in the love she shared and the memories she created. These flowers in Brazil's colors honor a truly remarkable woman who touched so many lives with her kindness and warmth.",
+                customFlowerName: "Ita's Birthday Remembrance"
+            )),
+            
+            (10, 1, Holiday(
+                name: "James' Birthday", 
+                descriptor: "birthday celebration", 
+                isBouquetWorthy: true, 
+                bouquetTheme: "majestic Bird of Paradise flower with vibrant orange and blue petals",
+                customLocation: (51.5074, -0.1278, "London, United Kingdom"),
+                personalMessage: "A stunning Bird of Paradise flower to celebrate James, the creator of this app, on his birthday. May this exotic bloom represent the colorful journey ahead and all the beauty life has to offer.",
+                customFlowerName: "James' Bird of Paradise"
+            )),
+            
             (10, 31, Holiday(name: "Halloween", descriptor: "mystical autumn", isBouquetWorthy: true, bouquetTheme: "mysterious beauty with orange marigolds and deep purple roses")),
-            (11, 28, Holiday(name: "Thanksgiving", descriptor: "grateful harvest", isBouquetWorthy: true, bouquetTheme: "gratitude with autumn chrysanthemums and wheat stalks")),  // Fourth Thursday (approximate)
+            
+            (11, 13, Holiday(
+                name: "Wedding Anniversary", 
+                descriptor: "eternal love", 
+                isBouquetWorthy: true, 
+                bouquetTheme: "romantic wedding bouquet with white roses, Portuguese lavender, and touches of gold",
+                customLocation: (38.7223, -9.1393, "Lisbon, Portugal"),
+                personalMessage: "A magnificent wedding bouquet celebrating the beautiful union of James and Jenny. Each year marks another chapter in their love story, which began in Portugal. May these flowers represent the continuing bloom of their love, growing stronger and more beautiful with each passing year.",
+                customFlowerName: "Anniversary Wedding Bouquet"
+            )),
+            
+            (11, 25, Holiday(
+                name: "First Meeting Anniversary", 
+                descriptor: "the beginning of love", 
+                isBouquetWorthy: true, 
+                bouquetTheme: "romantic flowers symbolizing new beginnings and the spark of first love",
+                customLocation: (51.5054, -0.0235, "Canary Wharf, London"),
+                personalMessage: "A special bouquet commemorating the magical day when James and Jenny first met. In the heart of Canary Wharf, two paths crossed and a beautiful love story began. These flowers celebrate that fateful moment when two souls found each other.",
+                customFlowerName: "First Meeting Flowers"
+            )),
+            
+            (11, 28, Holiday(name: "Thanksgiving", descriptor: "grateful harvest", isBouquetWorthy: true, bouquetTheme: "gratitude with autumn chrysanthemums and wheat stalks")),
             (12, 25, Holiday(name: "Christmas", descriptor: "festive winter holly", isBouquetWorthy: true, bouquetTheme: "festive joy with red poinsettias and white roses"))
         ]
         
-        return holidays.first { $0.month == month && $0.day == day }?.holiday
+        // Find matching holiday
+        if let matchingHoliday = holidays.first(where: { $0.month == month && $0.day == day })?.holiday {
+            // Special handling for wedding anniversary to update the year
+            if matchingHoliday.name == "Wedding Anniversary" && month == 11 && day == 13 {
+                let weddingYear = 2025 // Year they got married
+                let yearsMarried = year - weddingYear
+                let ordinal = yearsMarried == 1 ? "1st" : yearsMarried == 2 ? "2nd" : yearsMarried == 3 ? "3rd" : "\(yearsMarried)th"
+                
+                return Holiday(
+                    name: matchingHoliday.name,
+                    descriptor: matchingHoliday.descriptor,
+                    isBouquetWorthy: matchingHoliday.isBouquetWorthy,
+                    bouquetTheme: matchingHoliday.bouquetTheme,
+                    customLocation: matchingHoliday.customLocation,
+                    personalMessage: "A magnificent wedding bouquet celebrating the beautiful union of James and Jenny on their \(ordinal) anniversary. Each year marks another chapter in their love story, which began in Portugal. May these flowers represent the continuing bloom of their love, growing stronger and more beautiful with each passing year.",
+                    customFlowerName: "\(ordinal) Anniversary Wedding Bouquet"
+                )
+            }
+            return matchingHoliday
+        }
+        
+        return nil
     }
     
     private func getCurrentZodiacSign() -> ZodiacSign? {
@@ -308,12 +393,20 @@ struct Holiday {
     let descriptor: String
     let isBouquetWorthy: Bool
     let bouquetTheme: String?
+    let customLocation: (latitude: Double, longitude: Double, name: String)?
+    let personalMessage: String?
+    let customFlowerName: String?
     
-    init(name: String, descriptor: String, isBouquetWorthy: Bool = false, bouquetTheme: String? = nil) {
+    init(name: String, descriptor: String, isBouquetWorthy: Bool = false, bouquetTheme: String? = nil, 
+         customLocation: (latitude: Double, longitude: Double, name: String)? = nil,
+         personalMessage: String? = nil, customFlowerName: String? = nil) {
         self.name = name
         self.descriptor = descriptor
         self.isBouquetWorthy = isBouquetWorthy
         self.bouquetTheme = bouquetTheme
+        self.customLocation = customLocation
+        self.personalMessage = personalMessage
+        self.customFlowerName = customFlowerName
     }
 }
 

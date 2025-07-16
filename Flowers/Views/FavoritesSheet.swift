@@ -141,19 +141,26 @@ struct FavoritesSheet: View {
                     .padding(.horizontal, 24)
                     .padding(.bottom, 16)
                     
-                    // Continent stats
-                    if !showFavoritesOnly && !flowerStore.continentStats.isEmpty {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 12) {
-                                ForEach(Continent.allCases, id: \.self) { continent in
-                                    if let count = flowerStore.continentStats[continent], count > 0 {
+                    // Discovery location stats
+                    if !showFavoritesOnly && !flowerStore.discoveryLocationStats.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Found in")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(.flowerTextSecondary)
+                                .padding(.horizontal, 24)
+                            
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 12) {
+                                    ForEach(flowerStore.discoveryLocationStats.sorted(by: { $0.value > $1.value }).prefix(10), id: \.key) { location, count in
                                         VStack(spacing: 4) {
                                             Text("\(count)")
                                                 .font(.system(size: 16, weight: .semibold))
                                                 .foregroundColor(.flowerPrimary)
-                                            Text(continent.rawValue)
-                                                .font(.system(size: 12))
+                                            Text(location)
+                                                .font(.system(size: 11))
                                                 .foregroundColor(.flowerTextSecondary)
+                                                .lineLimit(1)
+                                                .minimumScaleFactor(0.8)
                                         }
                                         .padding(.horizontal, 12)
                                         .padding(.vertical, 8)
@@ -167,8 +174,8 @@ struct FavoritesSheet: View {
                                         )
                                     }
                                 }
+                                .padding(.horizontal, 24)
                             }
-                            .padding(.horizontal, 24)
                         }
                         .padding(.bottom, 16)
                     }

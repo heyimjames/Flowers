@@ -292,24 +292,84 @@ class OpenAIService {
         }
     }
     
-    func generateFlowerName(descriptor: String, existingNames: Set<String> = []) async throws -> String {
+    func generateFlowerName(descriptor: String, existingNames: Set<String> = [], context: FlowerContext? = nil) async throws -> String {
         guard !APIConfiguration.shared.openAIKey.isEmpty else {
             throw OpenAIError.invalidAPIKey
         }
         
         let apiKey = APIConfiguration.shared.openAIKey
         
-        let systemPrompt = """
-        You are a botanist who names newly discovered flower species. Create elegant, scientifically-plausible names 
-        that sound like they could be real flowers. Use combinations of Latin, Greek roots, or poetic English names.
-        Respond with just the flower name, nothing else.
-        IMPORTANT: The name must be completely unique and not match any existing flower names.
-        """
+        // Randomly decide between Latin names and real-world names (60% Latin, 40% real-world)
+        let useRealWorldName = Int.random(in: 1...10) <= 4
         
-        var userPrompt = """
-        Create a beautiful name for a flower described as: \(descriptor)
-        The name should be 2-3 words maximum and sound like it could be a real flower species.
-        """
+        let systemPrompt: String
+        var userPrompt: String
+        
+        if useRealWorldName && context != nil {
+            // Generate real-world sounding names based on context
+            systemPrompt = """
+            You are a creative florist who names flowers with poetic, real-world names that evoke their location, time, or context.
+            Create names that sound like they could be found in a boutique flower shop or garden catalog.
+            Names should be evocative and beautiful, relating to the city, country, season, time of day, or current date.
+            Examples: "London Morning Mist", "Barcelona Sunset Rose", "Winter Solstice Bloom", "Tokyo Cherry Dream", "Manhattan Twilight", "Alpine Spring Glory"
+            Respond with just the flower name, nothing else.
+            The name should be 2-4 words and poetic.
+            """
+            
+            var contextElements: [String] = []
+            
+            // Add context-specific information
+            if let city = context?.city {
+                contextElements.append("City: \(city)")
+            }
+            if let country = context?.country {
+                contextElements.append("Country: \(country)")
+            }
+            if let season = context?.season {
+                contextElements.append("Season: \(season)")
+            }
+            if let timeOfDay = context?.timeOfDay {
+                contextElements.append("Time: \(timeOfDay)")
+            }
+            
+            // Add current date context
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "MMMM d"
+            let currentDate = dateFormatter.string(from: Date())
+            contextElements.append("Date: \(currentDate)")
+            
+            // Check for special days
+            let calendar = Calendar.current
+            let components = calendar.dateComponents([.month, .day], from: Date())
+            if components.month == 12 && components.day == 25 {
+                contextElements.append("Special: Christmas Day")
+            } else if components.month == 1 && components.day == 1 {
+                contextElements.append("Special: New Year's Day")
+            }
+            
+            userPrompt = """
+            Create a beautiful real-world name for a flower described as: \(descriptor)
+            
+            Context:
+            \(contextElements.joined(separator: "\n"))
+            
+            The name should relate to one or more of these contextual elements in a poetic way.
+            Focus on location names, seasonal references, or time-based poetry.
+            """
+        } else {
+            // Original Latin/Greek naming system
+            systemPrompt = """
+            You are a botanist who names newly discovered flower species. Create elegant, scientifically-plausible names 
+            that sound like they could be real flowers. Use combinations of Latin, Greek roots, or poetic English names.
+            Respond with just the flower name, nothing else.
+            IMPORTANT: The name must be completely unique and not match any existing flower names.
+            """
+            
+            userPrompt = """
+            Create a beautiful name for a flower described as: \(descriptor)
+            The name should be 2-3 words maximum and sound like it could be a real flower species.
+            """
+        }
         
         if !existingNames.isEmpty {
             userPrompt += """
