@@ -16,6 +16,7 @@ struct ContentView: View {
     @State private var showDiscoveryCount = true
     @State private var showingFlowerDetail = false
     @State private var showingOnboarding = false
+    @State private var showingShareSheet = false
     @Environment(\.scenePhase) var scenePhase
     @State private var wasInBackground = false
     
@@ -227,6 +228,12 @@ struct ContentView: View {
                 }
             default:
                 break
+            }
+        }
+        .sheet(isPresented: $showingShareSheet) {
+            if let flower = flowerStore.currentFlower {
+                ShareSheet(flower: flower)
+                    .ignoresSafeArea()
             }
         }
 
@@ -532,26 +539,8 @@ struct ContentView: View {
     }
     
     private func shareFlower() {
-        guard let flower = flowerStore.currentFlower,
-              let imageData = flower.imageData,
-              let image = UIImage(data: imageData) else { return }
-        
-        var shareText = "🌸 \(flower.name)"
-        if let meaning = flower.meaning {
-            shareText += "\n\n\(meaning)"
-        }
-        shareText += "\n\nDiscovered with Flowers app"
-        
-        let activityVC = UIActivityViewController(
-            activityItems: [image, shareText],
-            applicationActivities: nil
-        )
-        
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let window = windowScene.windows.first,
-           let rootVC = window.rootViewController {
-            rootVC.present(activityVC, animated: true)
-        }
+        guard flowerStore.currentFlower != nil else { return }
+        showingShareSheet = true
     }
 }
 

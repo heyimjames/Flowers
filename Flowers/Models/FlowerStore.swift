@@ -15,6 +15,8 @@ class FlowerStore: ObservableObject {
     @Published var nextFlowerTime: Date?
     @Published var shouldShowOnboarding = false
     
+    @AppStorage("autoSaveToPhotos") var autoSaveToPhotos: Bool = true
+    
     private let userDefaults = UserDefaults.standard
     private let sharedDefaults = UserDefaults(suiteName: "group.OCTOBER.Flowers")
     private let favoritesKey = "favorites"
@@ -1061,6 +1063,17 @@ class FlowerStore: ObservableObject {
         if !discoveredFlowers.contains(where: { $0.id == flower.id }) {
             discoveredFlowers.insert(flower, at: 0)
             saveDiscoveredFlowers()
+            
+            // Auto-save to photo library if enabled
+            if autoSaveToPhotos {
+                PhotoLibraryService.shared.saveFlowerToLibrary(flower) { success, error in
+                    if success {
+                        print("Successfully saved flower to photo library")
+                    } else if let error = error {
+                        print("Failed to save flower to photo library: \(error.localizedDescription)")
+                    }
+                }
+            }
             
             // Check for milestone achievements
             checkForMilestoneAchievement()

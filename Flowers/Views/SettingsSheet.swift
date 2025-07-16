@@ -96,6 +96,34 @@ struct SettingsSheet: View {
                         // iCloud Sync Section
                         iCloudSyncSection
                         
+                        // Photos Section
+                        VStack(alignment: .leading, spacing: 16) {
+                            Label("Photos", systemImage: "photo.fill")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundColor(.flowerTextPrimary)
+                            
+                            Toggle(isOn: $flowerStore.autoSaveToPhotos) {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Auto-Save to Photos")
+                                        .font(.system(size: 16, weight: .medium))
+                                        .foregroundColor(.flowerTextPrimary)
+                                    Text("Automatically save new flowers to a 'Flowers' album in your photo library")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.flowerTextSecondary)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                            }
+                            .tint(.flowerPrimary)
+                            
+                            Text("Saved flowers include location, date, and flower details as metadata")
+                                .font(.system(size: 11))
+                                .foregroundColor(.flowerTextTertiary)
+                                .padding(.top, 4)
+                        }
+                        .padding(20)
+                        .background(Color.flowerCardBackground)
+                        .cornerRadius(16)
+                        
                         // Notifications Section
                         VStack(alignment: .leading, spacing: 16) {
                             Label("Notifications", systemImage: "bell.fill")
