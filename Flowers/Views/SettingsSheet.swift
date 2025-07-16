@@ -91,7 +91,7 @@ struct SettingsSheet: View {
                         }
                         .padding(20)
                         .background(Color.flowerCardBackground)
-                        .cornerRadius(16)
+                        .cornerRadius(25)
                         
                         // iCloud Sync Section
                         iCloudSyncSection
@@ -122,7 +122,7 @@ struct SettingsSheet: View {
                         }
                         .padding(20)
                         .background(Color.flowerCardBackground)
-                        .cornerRadius(16)
+                        .cornerRadius(25)
                         
                         // Notifications Section
                         VStack(alignment: .leading, spacing: 16) {
@@ -147,7 +147,7 @@ struct SettingsSheet: View {
                         }
                         .padding(20)
                         .background(Color.flowerCardBackground)
-                        .cornerRadius(16)
+                        .cornerRadius(25)
                         
                         // Debug Section
                         VStack(alignment: .leading, spacing: 16) {
@@ -175,7 +175,7 @@ struct SettingsSheet: View {
                                 Button(action: scheduleDebugNotification) {
                                     Text("Schedule Test Notification")
                                 }
-                                .buttonStyle(FlowerPrimaryButtonStyle())
+                                .flowerButtonStyle()
                             }
                             
                             Divider()
@@ -197,7 +197,7 @@ struct SettingsSheet: View {
                         }
                         .padding(20)
                         .background(Color.flowerCardBackground)
-                        .cornerRadius(16)
+                        .cornerRadius(25)
                         
                         // Profile Section
                         VStack(alignment: .leading, spacing: 16) {
@@ -227,7 +227,7 @@ struct SettingsSheet: View {
                         }
                         .padding(20)
                         .background(Color.flowerCardBackground)
-                        .cornerRadius(16)
+                        .cornerRadius(25)
                         
                         // About Section
                         VStack(alignment: .leading, spacing: 16) {
@@ -255,7 +255,7 @@ struct SettingsSheet: View {
                         }
                         .padding(20)
                         .background(Color.flowerCardBackground)
-                        .cornerRadius(16)
+                        .cornerRadius(25)
                     }
                     .padding(.horizontal, 24)
                     .padding(.bottom, 40)
@@ -429,7 +429,7 @@ struct SettingsSheet: View {
                         Text("Sync Now")
                     }
                 }
-                .buttonStyle(FlowerButtonStyle())
+                .flowerButtonStyle()
                 .disabled(iCloudSync.syncStatus == .syncing || isRestoringFromICloud)
                 
                 // Restore from iCloud button
@@ -441,7 +441,7 @@ struct SettingsSheet: View {
                         Text("Restore from iCloud")
                     }
                 }
-                .buttonStyle(FlowerSecondaryButtonStyle())
+                .flowerSecondaryButtonStyle()
                 .disabled(iCloudSync.syncStatus == .syncing || isRestoringFromICloud)
                 
                 if isRestoringFromICloud {

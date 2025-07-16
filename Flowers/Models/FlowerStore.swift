@@ -1288,19 +1288,79 @@ class FlowerStore: ObservableObject {
     // MARK: - Test Methods
     
     func generateTestFlowerForReveal() async {
-        // Generate a test flower for reveal screen
-        let testFlower = AIFlower(
-            name: "Test Reveal Flower",
-            descriptor: "beautiful test flower with rainbow petals",
-            imageData: createPlaceholderImage(),
-            generatedDate: Date(),
-            discoveryDate: Date()
-        )
+        // Generate a proper test bouquet with real flower generation
+        let descriptor = "spring garden bouquet with pink roses, white lilies, purple lavender, and yellow daffodils"
+        let bouquetFlowerNames = ["Pink Garden Roses", "White Asiatic Lilies", "Purple Lavender", "Yellow Daffodils", "Baby's Breath"]
         
-        // Set as pending flower to trigger reveal view
-        await MainActor.run {
-            self.pendingFlower = testFlower
-            self.hasUnrevealedFlower = true
+        do {
+            // Generate actual flower image using FAL service
+            let (image, prompt) = try await FALService.shared.generateFlowerImage(
+                descriptor: descriptor,
+                isBouquet: true,
+                personalMessage: "A beautiful test bouquet to demonstrate the magic of flower discovery."
+            )
+            
+            guard let imageData = image.jpegData(compressionQuality: 0.9) else {
+                throw NSError(domain: "FlowerStore", code: 0, userInfo: [NSLocalizedDescriptionKey: "Failed to convert image"])
+            }
+            
+            // Create a beautiful test bouquet
+            var testFlower = AIFlower(
+                name: "Developer's Garden Bouquet",
+                descriptor: descriptor,
+                imageData: imageData,
+                generatedDate: Date(),
+                isFavorite: false,
+                meaning: "A special bouquet created to celebrate the art of app development and the beauty of digital gardens. This arrangement represents the harmony between technology and nature, bringing together the most beloved spring flowers in a perfect symphony of colors and fragrances.",
+                properties: "This exquisite bouquet combines the romantic elegance of pink garden roses with the pure beauty of white Asiatic lilies. The purple lavender adds a soothing fragrance and represents devotion, while the cheerful yellow daffodils symbolize new beginnings and rebirth. Delicate baby's breath creates a dreamy, cloud-like backdrop that ties all the elements together in perfect harmony.",
+                origins: "This bouquet draws inspiration from traditional English cottage gardens, where these flowers have been cultivated together for centuries. The combination represents the timeless appeal of classic garden favorites, carefully selected to create a balanced and visually stunning arrangement.",
+                detailedDescription: "The Developer's Garden Bouquet is a testament to the beauty that can emerge from careful planning and attention to detail - much like great software development. Each flower was chosen not just for its individual beauty, but for how it complements the others, creating a whole that is greater than the sum of its parts. This bouquet serves as a reminder that the most beautiful creations often come from the perfect balance of different elements working in harmony.",
+                continent: .europe,
+                discoveryDate: Date(),
+                contextualGeneration: false,
+                generationContext: nil,
+                isBouquet: true,
+                bouquetFlowers: bouquetFlowerNames,
+                holidayName: "Development Testing",
+                discoveryLatitude: 37.7749, // San Francisco coordinates (tech hub)
+                discoveryLongitude: -122.4194,
+                discoveryLocationName: "San Francisco, CA"
+            )
+            
+            // Set as pending flower to trigger reveal view
+            await MainActor.run {
+                self.pendingFlower = testFlower
+                self.hasUnrevealedFlower = true
+            }
+            
+        } catch {
+            // Fallback to enhanced placeholder if API fails
+            let testFlower = AIFlower(
+                name: "Developer's Garden Bouquet",
+                descriptor: descriptor,
+                imageData: createPlaceholderImage(),
+                generatedDate: Date(),
+                isFavorite: false,
+                meaning: "A special bouquet created to celebrate the art of app development and the beauty of digital gardens. This arrangement represents the harmony between technology and nature.",
+                properties: "This placeholder bouquet showcases the framework for beautiful flower generation. When API keys are configured, this becomes a stunning arrangement of pink roses, white lilies, purple lavender, and yellow daffodils.",
+                origins: "Created in the digital realm where code meets creativity, this bouquet represents the potential for beauty in every line of code.",
+                detailedDescription: "The Developer's Garden Bouquet demonstrates the app's capability to create detailed, meaningful flower descriptions. This test arrangement shows how each flower in the app tells a story and carries meaning.",
+                continent: .northAmerica,
+                discoveryDate: Date(),
+                contextualGeneration: false,
+                generationContext: nil,
+                isBouquet: true,
+                bouquetFlowers: bouquetFlowerNames,
+                holidayName: "Development Testing",
+                discoveryLatitude: 37.7749,
+                discoveryLongitude: -122.4194,
+                discoveryLocationName: "San Francisco, CA"
+            )
+            
+            await MainActor.run {
+                self.pendingFlower = testFlower
+                self.hasUnrevealedFlower = true
+            }
         }
     }
     

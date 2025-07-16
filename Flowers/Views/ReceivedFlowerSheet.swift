@@ -105,26 +105,16 @@ struct ReceivedFlowerSheet: View {
                                     Image(systemName: "checkmark.circle.fill")
                                     Text("Accept Flower")
                                 }
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 56)
-                                .background(Color.flowerPrimary)
-                                .cornerRadius(16)
                             }
+                            .flowerButtonStyle()
                             
                             Button(action: {
                                 onReject()
                                 dismiss()
                             }) {
                                 Text("Decline")
-                                    .font(.system(size: 16, weight: .medium))
-                                    .foregroundColor(.flowerTextSecondary)
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: 56)
-                                    .background(Color.flowerButtonBackground)
-                                    .cornerRadius(16)
                             }
+                            .flowerSecondaryButtonStyle()
                         }
                         .padding(.horizontal, 24)
                         .padding(.bottom, 24)

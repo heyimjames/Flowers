@@ -106,26 +106,16 @@ struct GiftFlowerSheet: View {
                                     Image(systemName: "gift")
                                     Text("Gift via AirDrop")
                                 }
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 56)
-                                .background(Color.flowerPrimary)
-                                .cornerRadius(16)
                             }
+                            .flowerButtonStyle()
                             .disabled(userName.isEmpty)
                             
                             Button(action: {
                                 dismiss()
                             }) {
                                 Text("Cancel")
-                                    .font(.system(size: 16, weight: .medium))
-                                    .foregroundColor(.flowerTextSecondary)
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: 56)
-                                    .background(Color.flowerButtonBackground)
-                                    .cornerRadius(16)
                             }
+                            .flowerSecondaryButtonStyle()
                         }
                         .padding(.horizontal, 24)
                         .padding(.bottom, 24)

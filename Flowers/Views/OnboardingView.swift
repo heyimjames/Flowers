@@ -80,13 +80,8 @@ struct OnboardingView: View {
                                 Text(currentPage == 2 ? "Grant Permission & Continue" : "Continue")
                                 Image(systemName: "arrow.right")
                             }
-                            .font(.system(size: 18, weight: .medium))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 18)
-                            .background(Color.flowerPrimary)
-                            .cornerRadius(16)
                         }
+                        .flowerButtonStyle()
                         .padding(.horizontal, 32)
                     }
                     .padding(.bottom, 50)
@@ -430,13 +425,8 @@ struct StarterFlowerSelectionView: View {
                             Text("Begin Your Journey")
                             Image(systemName: "sparkles")
                         }
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 18)
-                        .background(Color.flowerPrimary)
-                        .cornerRadius(16)
                     }
+                    .flowerButtonStyle()
                     .padding(.horizontal, 32)
                     .padding(.bottom, 50)
                     .transition(.move(edge: .bottom).combined(with: .opacity))

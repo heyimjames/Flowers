@@ -101,7 +101,7 @@ struct ContentView: View {
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
                         .background(Color.flowerPrimary.opacity(0.1))
-                        .cornerRadius(16)
+                        .cornerRadius(25)
                         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: showDiscoveryCount)
                         
                         Spacer()
@@ -427,7 +427,7 @@ struct ContentView: View {
                     .padding(.horizontal, 20)
                     .padding(.vertical, 16)
                     .background(Color.flowerCardBackground)
-                    .cornerRadius(16)
+                    .cornerRadius(25)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 } else if flowerStore.isGenerating {
                     // Show loading state while details are being generated
@@ -442,7 +442,7 @@ struct ContentView: View {
                     .padding(.horizontal, 20)
                     .padding(.vertical, 16)
                     .background(Color.flowerCardBackground)
-                    .cornerRadius(16)
+                    .cornerRadius(25)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 } else if flower.imageData != nil {
                     // Show tap to learn more if details aren't available
@@ -461,7 +461,7 @@ struct ContentView: View {
                     .padding(.horizontal, 20)
                     .padding(.vertical, 12)
                     .background(Color.flowerCardBackground)
-                    .cornerRadius(16)
+                    .cornerRadius(25)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             } else if flowerStore.hasUnrevealedFlower {
@@ -542,21 +542,8 @@ struct ContentView: View {
                 Image(systemName: flowerStore.currentFlower?.isFavorite == true ? "heart.fill" : "heart")
                     .font(.system(size: 22))
                     .foregroundColor(flowerStore.currentFlower?.isFavorite == true ? .flowerSecondary : .flowerTextSecondary)
-                    .frame(width: 56, height: 56)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.flowerButtonBackground.opacity(0.6))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .strokeBorder(
-                                        flowerStore.currentFlower?.isFavorite == true ? 
-                                        Color.flowerSecondary.opacity(0.3) : 
-                                        Color.flowerTextTertiary.opacity(0.2),
-                                        lineWidth: 1
-                                    )
-                            )
-                    )
             }
+            .flowerIconButtonStyle(backgroundColor: .flowerButtonBackground, isActive: flowerStore.currentFlower?.isFavorite == true)
             .disabled(flowerStore.currentFlower == nil)
             
             // Share button
@@ -566,16 +553,8 @@ struct ContentView: View {
                 Image(systemName: "square.and.arrow.up")
                     .font(.system(size: 22))
                     .foregroundColor(.flowerTextSecondary)
-                    .frame(width: 56, height: 56)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.flowerButtonBackground.opacity(0.6))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .strokeBorder(Color.flowerTextTertiary.opacity(0.2), lineWidth: 1)
-                            )
-                    )
             }
+            .flowerIconButtonStyle()
             .disabled(flowerStore.currentFlower == nil)
             .accessibilityLabel("Share flower image")
             
@@ -584,16 +563,8 @@ struct ContentView: View {
                 Image(systemName: "rectangle.grid.2x2")
                     .font(.system(size: 22))
                     .foregroundColor(.flowerTextSecondary)
-                    .frame(width: 56, height: 56)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.flowerButtonBackground.opacity(0.6))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .strokeBorder(Color.flowerTextTertiary.opacity(0.2), lineWidth: 1)
-                            )
-                    )
             }
+            .flowerIconButtonStyle()
         }
     }
     

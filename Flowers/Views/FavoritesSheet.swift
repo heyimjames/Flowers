@@ -529,7 +529,7 @@ struct FlowerDetailSheet: View {
                                         Button(action: loadFlowerDetails) {
                                             Text("Retry")
                                         }
-                                        .buttonStyle(FlowerButtonStyle())
+                                        .flowerButtonStyle()
                                     }
                                     .padding(.vertical, 40)
                                     .padding(.horizontal, 24)
@@ -549,7 +549,7 @@ struct FlowerDetailSheet: View {
                                         }) {
                                             Text("Reveal Details")
                                         }
-                                        .buttonStyle(FlowerButtonStyle())
+                                        .flowerButtonStyle()
                                     }
                                     .padding(.vertical, 40)
                                     .padding(.horizontal, 24)

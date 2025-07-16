@@ -37,7 +37,7 @@ struct GeneratorSheet: View {
                         Image(uiImage: uiImage)
                             .resizable()
                             .aspectRatio(contentMode: .fit)
-                            .cornerRadius(16)
+                            .cornerRadius(25)
                             .opacity(0.3)
                             .blur(radius: 10)
                     } else {
@@ -81,7 +81,7 @@ struct GeneratorSheet: View {
                 Button(action: createFlower) {
                     Text("Pick Flower")
                 }
-                .buttonStyle(FlowerPrimaryButtonStyle())
+                .flowerButtonStyle()
                 .padding(.horizontal, 24)
                 .padding(.vertical, 20)
                 .disabled(isCreating)

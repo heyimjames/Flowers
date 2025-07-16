@@ -67,11 +67,15 @@ struct FlowerRevealView: View {
     @StateObject private var progressTracker = HoldProgressTracker()
     @State private var lastHapticLevel = 0
     
-    // Haptic generators
+    // Enhanced haptic generators
     private let lightImpact = UIImpactFeedbackGenerator(style: .light)
     private let mediumImpact = UIImpactFeedbackGenerator(style: .medium)
     private let heavyImpact = UIImpactFeedbackGenerator(style: .heavy)
     private let selectionFeedback = UISelectionFeedbackGenerator()
+    private let notificationFeedback = UINotificationFeedbackGenerator()
+    
+    // Haptic timing for complex patterns
+    @State private var hapticTimer: Timer?
     
     var body: some View {
         NavigationView {
@@ -154,17 +158,9 @@ struct FlowerRevealView: View {
                             flowerStore.revealPendingFlower()
                             dismiss()
                         }) {
-                            HStack {
-                                Text("Add to Collection")
-                                Image(systemName: "arrow.right")
-                            }
-                            .font(.system(size: 18, weight: .medium))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 18)
-                            .background(Color.flowerPrimary)
-                            .cornerRadius(16)
+                            Text("Add to Collection")
                         }
+                        .flowerButtonStyle()
                         .padding(.horizontal, 32)
                         .padding(.bottom, 50)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -175,11 +171,12 @@ struct FlowerRevealView: View {
         }
         .flowerConfetti(isActive: $showConfetti)
         .onAppear {
-            // Prepare haptic generators
+            // Prepare all haptic generators
             lightImpact.prepare()
             mediumImpact.prepare()
             heavyImpact.prepare()
             selectionFeedback.prepare()
+            notificationFeedback.prepare()
         }
         .onChange(of: progressTracker.progress) { newProgress in
             handleHapticFeedback(newProgress)
@@ -201,46 +198,210 @@ struct FlowerRevealView: View {
         if isPressing && !isRevealed {
             progressTracker.start()
             lastHapticLevel = 0
-            lightImpact.impactOccurred()
+            startHapticStory()
         } else {
             progressTracker.stop()
+            stopHapticStory()
+        }
+    }
+    
+    private func startHapticStory() {
+        // Initial "seed planting" - gentle tap
+        lightImpact.impactOccurred()
+        
+        // Start the growing pattern
+        hapticTimer = Timer.scheduledTimer(withTimeInterval: 0.15, repeats: true) { _ in
+            let progress = progressTracker.progress
+            performHapticStorybeat(progress)
+        }
+    }
+    
+    private func stopHapticStory() {
+        hapticTimer?.invalidate()
+        hapticTimer = nil
+    }
+    
+    private func performHapticStorybeat(_ progress: CGFloat) {
+        // Create a growing flower story through haptics
+        switch progress {
+        case 0.0..<0.1:
+            // Seeds settling - very gentle, occasional taps
+            if Int.random(in: 0...2) == 0 {
+                lightImpact.impactOccurred()
+            }
+            
+        case 0.1..<0.3:
+            // First sprout - gentle but more frequent
+            if Int.random(in: 0...1) == 0 {
+                lightImpact.impactOccurred()
+            }
+            
+        case 0.3..<0.5:
+            // Growing stem - rhythmic medium taps
+            mediumImpact.impactOccurred()
+            
+        case 0.5..<0.7:
+            // Leaves unfurling - alternating light and medium
+            if Int.random(in: 0...1) == 0 {
+                lightImpact.impactOccurred()
+            } else {
+                mediumImpact.impactOccurred()
+            }
+            
+        case 0.7..<0.85:
+            // Bud forming - building intensity
+            mediumImpact.impactOccurred()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                self.lightImpact.impactOccurred()
+            }
+            
+        case 0.85..<0.95:
+            // Petals beginning to open - complex pattern
+            heavyImpact.impactOccurred()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.03) {
+                self.mediumImpact.impactOccurred()
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.06) {
+                self.lightImpact.impactOccurred()
+            }
+            
+        case 0.95..<1.0:
+            // Final bloom - crescendo
+            heavyImpact.impactOccurred()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.02) {
+                self.mediumImpact.impactOccurred()
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.04) {
+                self.lightImpact.impactOccurred()
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.06) {
+                self.selectionFeedback.selectionChanged()
+            }
+            
+        default:
+            break
         }
     }
     
     private func handleHapticFeedback(_ progress: CGFloat) {
-        let currentLevel = Int(progress * 10)
+        // Additional milestone haptics for major progress points
+        let currentLevel = Int(progress * 20) // More granular levels
         
         if currentLevel > lastHapticLevel {
             lastHapticLevel = currentLevel
             
             switch currentLevel {
-            case 1...3:
-                // Light taps for early progress
-                lightImpact.impactOccurred()
-            case 4...6:
-                // Medium taps for middle progress
-                mediumImpact.impactOccurred()
-            case 7...8:
-                // Heavy taps for near completion
-                heavyImpact.impactOccurred()
-            case 9:
-                // Selection feedback right before reveal
-                selectionFeedback.selectionChanged()
-            case 10:
-                // Final heavy impact
-                heavyImpact.impactOccurred()
+            case 2: // 10% - First sprout
+                performSproutHaptic()
+            case 6: // 30% - Growing strong
+                performGrowthHaptic()
+            case 10: // 50% - Halfway bloom
+                performHalfwayHaptic()
+            case 14: // 70% - Bud forming
+                performBudHaptic()
+            case 17: // 85% - Petals opening
+                performPetalHaptic()
+            case 19: // 95% - Almost there
+                performAlmostReadyHaptic()
             default:
                 break
             }
         }
     }
     
+    // Individual haptic story moments
+    private func performSproutHaptic() {
+        lightImpact.impactOccurred()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            self.lightImpact.impactOccurred()
+        }
+    }
+    
+    private func performGrowthHaptic() {
+        mediumImpact.impactOccurred()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            self.mediumImpact.impactOccurred()
+        }
+    }
+    
+    private func performHalfwayHaptic() {
+        heavyImpact.impactOccurred()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
+            self.mediumImpact.impactOccurred()
+        }
+    }
+    
+    private func performBudHaptic() {
+        mediumImpact.impactOccurred()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.04) {
+            self.mediumImpact.impactOccurred()
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
+            self.heavyImpact.impactOccurred()
+        }
+    }
+    
+    private func performPetalHaptic() {
+        selectionFeedback.selectionChanged()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            self.heavyImpact.impactOccurred()
+        }
+    }
+    
+    private func performAlmostReadyHaptic() {
+        heavyImpact.impactOccurred()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.03) {
+            self.heavyImpact.impactOccurred()
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.06) {
+            self.mediumImpact.impactOccurred()
+        }
+    }
+    
     private func revealFlower() {
         progressTracker.stop()
+        stopHapticStory()
+        
+        // Epic reveal haptic sequence
+        performFlowerRevealHaptic()
         
         withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
             isRevealed = true
             showConfetti = true
+        }
+    }
+    
+    private func performFlowerRevealHaptic() {
+        // The flower blooms! - Epic haptic crescendo
+        heavyImpact.impactOccurred()
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            self.heavyImpact.impactOccurred()
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            self.mediumImpact.impactOccurred()
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            self.lightImpact.impactOccurred()
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            self.selectionFeedback.selectionChanged()
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            self.notificationFeedback.notificationOccurred(.success)
+        }
+        
+        // Gentle afterglow - flower settling into its beauty
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.lightImpact.impactOccurred()
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
+            self.lightImpact.impactOccurred()
         }
     }
     
