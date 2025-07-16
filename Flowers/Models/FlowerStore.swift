@@ -476,6 +476,8 @@ class FlowerStore: ObservableObject {
         content.body = body
         content.sound = .default
         content.badge = 1
+        // Ensure the app icon is used in the notification
+        content.interruptionLevel = .timeSensitive
         
         // Convert the Lisbon time to user's local time
         let components = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: date)
@@ -529,6 +531,8 @@ class FlowerStore: ObservableObject {
             content.body = notificationBody
             content.sound = .default
             content.badge = 1
+            // Ensure the app icon is used in the notification
+            content.interruptionLevel = .timeSensitive
             
             let trigger = UNTimeIntervalNotificationTrigger(timeInterval: TimeInterval(seconds), repeats: false)
             

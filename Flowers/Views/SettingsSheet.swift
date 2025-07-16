@@ -12,6 +12,8 @@ struct SettingsSheet: View {
     @State private var showingICloudRestoreConfirmation = false
     @State private var isRestoringFromICloud = false
     @State private var restoreResult: RestoreResult?
+    @AppStorage("notificationsEnabled") private var notificationsEnabled = false
+    @State private var notificationPermissionGranted = false
     
     enum RestoreResult: Identifiable {
         case success(flowersCount: Int)
@@ -130,20 +132,37 @@ struct SettingsSheet: View {
                                 .font(.system(size: 18, weight: .semibold))
                                 .foregroundColor(.flowerTextPrimary)
                             
-                            Button(action: requestNotificationPermission) {
-                                HStack {
-                                    Text("Enable Daily Flower Notifications")
-                                    Spacer()
-                                    Image(systemName: "chevron.right")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(.flowerTextTertiary)
+                            Toggle(isOn: $notificationsEnabled) {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Daily Flower Notifications")
+                                        .font(.system(size: 16, weight: .medium))
+                                        .foregroundColor(.flowerTextPrimary)
+                                    
+                                    Text("Get notified when your daily flower blooms")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.flowerTextSecondary)
                                 }
                             }
-                            .foregroundColor(.flowerTextPrimary)
+                            .onChange(of: notificationsEnabled) { _, newValue in
+                                if newValue {
+                                    requestNotificationPermission()
+                                } else {
+                                    disableNotifications()
+                                }
+                            }
                             
-                            Text("Get notified when your daily flower blooms")
-                                .font(.system(size: 12))
-                                .foregroundColor(.flowerTextSecondary)
+                            if notificationsEnabled && !notificationPermissionGranted {
+                                Button(action: openSettings) {
+                                    HStack {
+                                        Image(systemName: "gear")
+                                            .font(.system(size: 14))
+                                        Text("Open Settings to Enable Notifications")
+                                            .font(.system(size: 14))
+                                        Spacer()
+                                    }
+                                    .foregroundColor(.flowerPrimary)
+                                }
+                            }
                         }
                         .padding(20)
                         .background(Color.flowerCardBackground)
@@ -303,12 +322,56 @@ struct SettingsSheet: View {
                 )
             }
         }
+        .onAppear {
+            checkNotificationPermissionStatus()
+        }
     }
     
     private func requestNotificationPermission() {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
-            if granted {
-                print("Notification permission granted")
+            DispatchQueue.main.async {
+                self.notificationPermissionGranted = granted
+                if granted {
+                    // Schedule the next flower generation
+                    Task {
+                        if let nextTime = FlowerNotificationSchedule.getNextScheduledTime() {
+                            await self.flowerStore.generateDailyFlowerAndScheduleNotification(at: nextTime)
+                        }
+                    }
+                } else {
+                    // If permission was denied, turn off the toggle
+                    self.notificationsEnabled = false
+                }
+            }
+        }
+    }
+    
+    private func disableNotifications() {
+        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+        UNUserNotificationCenter.current().removeAllDeliveredNotifications()
+    }
+    
+    private func openSettings() {
+        if let url = URL(string: UIApplication.openSettingsURLString) {
+            UIApplication.shared.open(url)
+        }
+    }
+    
+    private func checkNotificationPermissionStatus() {
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            DispatchQueue.main.async {
+                self.notificationPermissionGranted = settings.authorizationStatus == .authorized
+                // If notifications are enabled but permission was revoked, turn off the toggle
+                if self.notificationsEnabled && !self.notificationPermissionGranted {
+                    self.notificationsEnabled = false
+                } else if self.notificationsEnabled && self.notificationPermissionGranted {
+                    // Schedule notifications if both toggle is on and permission is granted
+                    Task {
+                        if let nextTime = FlowerNotificationSchedule.getNextScheduledTime() {
+                            await self.flowerStore.generateDailyFlowerAndScheduleNotification(at: nextTime)
+                        }
+                    }
+                }
             }
         }
     }
@@ -325,28 +388,21 @@ struct SettingsSheet: View {
             restoreResult = nil
         }
         
-        do {
-            // Get the count of flowers before restore
-            let flowersBeforeRestore = await MainActor.run { flowerStore.discoveredFlowers.count }
-            
-            // Perform the restore
-            await iCloudSync.mergeWithICloudData(flowerStore: flowerStore)
-            
-            // Get the count after restore
-            let flowersAfterRestore = await MainActor.run { flowerStore.discoveredFlowers.count }
-            
-            // Calculate how many were restored
-            let restoredCount = flowersAfterRestore - flowersBeforeRestore
-            
-            await MainActor.run {
-                isRestoringFromICloud = false
-                restoreResult = .success(flowersCount: max(0, restoredCount))
-            }
-        } catch {
-            await MainActor.run {
-                isRestoringFromICloud = false
-                restoreResult = .failure(error: error.localizedDescription)
-            }
+        // Get the count of flowers before restore
+        let flowersBeforeRestore = await MainActor.run { flowerStore.discoveredFlowers.count }
+        
+        // Perform the restore
+        await iCloudSync.mergeWithICloudData(flowerStore: flowerStore)
+        
+        // Get the count after restore
+        let flowersAfterRestore = await MainActor.run { flowerStore.discoveredFlowers.count }
+        
+        // Calculate how many were restored
+        let restoredCount = flowersAfterRestore - flowersBeforeRestore
+        
+        await MainActor.run {
+            isRestoringFromICloud = false
+            restoreResult = .success(flowersCount: max(0, restoredCount))
         }
     }
     
