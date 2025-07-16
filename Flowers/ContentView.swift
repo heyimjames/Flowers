@@ -304,7 +304,7 @@ struct ContentView: View {
                                         .font(.system(size: 12))
                                         .foregroundColor(.flowerPrimary)
                                     Text("Meaning")
-                                        .font(.system(size: 14, weight: .light, design: .serif))
+                                        .font(.system(size: 14, weight: .medium))
                                         .foregroundColor(.flowerTextPrimary)
                                 }
                                 
@@ -323,7 +323,7 @@ struct ContentView: View {
                                         .font(.system(size: 12))
                                         .foregroundColor(.flowerPrimary)
                                     Text("Characteristics")
-                                        .font(.system(size: 14, weight: .semibold))
+                                        .font(.system(size: 14, weight: .medium))
                                         .foregroundColor(.flowerTextPrimary)
                                 }
                                 
@@ -342,7 +342,7 @@ struct ContentView: View {
                                         .font(.system(size: 12))
                                         .foregroundColor(.flowerPrimary)
                                     Text("Includes")
-                                        .font(.system(size: 14, weight: .semibold))
+                                        .font(.system(size: 14, weight: .medium))
                                         .foregroundColor(.flowerTextPrimary)
                                 }
                                 
