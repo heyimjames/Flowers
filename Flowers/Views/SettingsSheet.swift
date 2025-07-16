@@ -426,6 +426,13 @@ struct SettingsSheet: View {
                 }) {
                     HStack {
                         Image(systemName: "arrow.clockwise")
+                            .rotationEffect(iCloudSync.syncStatus == .syncing ? .degrees(360) : .degrees(0))
+                            .animation(
+                                iCloudSync.syncStatus == .syncing ?
+                                Animation.linear(duration: 1.0).repeatForever(autoreverses: false) :
+                                .default,
+                                value: iCloudSync.syncStatus
+                            )
                         Text("Sync Now")
                     }
                 }
