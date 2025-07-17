@@ -1477,4 +1477,82 @@ class FlowerStore: ObservableObject {
         // Force UI update
         objectWillChange.send()
     }
+    
+    func resetOnboardingState() {
+        // Only reset onboarding-related keys, keep flowers
+        userDefaults.removeObject(forKey: "hasCompletedOnboarding")
+        userDefaults.removeObject(forKey: "hasReceivedJennyFlower")
+        shouldShowOnboarding = true
+        
+        // Force UI update
+        objectWillChange.send()
+    }
+    
+    func generateCustomFlower(prompt: String) async throws {
+        isGenerating = true
+        errorMessage = nil
+        
+        do {
+            // Generate image using the custom prompt
+            let (image, _) = try await FALService.shared.generateFlowerImage(descriptor: prompt)
+            let imageData = image.pngData()
+            
+            // Generate flower details using OpenAI
+            var flower = AIFlower(
+                name: "Custom Creation",
+                descriptor: prompt,
+                imageData: imageData,
+                generatedDate: Date(),
+                isFavorite: false
+            )
+            
+            // Generate details if OpenAI is available
+            if apiConfig.hasValidOpenAIKey {
+                do {
+                    let details = try await OpenAIService.shared.generateFlowerDetails(for: flower, context: nil)
+                    flower.meaning = details.meaning
+                    flower.properties = details.properties
+                    flower.origins = details.origins
+                    flower.detailedDescription = details.detailedDescription
+                    flower.continent = Continent(rawValue: details.continent)
+                } catch {
+                    print("Failed to generate flower details: \(error)")
+                    // Use fallback details
+                    flower.meaning = "A unique custom creation that reflects your personal vision and creativity."
+                    flower.properties = "This flower was created from your custom description, making it one-of-a-kind in your collection."
+                    flower.origins = "Born from imagination and brought to life through AI artistry."
+                    flower.detailedDescription = "This custom flower represents your creative vision, generated specifically from your unique description. It stands as a testament to the power of imagination and the beauty that emerges when technology meets creativity."
+                }
+            }
+            
+            // Set current flower and add to collection
+            currentFlower = flower
+            addToDiscoveredFlowers(flower)
+            
+            // Save to shared container for widget
+            if let encoded = try? JSONEncoder().encode(flower) {
+                sharedDefaults?.set(encoded, forKey: dailyFlowerKey)
+            }
+            
+            // Auto-save to photos if enabled
+            if autoSaveToPhotos {
+                PhotoLibraryService.shared.saveFlowerToLibrary(flower) { success, error in
+                    if success {
+                        print("Successfully saved custom flower to photo library")
+                    } else if let error = error {
+                        print("Failed to save custom flower to photos: \(error)")
+                    }
+                }
+            }
+            
+            // Sync to iCloud
+            await iCloudSyncManager.shared.syncToICloud()
+            
+        } catch {
+            errorMessage = "Failed to generate custom flower: \(error.localizedDescription)"
+            throw error
+        }
+        
+        isGenerating = false
+    }
 } 

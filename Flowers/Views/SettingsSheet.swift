@@ -21,6 +21,25 @@ struct SettingsSheet: View {
     @State private var showingImportConfirmation = false
     @State private var currentAppIcon: String = ""
     @State private var showingIconChangeAlert = false
+    @State private var showingCustomFlowerSheet = false
+    
+    // Developer detection
+    private var isDeveloper: Bool {
+        // Check if this is James' device using device identifier
+        let deviceID = UIDevice.current.identifierForVendor?.uuidString ?? ""
+        let developerDeviceIDs = [
+            "1CE7A12B-37D2-4BA5-B9D9-88AB3EAFB828", // James' device
+            // Add more device UUIDs if needed
+        ]
+        
+        // Also check for specific iCloud account (you can add this)
+        // let iCloudAccount = FileManager.default.ubiquityIdentityToken != nil
+        
+        // Print device UUID for developer to add to the list
+        print("Current device UUID: \(deviceID)")
+        
+        return developerDeviceIDs.contains(deviceID) || Bundle.main.bundleIdentifier?.contains("debug") == true
+    }
     
     enum RestoreResult: Identifiable {
         case success(flowersCount: Int)
@@ -57,8 +76,9 @@ struct SettingsSheet: View {
                 
                 ScrollView {
                     VStack(spacing: 24) {
-                        // API Configuration Section
-                        VStack(alignment: .leading, spacing: 16) {
+                        // API Configuration Section (only show if needed)
+                        if !AppConfig.shared.hasBuiltInKeys || isDeveloper {
+                            VStack(alignment: .leading, spacing: 16) {
                             HStack {
                                 Label("API Configuration", systemImage: "key.fill")
                                     .font(.system(size: 18, weight: .light, design: .serif))
@@ -121,8 +141,9 @@ struct SettingsSheet: View {
                             }
                         }
                         .padding(20)
-                        .background(Color.flowerCardBackground)
+                        .background(Color.black.opacity(0.05))
                         .cornerRadius(25)
+                        }
                         
                         // iCloud Sync Section
                         iCloudSyncSection
@@ -152,7 +173,7 @@ struct SettingsSheet: View {
                                 .padding(.top, 4)
                         }
                         .padding(20)
-                        .background(Color.flowerCardBackground)
+                        .background(Color.black.opacity(0.05))
                         .cornerRadius(25)
                         
                         // Notifications Section
@@ -195,7 +216,7 @@ struct SettingsSheet: View {
                             }
                         }
                         .padding(20)
-                        .background(Color.flowerCardBackground)
+                        .background(Color.black.opacity(0.05))
                         .cornerRadius(25)
                         
                         // Appearance Section
@@ -217,7 +238,7 @@ struct SettingsSheet: View {
                                         VStack(spacing: 8) {
                                             ZStack {
                                                 RoundedRectangle(cornerRadius: 16)
-                                                    .fill(currentAppIcon.isEmpty ? Color.flowerPrimary.opacity(0.2) : Color.flowerCardBackground)
+                                                    .fill(currentAppIcon.isEmpty ? Color.flowerPrimary.opacity(0.2) : Color.black.opacity(0.05))
                                                     .stroke(currentAppIcon.isEmpty ? Color.flowerPrimary : Color.clear, lineWidth: 2)
                                                     .frame(width: 64, height: 64)
                                                 
@@ -241,14 +262,29 @@ struct SettingsSheet: View {
                                         VStack(spacing: 8) {
                                             ZStack {
                                                 RoundedRectangle(cornerRadius: 16)
-                                                    .fill(currentAppIcon == "AppIcon2" ? Color.flowerPrimary.opacity(0.2) : Color.flowerCardBackground)
+                                                    .fill(currentAppIcon == "AppIcon2" ? Color.flowerPrimary.opacity(0.2) : Color.black.opacity(0.05))
                                                     .stroke(currentAppIcon == "AppIcon2" ? Color.flowerPrimary : Color.clear, lineWidth: 2)
                                                     .frame(width: 64, height: 64)
                                                 
-                                                // Use a placeholder since we can't directly reference AppIcon2 assets
-                                                Image(systemName: "flower.fill")
-                                                    .font(.system(size: 32))
-                                                    .foregroundColor(.flowerPrimary)
+                                                // Try to load AppIcon2 preview image
+                                                if let appIcon2Preview = UIImage(named: "AppIcon2Preview") {
+                                                    Image(uiImage: appIcon2Preview)
+                                                        .resizable()
+                                                        .aspectRatio(contentMode: .fit)
+                                                        .frame(width: 48, height: 48)
+                                                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                                                } else {
+                                                    // Fallback different design to distinguish from default
+                                                    ZStack {
+                                                        RoundedRectangle(cornerRadius: 12)
+                                                            .fill(Color.orange.opacity(0.8))
+                                                            .frame(width: 48, height: 48)
+                                                        
+                                                        Image(systemName: "sparkles")
+                                                            .font(.system(size: 20))
+                                                            .foregroundColor(.white)
+                                                    }
+                                                }
                                             }
                                             
                                             Text("Alternative")
@@ -267,11 +303,12 @@ struct SettingsSheet: View {
                             }
                         }
                         .padding(20)
-                        .background(Color.flowerCardBackground)
+                        .background(Color.black.opacity(0.05))
                         .cornerRadius(25)
                         
-                        // Debug Section
-                        VStack(alignment: .leading, spacing: 16) {
+                        // Debug Section (developer only)
+                        if isDeveloper {
+                            VStack(alignment: .leading, spacing: 16) {
                             Label("Debug Options", systemImage: "wrench.and.screwdriver.fill")
                                 .font(.system(size: 18, weight: .semibold))
                                 .foregroundColor(.flowerTextPrimary)
@@ -317,6 +354,42 @@ struct SettingsSheet: View {
                                 
                                 Divider()
                                 
+                                // Restart Onboarding
+                                VStack(alignment: .leading, spacing: 12) {
+                                    Text("Restart Onboarding")
+                                        .font(.system(size: 16, weight: .medium))
+                                        .foregroundColor(.flowerTextPrimary)
+                                    
+                                    Text("Reset onboarding state and start from the beginning")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.flowerTextSecondary)
+                                    
+                                    Button(action: restartOnboarding) {
+                                        Text("Restart Onboarding")
+                                    }
+                                    .flowerButtonStyle()
+                                }
+                                
+                                Divider()
+                                
+                                // Custom Flower Generation
+                                VStack(alignment: .leading, spacing: 12) {
+                                    Text("Custom Flower Generation")
+                                        .font(.system(size: 16, weight: .medium))
+                                        .foregroundColor(.flowerTextPrimary)
+                                    
+                                    Text("Generate a custom flower with a specific prompt")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.flowerTextSecondary)
+                                    
+                                    Button(action: { showingCustomFlowerSheet = true }) {
+                                        Text("Generate Custom Flower")
+                                    }
+                                    .flowerButtonStyle()
+                                }
+                                
+                                Divider()
+                                
                                 // Regenerate Onboarding Assets
                                 VStack(alignment: .leading, spacing: 12) {
                                     Text("Regenerate Onboarding Assets")
@@ -335,8 +408,9 @@ struct SettingsSheet: View {
                             }
                         }
                         .padding(20)
-                        .background(Color.flowerCardBackground)
+                        .background(Color.black.opacity(0.05))
                         .cornerRadius(25)
+                        }
                         
                         // Profile Section
                         VStack(alignment: .leading, spacing: 16) {
@@ -365,7 +439,7 @@ struct SettingsSheet: View {
                             }
                         }
                         .padding(20)
-                        .background(Color.flowerCardBackground)
+                        .background(Color.black.opacity(0.05))
                         .cornerRadius(25)
                         
                         // About Section
@@ -391,9 +465,32 @@ struct SettingsSheet: View {
                                     .foregroundColor(.flowerTextPrimary)
                             }
                             .font(.system(size: 14))
+                            
+                            Divider()
+                                .background(Color.flowerTextTertiary)
+                            
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Built by James Frewin with the help of AI")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.flowerTextSecondary)
+                                
+                                Button(action: {
+                                    if let url = URL(string: "https://x.com/jamesfrewin1") {
+                                        UIApplication.shared.open(url)
+                                    }
+                                }) {
+                                    HStack(spacing: 6) {
+                                        Image(systemName: "link")
+                                            .font(.system(size: 12))
+                                        Text("@jamesfrewin1")
+                                            .font(.system(size: 14))
+                                    }
+                                    .foregroundColor(.flowerPrimary)
+                                }
+                            }
                         }
                         .padding(20)
-                        .background(Color.flowerCardBackground)
+                        .background(Color.black.opacity(0.05))
                         .cornerRadius(25)
                     }
                     .padding(.horizontal, 24)
@@ -416,15 +513,15 @@ struct SettingsSheet: View {
         } message: {
             Text("Are you sure you want to reset your profile? This will delete all your discovered flowers and return you to the onboarding flow.")
         }
-        .alert("Restore from iCloud?", isPresented: $showingICloudRestoreConfirmation) {
+        .alert("Merge from iCloud?", isPresented: $showingICloudRestoreConfirmation) {
             Button("Cancel", role: .cancel) { }
-            Button("Restore") {
+            Button("Merge") {
                 Task {
                     await performICloudRestore()
                 }
             }
         } message: {
-            Text("This will merge your iCloud backup with your current collection. Any flowers in your iCloud backup that aren't in your current collection will be added.")
+            Text("This will merge your iCloud backup with your current collection. Any flowers in your iCloud backup that aren't in your current collection will be added. No flowers will be lost.")
         }
         .alert(item: $restoreResult) { result in
             switch result {
@@ -495,6 +592,10 @@ struct SettingsSheet: View {
                 )
             }
         }
+        .sheet(isPresented: $showingCustomFlowerSheet) {
+            CustomFlowerGenerationSheet()
+                .environmentObject(flowerStore)
+        }
     }
     
     private func requestNotificationPermission() {
@@ -555,6 +656,11 @@ struct SettingsSheet: View {
         Task {
             await OnboardingAssetsService.shared.regenerateAssets()
         }
+    }
+    
+    private func restartOnboarding() {
+        flowerStore.resetOnboardingState()
+        dismiss()
     }
     
     private func performICloudRestore() async {
@@ -688,7 +794,7 @@ struct SettingsSheet: View {
             if iCloudSync.iCloudAvailable {
                 Button(action: {
                     Task {
-                        await iCloudSync.syncToICloud()
+                        await iCloudSync.performFullSync(flowerStore: flowerStore)
                     }
                 }) {
                     HStack {
@@ -713,7 +819,7 @@ struct SettingsSheet: View {
                     HStack {
                         Image(systemName: "icloud.and.arrow.down")
                             .foregroundColor(.flowerPrimary)
-                        Text("Restore from iCloud")
+                        Text("Merge from iCloud")
                             .foregroundColor(.flowerPrimary)
                     }
                 }
@@ -745,10 +851,20 @@ struct SettingsSheet: View {
                     .padding(.top, 8)
                 }
                 
-                Text("Your flowers are automatically backed up to iCloud")
-                    .font(.system(size: 12))
-                    .foregroundColor(.flowerTextTertiary)
-                    .fixedSize(horizontal: false, vertical: true)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("• Sync Now: Merges your local flowers with iCloud and uploads the combined collection")
+                        .font(.system(size: 11))
+                        .foregroundColor(.flowerTextTertiary)
+                    
+                    Text("• Merge from iCloud: Downloads flowers from iCloud and merges with your local collection")
+                        .font(.system(size: 11))
+                        .foregroundColor(.flowerTextTertiary)
+                    
+                    Text("• Your flowers are automatically backed up to iCloud")
+                        .font(.system(size: 11))
+                        .foregroundColor(.flowerTextTertiary)
+                }
+                .fixedSize(horizontal: false, vertical: true)
             } else {
                 Text("Sign in to iCloud in Settings to back up your flowers")
                     .font(.system(size: 12))
@@ -757,7 +873,7 @@ struct SettingsSheet: View {
             }
         }
         .padding(20)
-        .background(Color.flowerCardBackground)
+        .background(Color.black.opacity(0.05))
         .cornerRadius(16)
     }
     
@@ -799,5 +915,197 @@ struct FlowerTextFieldStyle: TextFieldStyle {
             .background(Color.flowerInputBackground)
             .cornerRadius(8)
             .font(.system(size: 16))
+    }
+}
+
+struct CustomFlowerGenerationSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var flowerStore: FlowerStore
+    @State private var customPrompt = "A beautiful ethereal flower with luminous petals that seem to glow from within, featuring delicate crystalline structures and soft pastel colors that shift between lavender and rose gold"
+    @State private var isGenerating = false
+    @State private var errorMessage: String?
+    @State private var showingSuccess = false
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 0) {
+                // Header
+                HStack {
+                    Text("Custom Flower")
+                        .font(.system(size: 28, weight: .light, design: .serif))
+                        .foregroundColor(.flowerTextPrimary)
+                    
+                    Spacer()
+                    
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                    .font(.system(size: 17, weight: .medium))
+                    .foregroundColor(.flowerPrimary)
+                }
+                .padding(.horizontal, 24)
+                .padding(.top, 20)
+                .padding(.bottom, 24)
+                
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // Prompt Section
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Flower Description")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundColor(.flowerTextPrimary)
+                            
+                            Text("Describe the flower you'd like to generate. Be as detailed as possible - include colors, textures, style, and any special characteristics.")
+                                .font(.system(size: 14))
+                                .foregroundColor(.flowerTextSecondary)
+                            
+                            // Text Editor
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Prompt")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(.flowerTextSecondary)
+                                
+                                TextEditor(text: $customPrompt)
+                                    .frame(minHeight: 120)
+                                    .padding(12)
+                                    .background(Color.flowerInputBackground)
+                                    .cornerRadius(8)
+                                    .font(.system(size: 16))
+                            }
+                            
+                            // Generate Button
+                            Button(action: generateCustomFlower) {
+                                HStack {
+                                    if isGenerating {
+                                        ProgressView()
+                                            .scaleEffect(0.8)
+                                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                        Text("Generating...")
+                                    } else {
+                                        Image(systemName: "sparkles")
+                                        Text("Generate Custom Flower")
+                                    }
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .background(isGenerating ? Color.flowerPrimary.opacity(0.6) : Color.flowerPrimary)
+                                .foregroundColor(.white)
+                                .cornerRadius(12)
+                                .font(.system(size: 16, weight: .medium))
+                            }
+                            .disabled(isGenerating || customPrompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                            
+                            // Error Message
+                            if let error = errorMessage {
+                                Text(error)
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.flowerError)
+                                    .padding(.top, 8)
+                            }
+                        }
+                        .padding(20)
+                        .background(Color.black.opacity(0.05))
+                        .cornerRadius(25)
+                        
+                        // Tips Section
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Tips for Better Results")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundColor(.flowerTextPrimary)
+                            
+                            VStack(alignment: .leading, spacing: 12) {
+                                TipRow(
+                                    icon: "paintbrush.fill",
+                                    title: "Be Specific",
+                                    description: "Include colors, textures, and artistic styles"
+                                )
+                                
+                                TipRow(
+                                    icon: "eye.fill",
+                                    title: "Visual Details",
+                                    description: "Describe petal shapes, stem characteristics, and overall composition"
+                                )
+                                
+                                TipRow(
+                                    icon: "sparkles",
+                                    title: "Atmosphere",
+                                    description: "Add mood descriptors like 'ethereal', 'vibrant', or 'delicate'"
+                                )
+                                
+                                TipRow(
+                                    icon: "camera.fill",
+                                    title: "Photography Style",
+                                    description: "Mention lighting conditions or photographic techniques"
+                                )
+                            }
+                        }
+                        .padding(20)
+                        .background(Color.black.opacity(0.05))
+                        .cornerRadius(25)
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 40)
+                }
+            }
+            .background(Color.flowerSheetBackground)
+        }
+        .alert("Success!", isPresented: $showingSuccess) {
+            Button("OK") {
+                dismiss()
+            }
+        } message: {
+            Text("Your custom flower has been generated and added to your collection!")
+        }
+    }
+    
+    private func generateCustomFlower() {
+        guard !customPrompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            errorMessage = "Please enter a flower description"
+            return
+        }
+        
+        isGenerating = true
+        errorMessage = nil
+        
+        Task {
+            do {
+                try await flowerStore.generateCustomFlower(prompt: customPrompt)
+                await MainActor.run {
+                    isGenerating = false
+                    showingSuccess = true
+                }
+            } catch {
+                await MainActor.run {
+                    isGenerating = false
+                    errorMessage = "Failed to generate flower: \(error.localizedDescription)"
+                }
+            }
+        }
+    }
+}
+
+struct TipRow: View {
+    let icon: String
+    let title: String
+    let description: String
+    
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 16))
+                .foregroundColor(.flowerPrimary)
+                .frame(width: 20)
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.flowerTextPrimary)
+                
+                Text(description)
+                    .font(.system(size: 12))
+                    .foregroundColor(.flowerTextSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
     }
 } 

@@ -191,20 +191,46 @@ class iCloudSyncManager: ObservableObject {
         let minimumSyncDuration: TimeInterval = 2.5
         
         do {
-            // Get current flowers from UserDefaults
-            let flowers = await MainActor.run { () -> [AIFlower] in
+            // First, get existing iCloud flowers
+            let existingICloudFlowers = await restoreFromICloud() ?? []
+            print("Found \(existingICloudFlowers.count) existing flowers in iCloud")
+            
+            // Get current local flowers from UserDefaults
+            let localFlowers = await MainActor.run { () -> [AIFlower] in
                 let userDefaults = UserDefaults.standard
                 if let data = userDefaults.data(forKey: "discoveredFlowers") {
                     let decoder = JSONDecoder()
                     decoder.dateDecodingStrategy = .iso8601
                     if let decoded = try? decoder.decode([AIFlower].self, from: data) {
-                        print("iCloudSyncManager: Found \(decoded.count) flowers to sync")
+                        print("iCloudSyncManager: Found \(decoded.count) local flowers to sync")
                         return decoded
                     }
                 }
                 print("iCloudSyncManager: No flowers found in UserDefaults")
                 return []
             }
+            
+            // Merge flowers - combine both sets, keeping newer versions
+            var mergedFlowersDict = Dictionary(uniqueKeysWithValues: localFlowers.map { ($0.id, $0) })
+            
+            // Add iCloud flowers that don't exist locally or are newer
+            for iCloudFlower in existingICloudFlowers {
+                if let existingFlower = mergedFlowersDict[iCloudFlower.id] {
+                    // Keep the newer version
+                    if iCloudFlower.generatedDate > existingFlower.generatedDate {
+                        mergedFlowersDict[iCloudFlower.id] = iCloudFlower
+                    }
+                } else {
+                    // Add flower that only exists in iCloud
+                    mergedFlowersDict[iCloudFlower.id] = iCloudFlower
+                }
+            }
+            
+            let flowers = Array(mergedFlowersDict.values).sorted {
+                ($0.discoveryDate ?? $0.generatedDate) > ($1.discoveryDate ?? $1.generatedDate)
+            }
+            
+            print("Merged collection has \(flowers.count) flowers (was \(localFlowers.count) local + \(existingICloudFlowers.count) iCloud)")
             
             // Prepare data
             let encoder = JSONEncoder()
@@ -279,6 +305,18 @@ class iCloudSyncManager: ObservableObject {
         do {
             let flowersURL = containerURL.appendingPathComponent(flowersFileName)
             
+            // Try to download the file first if it's not local
+            do {
+                print("Attempting to download iCloud file if needed...")
+                try FileManager.default.startDownloadingUbiquitousItem(at: flowersURL)
+                
+                // Wait a bit for download to start
+                try await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
+                print("Download request completed")
+            } catch {
+                print("Error requesting iCloud file download: \(error)")
+            }
+            
             // Check if file exists
             var isDownloaded = false
             var coordinatorError: NSError?
@@ -289,10 +327,15 @@ class iCloudSyncManager: ObservableObject {
                 error: &coordinatorError
             ) { readingURL in
                 isDownloaded = FileManager.default.fileExists(atPath: readingURL.path)
+                if isDownloaded {
+                    print("iCloud file exists at: \(readingURL.path)")
+                } else {
+                    print("iCloud file not found at: \(readingURL.path)")
+                }
             }
             
             if !isDownloaded {
-                print("No iCloud backup found")
+                print("No iCloud backup found after download attempt")
                 return nil
             }
             
@@ -303,7 +346,12 @@ class iCloudSyncManager: ObservableObject {
                 options: .withoutChanges,
                 error: &coordinatorError
             ) { readingURL in
-                flowersData = try? Data(contentsOf: readingURL)
+                do {
+                    flowersData = try Data(contentsOf: readingURL)
+                    print("Successfully read \(flowersData?.count ?? 0) bytes from iCloud")
+                } catch {
+                    print("Error reading iCloud file: \(error)")
+                }
             }
             
             guard let data = flowersData else {
@@ -326,17 +374,26 @@ class iCloudSyncManager: ObservableObject {
     }
     
     func mergeWithICloudData(flowerStore: FlowerStore) async {
+        print("Starting iCloud merge process...")
+        
         guard let iCloudFlowers = await restoreFromICloud() else {
-            // No iCloud data, just sync current data
+            print("No iCloud data found, syncing current local data to iCloud")
             await syncToICloud()
             return
         }
         
+        print("Found \(iCloudFlowers.count) flowers in iCloud backup")
+        
         await MainActor.run {
             let localFlowers = flowerStore.discoveredFlowers
+            print("Found \(localFlowers.count) local flowers")
             
             // Create a dictionary for quick lookup
             var mergedFlowersDict = Dictionary(uniqueKeysWithValues: localFlowers.map { ($0.id, $0) })
+            print("Created lookup dictionary with \(mergedFlowersDict.count) local flowers")
+            
+            var addedFromiCloud = 0
+            var updatedFromiCloud = 0
             
             // Merge iCloud flowers (newer dates win)
             for iCloudFlower in iCloudFlowers {
@@ -347,10 +404,16 @@ class iCloudSyncManager: ObservableObject {
                     
                     if iCloudDate > existingDate {
                         mergedFlowersDict[iCloudFlower.id] = iCloudFlower
+                        updatedFromiCloud += 1
+                        print("Updated flower '\(iCloudFlower.name)' from iCloud (newer date)")
+                    } else {
+                        print("Kept local flower '\(existingFlower.name)' (newer or same date)")
                     }
                 } else {
                     // New flower from iCloud
                     mergedFlowersDict[iCloudFlower.id] = iCloudFlower
+                    addedFromiCloud += 1
+                    print("Added new flower '\(iCloudFlower.name)' from iCloud")
                 }
             }
             
@@ -358,6 +421,8 @@ class iCloudSyncManager: ObservableObject {
             let mergedFlowers = Array(mergedFlowersDict.values).sorted {
                 ($0.discoveryDate ?? $0.generatedDate) > ($1.discoveryDate ?? $1.generatedDate)
             }
+            
+            print("Merge complete: \(mergedFlowers.count) total flowers (\(addedFromiCloud) added, \(updatedFromiCloud) updated from iCloud)")
             
             flowerStore.discoveredFlowers = mergedFlowers
             
@@ -367,10 +432,20 @@ class iCloudSyncManager: ObservableObject {
             // Save to local storage
             flowerStore.saveFlowers()
             
-            print("Merged data: \(mergedFlowers.count) total flowers")
+            print("Saved merged collection to local storage")
         }
         
-        // Sync the merged data back to iCloud
+        // Don't sync back immediately - the merged data was already saved locally
+        // The next regular sync will upload the merged collection
+        print("Merge complete. Merged data saved locally.")
+    }
+    
+    /// Performs a full sync - merges iCloud data with local and then syncs back
+    func performFullSync(flowerStore: FlowerStore) async {
+        // First merge with iCloud data
+        await mergeWithICloudData(flowerStore: flowerStore)
+        
+        // Then sync the merged data back to iCloud
         await syncToICloud()
     }
     
