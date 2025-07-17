@@ -19,6 +19,8 @@ struct SettingsSheet: View {
     @State private var importedFlower: AIFlower?
     @State private var importedSenderInfo: FlowerOwner?
     @State private var showingImportConfirmation = false
+    @State private var currentAppIcon: String = ""
+    @State private var showingIconChangeAlert = false
     
     enum RestoreResult: Identifiable {
         case success(flowersCount: Int)
@@ -196,6 +198,78 @@ struct SettingsSheet: View {
                         .background(Color.flowerCardBackground)
                         .cornerRadius(25)
                         
+                        // Appearance Section
+                        VStack(alignment: .leading, spacing: 16) {
+                            Label("Appearance", systemImage: "paintbrush.fill")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundColor(.flowerTextPrimary)
+                            
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("App Icon")
+                                    .font(.system(size: 16, weight: .medium))
+                                    .foregroundColor(.flowerTextPrimary)
+                                
+                                HStack(spacing: 16) {
+                                    // Primary App Icon
+                                    Button(action: {
+                                        changeAppIcon(to: nil, name: "Default")
+                                    }) {
+                                        VStack(spacing: 8) {
+                                            ZStack {
+                                                RoundedRectangle(cornerRadius: 16)
+                                                    .fill(currentAppIcon.isEmpty ? Color.flowerPrimary.opacity(0.2) : Color.flowerCardBackground)
+                                                    .stroke(currentAppIcon.isEmpty ? Color.flowerPrimary : Color.clear, lineWidth: 2)
+                                                    .frame(width: 64, height: 64)
+                                                
+                                                Image("Icon Flowers")
+                                                    .resizable()
+                                                    .aspectRatio(contentMode: .fit)
+                                                    .frame(width: 48, height: 48)
+                                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                                            }
+                                            
+                                            Text("Default")
+                                                .font(.system(size: 12, weight: .medium))
+                                                .foregroundColor(.flowerTextPrimary)
+                                        }
+                                    }
+                                    
+                                    // Alternate App Icon
+                                    Button(action: {
+                                        changeAppIcon(to: "AppIcon2", name: "AppIcon2")
+                                    }) {
+                                        VStack(spacing: 8) {
+                                            ZStack {
+                                                RoundedRectangle(cornerRadius: 16)
+                                                    .fill(currentAppIcon == "AppIcon2" ? Color.flowerPrimary.opacity(0.2) : Color.flowerCardBackground)
+                                                    .stroke(currentAppIcon == "AppIcon2" ? Color.flowerPrimary : Color.clear, lineWidth: 2)
+                                                    .frame(width: 64, height: 64)
+                                                
+                                                // Use a placeholder since we can't directly reference AppIcon2 assets
+                                                Image(systemName: "flower.fill")
+                                                    .font(.system(size: 32))
+                                                    .foregroundColor(.flowerPrimary)
+                                            }
+                                            
+                                            Text("Alternative")
+                                                .font(.system(size: 12, weight: .medium))
+                                                .foregroundColor(.flowerTextPrimary)
+                                        }
+                                    }
+                                    
+                                    Spacer()
+                                }
+                                
+                                Text("Choose your preferred app icon. Changes take effect immediately.")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.flowerTextSecondary)
+                                    .padding(.top, 4)
+                            }
+                        }
+                        .padding(20)
+                        .background(Color.flowerCardBackground)
+                        .cornerRadius(25)
+                        
                         // Debug Section
                         VStack(alignment: .leading, spacing: 16) {
                             Label("Debug Options", systemImage: "wrench.and.screwdriver.fill")
@@ -240,6 +314,24 @@ struct SettingsSheet: View {
                                     }
                                 }
                                 .tint(.flowerPrimary)
+                                
+                                Divider()
+                                
+                                // Regenerate Onboarding Assets
+                                VStack(alignment: .leading, spacing: 12) {
+                                    Text("Regenerate Onboarding Assets")
+                                        .font(.system(size: 16, weight: .medium))
+                                        .foregroundColor(.flowerTextPrimary)
+                                    
+                                    Text("Force regenerate the static flower images used in onboarding")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.flowerTextSecondary)
+                                    
+                                    Button(action: regenerateOnboardingAssets) {
+                                        Text("Regenerate Assets")
+                                    }
+                                    .flowerButtonStyle()
+                                }
                             }
                         }
                         .padding(20)
@@ -350,8 +442,14 @@ struct SettingsSheet: View {
                 )
             }
         }
+        .alert("App Icon Changed", isPresented: $showingIconChangeAlert) {
+            Button("OK") { }
+        } message: {
+            Text("Your app icon has been updated successfully!")
+        }
         .onAppear {
             checkNotificationPermissionStatus()
+            updateCurrentAppIcon()
             
             // Update iCloud sync stats when view appears
             Task {
@@ -451,6 +549,12 @@ struct SettingsSheet: View {
     private func scheduleDebugNotification() {
         flowerStore.scheduleDebugNotification(in: debugNotificationSeconds)
         dismiss()
+    }
+    
+    private func regenerateOnboardingAssets() {
+        Task {
+            await OnboardingAssetsService.shared.regenerateAssets()
+        }
     }
     
     private func performICloudRestore() async {
@@ -655,6 +759,36 @@ struct SettingsSheet: View {
         .padding(20)
         .background(Color.flowerCardBackground)
         .cornerRadius(16)
+    }
+    
+    // MARK: - App Icon Management
+    private func updateCurrentAppIcon() {
+        if let alternateIconName = UIApplication.shared.alternateIconName {
+            currentAppIcon = alternateIconName
+        } else {
+            currentAppIcon = ""
+        }
+    }
+    
+    private func changeAppIcon(to iconName: String?, name: String) {
+        guard UIApplication.shared.supportsAlternateIcons else {
+            print("Alternate icons are not supported on this device")
+            return
+        }
+        
+        UIApplication.shared.setAlternateIconName(iconName) { error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    print("Failed to change app icon: \(error.localizedDescription)")
+                } else {
+                    self.currentAppIcon = iconName ?? ""
+                    self.showingIconChangeAlert = true
+                    
+                    // Haptic feedback for successful icon change
+                    UINotificationFeedbackGenerator().notificationOccurred(.success)
+                }
+            }
+        }
     }
 }
 

@@ -818,8 +818,6 @@ class FlowerStore: ObservableObject {
                     weatherCondition = "Hail"
                 case .thunderstorms:
                     weatherCondition = "Thunderstorms"
-                case .fog:
-                    weatherCondition = "Foggy"
                 case .haze:
                     weatherCondition = "Hazy"
                 case .smoky:

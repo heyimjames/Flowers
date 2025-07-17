@@ -1,5 +1,6 @@
 import SwiftUI
 import CoreLocation
+import MapKit
 import UIKit
 import Photos
 import EventKit
@@ -411,9 +412,8 @@ struct WelcomePageView: View {
                 Image(uiImage: flowerImage)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(width: 200, height: 200)
-                    .cornerRadius(20)
-                    .shadow(color: .flowerPrimary.opacity(0.3), radius: 20, y: 10)
+                    .frame(width: 280, height: 280)
+                    .cornerRadius(12)
                     .scaleEffect(animateFlower ? 1.05 : 1.0)
                     .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true), value: animateFlower)
                     .onAppear { animateFlower = true }
@@ -430,7 +430,7 @@ struct WelcomePageView: View {
                     }
             }
             
-            VStack(spacing: 16) {
+            VStack(spacing: 20) {
                 Text("Welcome to Flowers")
                     .font(.system(size: 36, weight: .light, design: .serif))
                     .foregroundColor(.flowerTextPrimary)
@@ -440,6 +440,7 @@ struct WelcomePageView: View {
                     .font(.system(size: 18))
                     .foregroundColor(.flowerTextSecondary)
                     .multilineTextAlignment(.center)
+                    .lineSpacing(7.2) // 1.4em at 18pt font size
                     .padding(.horizontal, 32)
             }
             
@@ -454,21 +455,47 @@ struct WelcomePageView: View {
     private func generateOnboardingFlower() {
         guard onboardingFlowerImage == nil else { return }
         
+        // First try to load cached flower synchronously
+        if let cachedFlower = loadCachedOnboardingFlower() {
+            onboardingFlowerImage = cachedFlower
+            print("WelcomePageView: Loaded cached onboarding flower immediately")
+            return
+        }
+        
+        // If no cached version, generate asynchronously
         Task {
-            do {
-                // Generate a beautiful welcome flower
-                let descriptor = "elegant welcome flower with soft pastel petals in pink and white, perfect symmetry, gentle morning light, botanical illustration style"
-                
-                let (image, _) = try await FALService.shared.generateFlowerImage(descriptor: descriptor)
-                
+            if let flower = await OnboardingAssetsService.shared.getOnboardingFlowerForFirstPage(),
+               let imageData = flower.imageData,
+               let image = UIImage(data: imageData) {
                 await MainActor.run {
                     self.onboardingFlowerImage = image
                 }
-            } catch {
-                print("Failed to generate onboarding flower: \(error)")
+            } else {
+                print("Failed to load onboarding flower from service")
                 // Keep the fallback SF Symbol
             }
         }
+    }
+    
+    private func loadCachedOnboardingFlower() -> UIImage? {
+        guard UserDefaults.standard.bool(forKey: "onboarding_main_flower_generated"),
+              let flowerData = UserDefaults.standard.data(forKey: "onboarding_main_flower") else {
+            return nil
+        }
+        
+        do {
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let flower = try decoder.decode(AIFlower.self, from: flowerData)
+            
+            if let imageData = flower.imageData {
+                return UIImage(data: imageData)
+            }
+        } catch {
+            print("WelcomePageView: Failed to decode cached onboarding flower: \(error)")
+        }
+        
+        return nil
     }
 }
 
@@ -579,37 +606,56 @@ struct FeatureRow: View {
 struct LocationPermissionPageView: View {
     let locationManager: CLLocationManager
     @State private var animateMap = false
+    @State private var onboardingFlowerImage: UIImage?
+    
+    // Create a sample flower with Canary Wharf London coordinates
+    private var sampleFlower: AIFlower {
+        AIFlower(
+            name: "Canary Wharf Rose",
+            descriptor: "elegant city rose with glass tower reflections",
+            discoveryLatitude: 51.5054,
+            discoveryLongitude: -0.0235,
+            discoveryLocationName: "Canary Wharf, London"
+        )
+    }
     
     var body: some View {
         VStack(spacing: 32) {
             Spacer()
             
-            // Animated map icon
-            ZStack {
-                Circle()
-                    .fill(Color.flowerPrimary.opacity(0.1))
-                    .frame(width: 120, height: 120)
-                    .scaleEffect(animateMap ? 1.2 : 1.0)
-                    .opacity(animateMap ? 0 : 1)
-                    .animation(.easeOut(duration: 2).repeatForever(autoreverses: false), value: animateMap)
-                
-                Image(systemName: "location.fill")
-                    .font(.system(size: 50))
-                    .foregroundColor(.flowerPrimary)
-            }
-            .onAppear { animateMap = true }
-            
-            VStack(spacing: 16) {
+            VStack(spacing: 20) {
                 Text("Location-Inspired Flowers")
                     .font(.system(size: 28, weight: .light, design: .serif))
                     .foregroundColor(.flowerTextPrimary)
                     .multilineTextAlignment(.center)
                 
-                Text("Allow location access to create flowers that reflect your city's unique character, local weather patterns, and seasonal changes")
+                Text("We use your location to generate flowers that are personalized to your city and surroundings")
                     .font(.system(size: 16))
                     .foregroundColor(.flowerTextSecondary)
                     .multilineTextAlignment(.center)
+                    .lineSpacing(6.4) // 1.4em at 16pt font size
                     .padding(.horizontal, 32)
+            }
+            
+            Spacer().frame(height: 24)
+            
+            // Example map showing Canary Wharf London (non-interactive onboarding version)
+            VStack(spacing: 16) {
+                OnboardingMapView(
+                    flower: sampleFlower,
+                    onboardingFlowerImage: $onboardingFlowerImage
+                )
+                .frame(width: 300, height: 300)
+                .cornerRadius(16)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color(red: 1/255, green: 1/255, blue: 1/255).opacity(0.12), lineWidth: 1)
+                )
+                .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
+                .scaleEffect(animateMap ? 1.0 : 0.9)
+                .rotationEffect(.degrees(-2)) // Random rotation: -2 degrees
+                .animation(.spring(response: 0.8, dampingFraction: 0.8), value: animateMap)
+                .onAppear { animateMap = true }
             }
             
             Spacer()
@@ -748,10 +794,27 @@ struct StarterFlowerSelectionView: View {
 
 struct CameraRollPermissionPageView: View {
     @State private var animateAlbum = false
+    @State private var onboardingImages: [UIImage] = []
     
     var body: some View {
         VStack(spacing: 32) {
             Spacer()
+            
+            VStack(spacing: 20) {
+                Text("Save Your Flower Collection")
+                    .font(.system(size: 28, weight: .light, design: .serif))
+                    .foregroundColor(.flowerTextPrimary)
+                    .multilineTextAlignment(.center)
+                
+                Text("We use camera roll access to save your personalized flowers to your photo library")
+                    .font(.system(size: 16))
+                    .foregroundColor(.flowerTextSecondary)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(6.4) // 1.4em at 16pt font size
+                    .padding(.horizontal, 32)
+            }
+            
+            Spacer().frame(height: 24)
             
             // Camera Roll Album Preview
             VStack(spacing: 16) {
@@ -770,16 +833,26 @@ struct CameraRollPermissionPageView: View {
                 // Sample flower grid
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 3), spacing: 4) {
                     ForEach(0..<6) { index in
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(Color.flowerPrimary.opacity(0.3))
-                            .aspectRatio(1, contentMode: .fit)
-                            .overlay(
-                                Image(systemName: "flower.fill")
-                                    .font(.system(size: 24))
-                                    .foregroundColor(.flowerPrimary.opacity(0.6))
-                            )
-                            .scaleEffect(animateAlbum ? 1.0 : 0.8)
-                            .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(Double(index) * 0.1), value: animateAlbum)
+                        Group {
+                            if index < onboardingImages.count {
+                                Image(uiImage: onboardingImages[index])
+                                    .resizable()
+                                    .scaledToFill()
+                                    .aspectRatio(1, contentMode: .fill)
+                                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                            } else {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.flowerPrimary.opacity(0.3))
+                                    .aspectRatio(1, contentMode: .fit)
+                                    .overlay(
+                                        Image(systemName: "flower.fill")
+                                            .font(.system(size: 24))
+                                            .foregroundColor(.flowerPrimary.opacity(0.6))
+                                    )
+                            }
+                        }
+                        .scaleEffect(animateAlbum ? 1.0 : 0.8)
+                        .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(Double(index) * 0.1), value: animateAlbum)
                     }
                 }
                 .padding(.horizontal, 16)
@@ -787,21 +860,18 @@ struct CameraRollPermissionPageView: View {
             .padding(.vertical, 20)
             .background(Color.flowerCardBackground)
             .cornerRadius(16)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color(red: 1/255, green: 1/255, blue: 1/255).opacity(0.12), lineWidth: 1)
+            )
             .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
             .frame(maxWidth: 300)
-            .onAppear { animateAlbum = true }
-            
-            VStack(spacing: 16) {
-                Text("Save Your Flower Collection")
-                    .font(.system(size: 28, weight: .light, design: .serif))
-                    .foregroundColor(.flowerTextPrimary)
-                    .multilineTextAlignment(.center)
-                
-                Text("Automatically save your beautiful flower discoveries to a dedicated album in your Photos app for easy access and sharing")
-                    .font(.system(size: 16))
-                    .foregroundColor(.flowerTextSecondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
+            .rotationEffect(.degrees(1.5)) // Random rotation: +1.5 degrees
+            .onAppear { 
+                animateAlbum = true
+                Task {
+                    onboardingImages = await OnboardingAssetsService.shared.getOnboardingFlowerImages()
+                }
             }
             
             Spacer()
@@ -817,11 +887,27 @@ struct CalendarPermissionPageView: View {
         VStack(spacing: 32) {
             Spacer()
             
+            VStack(spacing: 20) {
+                Text("Holiday & Event Flowers")
+                    .font(.system(size: 28, weight: .light, design: .serif))
+                    .foregroundColor(.flowerTextPrimary)
+                    .multilineTextAlignment(.center)
+                
+                Text("We use calendar access to generate special flowers personalized to your holidays and important events")
+                    .font(.system(size: 16))
+                    .foregroundColor(.flowerTextSecondary)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(6.4) // 1.4em at 16pt font size
+                    .padding(.horizontal, 32)
+            }
+            
+            Spacer().frame(height: 24)
+            
             // Calendar preview with special dates
             VStack(spacing: 16) {
                 // Calendar header
                 HStack {
-                    Text("July 2025")
+                    Text("May 2025")
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(.flowerTextPrimary)
                     Spacer()
@@ -829,15 +915,23 @@ struct CalendarPermissionPageView: View {
                 .padding(.horizontal, 16)
                 
                 // Calendar grid
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 8) {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 7), spacing: 8) {
                     // Day headers
                     ForEach(["S", "M", "T", "W", "T", "F", "S"], id: \.self) { day in
                         Text(day)
                             .font(.system(size: 12, weight: .medium))
                             .foregroundColor(.flowerTextSecondary)
+                            .frame(width: 32, height: 20)
+                            .multilineTextAlignment(.center)
                     }
                     
-                    // Calendar days
+                    // May 2025 starts on Thursday, so add 4 empty cells first
+                    ForEach(0..<4, id: \.self) { _ in
+                        Text("")
+                            .frame(width: 32, height: 32)
+                    }
+                    
+                    // Calendar days for May (31 days)
                     ForEach(1..<32) { day in
                         ZStack {
                             Circle()
@@ -859,27 +953,19 @@ struct CalendarPermissionPageView: View {
                         .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(Double(day) * 0.01), value: animateCalendar)
                     }
                 }
-                .padding(.horizontal, 16)
+                .padding(.horizontal, 12)
             }
             .padding(.vertical, 20)
             .background(Color.flowerCardBackground)
             .cornerRadius(16)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color(red: 1/255, green: 1/255, blue: 1/255).opacity(0.12), lineWidth: 1)
+            )
             .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
             .frame(maxWidth: 300)
+            .rotationEffect(.degrees(-1)) // Random rotation: -1 degree
             .onAppear { animateCalendar = true }
-            
-            VStack(spacing: 16) {
-                Text("Holiday & Event Flowers")
-                    .font(.system(size: 28, weight: .light, design: .serif))
-                    .foregroundColor(.flowerTextPrimary)
-                    .multilineTextAlignment(.center)
-                
-                Text("Create special bouquets and themed flowers for holidays, birthdays, anniversaries, and important events in your calendar")
-                    .font(.system(size: 16))
-                    .foregroundColor(.flowerTextSecondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
-            }
             
             Spacer()
             Spacer()
@@ -890,21 +976,44 @@ struct CalendarPermissionPageView: View {
 struct WeatherPermissionPageView: View {
     @State private var animateWeather = false
     
+    // Get current date
+    private var currentDateString: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEEE, d MMMM"
+        return formatter.string(from: Date())
+    }
+    
     var body: some View {
         VStack(spacing: 32) {
             Spacer()
+            
+            VStack(spacing: 20) {
+                Text("Weather-Inspired Flowers")
+                    .font(.system(size: 28, weight: .light, design: .serif))
+                    .foregroundColor(.flowerTextPrimary)
+                    .multilineTextAlignment(.center)
+                
+                Text("We use weather data to generate flowers that are personalized to your current weather conditions")
+                    .font(.system(size: 16))
+                    .foregroundColor(.flowerTextSecondary)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(6.4) // 1.4em at 16pt font size
+                    .padding(.horizontal, 32)
+            }
+            
+            Spacer().frame(height: 24)
             
             // Weather card preview
             VStack(spacing: 16) {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Monday, 17th July")
+                        Text(currentDateString)
                             .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.flowerTextPrimary)
+                            .foregroundColor(.white)
                         
-                        Text("London, UK")
+                        Text("Lisbon, Portugal")
                             .font(.system(size: 14))
-                            .foregroundColor(.flowerTextSecondary)
+                            .foregroundColor(.white.opacity(0.8))
                     }
                     
                     Spacer()
@@ -915,55 +1024,57 @@ struct WeatherPermissionPageView: View {
                                 .font(.system(size: 24))
                                 .foregroundColor(.yellow)
                             
-                            Text("22°C")
+                            Text("31°C")
                                 .font(.system(size: 24, weight: .semibold))
-                                .foregroundColor(.flowerTextPrimary)
+                                .foregroundColor(.white)
                         }
                         
                         Text("Sunny")
                             .font(.system(size: 14))
-                            .foregroundColor(.flowerTextSecondary)
+                            .foregroundColor(.white.opacity(0.8))
                     }
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 16)
                 
                 Divider()
+                    .background(Color.white.opacity(0.3))
                 
                 HStack {
                     Image(systemName: "flower.fill")
                         .font(.system(size: 16))
-                        .foregroundColor(.flowerPrimary)
+                        .foregroundColor(.white)
                     
-                    Text("Perfect weather for a Sun-kissed Rose")
+                    Text("Perfect weather for picking flowers")
                         .font(.system(size: 14))
-                        .foregroundColor(.flowerTextSecondary)
+                        .foregroundColor(.white.opacity(0.9))
                     
                     Spacer()
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 16)
             }
-            .background(Color.flowerCardBackground)
+            .background(
+                LinearGradient(
+                    colors: [
+                        Color(red: 135/255, green: 206/255, blue: 250/255), // Light sky blue
+                        Color(red: 30/255, green: 144/255, blue: 255/255)   // Dodger blue
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
             .cornerRadius(16)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color(red: 1/255, green: 1/255, blue: 1/255).opacity(0.12), lineWidth: 1)
+            )
             .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
             .frame(maxWidth: 300)
+            .rotationEffect(.degrees(2.5)) // Random rotation: +2.5 degrees
             .scaleEffect(animateWeather ? 1.0 : 0.95)
             .animation(.spring(response: 0.6, dampingFraction: 0.8), value: animateWeather)
             .onAppear { animateWeather = true }
-            
-            VStack(spacing: 16) {
-                Text("Weather-Inspired Flowers")
-                    .font(.system(size: 28, weight: .light, design: .serif))
-                    .foregroundColor(.flowerTextPrimary)
-                    .multilineTextAlignment(.center)
-                
-                Text("Generate flowers that reflect the current weather conditions, creating sun-kissed blooms on bright days or rain-blessed petals during storms")
-                    .font(.system(size: 16))
-                    .foregroundColor(.flowerTextSecondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
-            }
             
             Spacer()
             Spacer()
@@ -1046,5 +1157,110 @@ struct StarterFlowerCard: View {
         )
         .scaleEffect(isSelected ? 1.02 : 1)
         .onTapGesture(perform: onTap)
+    }
+}
+
+// Non-interactive map view specifically for onboarding
+struct OnboardingMapView: View {
+    let flower: AIFlower
+    @Binding var onboardingFlowerImage: UIImage?
+    @State private var region: MKCoordinateRegion
+    
+    init(flower: AIFlower, onboardingFlowerImage: Binding<UIImage?>) {
+        self.flower = flower
+        self._onboardingFlowerImage = onboardingFlowerImage
+        
+        // Initialize region with flower's discovery location
+        if let lat = flower.discoveryLatitude,
+           let lon = flower.discoveryLongitude {
+            self._region = State(initialValue: MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: lat, longitude: lon),
+                span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+            ))
+        } else {
+            self._region = State(initialValue: MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 51.5054, longitude: -0.0235),
+                span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+            ))
+        }
+    }
+    
+    var body: some View {
+        ZStack {
+            Map(coordinateRegion: .constant(region),
+                interactionModes: [], // No interaction
+                showsUserLocation: false,
+                annotationItems: [MapFlower(flower: flower)]) { item in
+                MapAnnotation(coordinate: item.coordinate) {
+                    OnboardingFlowerMapPin(flower: item.flower, flowerImage: onboardingFlowerImage)
+                }
+            }
+            .disabled(true) // Ensure no interaction
+            
+            // Location label overlay - bottom left
+            VStack {
+                Spacer()
+                HStack {
+                    if let locationName = flower.discoveryLocationName {
+                        HStack(spacing: 4) {
+                            Image(systemName: "location.fill")
+                                .font(.system(size: 10))
+                            Text(locationName)
+                                .font(.system(size: 12, weight: .medium))
+                        }
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(
+                            Capsule()
+                                .fill(Color.black.opacity(0.7))
+                        )
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal, 12)
+                .padding(.bottom, 12)
+            }
+        }
+    }
+}
+
+// Simplified map pin for onboarding that uses the onboarding flower image
+struct OnboardingFlowerMapPin: View {
+    let flower: AIFlower
+    let flowerImage: UIImage?
+    
+    var body: some View {
+        VStack(spacing: 2) {
+            ZStack {
+                Circle()
+                    .fill(Color.white)
+                    .frame(width: 32, height: 32)
+                    .shadow(color: .black.opacity(0.2), radius: 4, y: 2)
+                
+                if let image = flowerImage {
+                    Image(uiImage: image)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 26, height: 26)
+                        .clipShape(Circle())
+                } else {
+                    Image(systemName: "flower.fill")
+                        .font(.system(size: 16))
+                        .foregroundColor(.flowerPrimary)
+                }
+            }
+            
+            // Small pin tail
+            Path { path in
+                path.move(to: CGPoint(x: 0, y: 0))
+                path.addLine(to: CGPoint(x: 4, y: 6))
+                path.addLine(to: CGPoint(x: -4, y: 6))
+                path.closeSubpath()
+            }
+            .fill(Color.white)
+            .frame(width: 8, height: 6)
+            .shadow(color: .black.opacity(0.15), radius: 1, y: 1)
+        }
     }
 } 

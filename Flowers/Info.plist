@@ -14,6 +14,26 @@
 	<string>Your location helps create unique flowers that reflect your city's character, local weather patterns, seasonal changes, and special calendar events - making each discovery truly personal to you.</string>
 	<key>NSCalendarsUsageDescription</key>
 	<string>Calendar access allows us to create special holiday flowers and seasonal collections that celebrate important dates and events in your life.</string>
+	<key>CFBundleIcons</key>
+	<dict>
+		<key>CFBundleAlternateIcons</key>
+		<dict>
+			<key>AppIcon2</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>AppIcon2</string>
+				</array>
+			</dict>
+		</dict>
+		<key>CFBundlePrimaryIcon</key>
+		<dict>
+			<key>CFBundleIconFiles</key>
+			<array>
+				<string>AppIcon</string>
+			</array>
+		</dict>
+	</dict>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>

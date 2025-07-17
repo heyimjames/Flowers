@@ -25,6 +25,9 @@ struct FlowersApp: App {
                     // Initialize contextual generator
                     _ = contextualGenerator
                     
+                    // Initialize onboarding assets in background
+                    OnboardingAssetsService.shared.initializeAssetsIfNeeded()
+                    
                     // Request notification permissions on first launch
                     UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
                         if granted {
