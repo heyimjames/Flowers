@@ -1,5 +1,6 @@
 import Foundation
 import CoreLocation
+import WeatherKit
 
 class ContextualFlowerGenerator: NSObject, ObservableObject, CLLocationManagerDelegate {
     static let shared = ContextualFlowerGenerator()
@@ -8,6 +9,9 @@ class ContextualFlowerGenerator: NSObject, ObservableObject, CLLocationManagerDe
     @Published var currentLocation: CLLocation?
     @Published var currentPlacemark: CLPlacemark?
     @Published var locationPermissionStatus: CLAuthorizationStatus = .notDetermined
+    @Published var currentWeather: Weather?
+    
+    private let weatherService = WeatherService.shared
     
     override init() {
         super.init()
@@ -47,6 +51,11 @@ class ContextualFlowerGenerator: NSObject, ObservableObject, CLLocationManagerDe
             CLGeocoder().reverseGeocodeLocation(location) { [weak self] placemarks, error in
                 self?.currentPlacemark = placemarks?.first
             }
+            
+            // Get weather for location
+            Task {
+                await self.updateWeather(for: location)
+            }
         }
     }
     
@@ -56,6 +65,19 @@ class ContextualFlowerGenerator: NSObject, ObservableObject, CLLocationManagerDe
     
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         checkLocationAuthorization()
+    }
+    
+    // MARK: - Weather Management
+    
+    private func updateWeather(for location: CLLocation) async {
+        do {
+            let weather = try await weatherService.weather(for: location)
+            await MainActor.run {
+                self.currentWeather = weather
+            }
+        } catch {
+            print("Weather update error: \(error)")
+        }
     }
     
     // MARK: - Contextual Generation
@@ -96,11 +118,10 @@ class ContextualFlowerGenerator: NSObject, ObservableObject, CLLocationManagerDe
         let components = calendar.dateComponents([.month, .day, .hour], from: now)
         
         // Seasonal elements
-        if let season = getCurrentSeason() {
-            context.season = season
-            if Int.random(in: 1...3) == 1 {
-                contextElements.append("\(season.lowercased())")
-            }
+        let season = getCurrentSeason()
+        context.season = season.rawValue
+        if Int.random(in: 1...3) == 1 {
+            contextElements.append("\(season.rawValue.lowercased())")
         }
         
         // Holiday elements
@@ -133,6 +154,46 @@ class ContextualFlowerGenerator: NSObject, ObservableObject, CLLocationManagerDe
                 context.timeOfDay = "night"
                 if Int.random(in: 1...3) == 1 {
                     contextElements.append("moonlit")
+                }
+            }
+        }
+        
+        // Weather-based context
+        if let weather = currentWeather {
+            context.weather = weather
+            let condition = weather.currentWeather.condition
+            let temperature = weather.currentWeather.temperature
+            
+            // Add weather-based descriptors
+            switch condition {
+            case .clear:
+                if Int.random(in: 1...3) == 1 {
+                    contextElements.append("sun-kissed")
+                }
+            case .cloudy, .mostlyCloudy:
+                if Int.random(in: 1...3) == 1 {
+                    contextElements.append("cloud-soft")
+                }
+            case .rain, .drizzle:
+                if Int.random(in: 1...3) == 1 {
+                    contextElements.append("rain-blessed")
+                }
+            case .snow:
+                if Int.random(in: 1...3) == 1 {
+                    contextElements.append("snow-touched")
+                }
+            default:
+                break
+            }
+            
+            // Temperature-based colors
+            if temperature.value < 10 {
+                if Int.random(in: 1...3) == 1 {
+                    contextElements.append("frost-blue")
+                }
+            } else if temperature.value > 25 {
+                if Int.random(in: 1...3) == 1 {
+                    contextElements.append("warmth-golden")
                 }
             }
         }
@@ -183,7 +244,7 @@ class ContextualFlowerGenerator: NSObject, ObservableObject, CLLocationManagerDe
         return countryColorMap[country]
     }
     
-    private func getCurrentSeason() -> String? {
+    func getCurrentSeason() -> Season {
         let calendar = Calendar.current
         let month = calendar.component(.month, from: Date())
         
@@ -192,20 +253,20 @@ class ContextualFlowerGenerator: NSObject, ObservableObject, CLLocationManagerDe
         
         if isNorthernHemisphere {
             switch month {
-            case 3...5: return "Spring"
-            case 6...8: return "Summer"
-            case 9...11: return "Autumn"
-            case 12, 1, 2: return "Winter"
-            default: return nil
+            case 3...5: return .spring
+            case 6...8: return .summer
+            case 9...11: return .autumn
+            case 12, 1, 2: return .winter
+            default: return .spring // Fallback
             }
         } else {
             // Southern hemisphere has opposite seasons
             switch month {
-            case 3...5: return "Autumn"
-            case 6...8: return "Winter"
-            case 9...11: return "Spring"
-            case 12, 1, 2: return "Summer"
-            default: return nil
+            case 3...5: return .autumn
+            case 6...8: return .winter
+            case 9...11: return .spring
+            case 12, 1, 2: return .summer
+            default: return .spring // Fallback
             }
         }
     }
@@ -356,6 +417,13 @@ class ContextualFlowerGenerator: NSObject, ObservableObject, CLLocationManagerDe
 
 // MARK: - Supporting Types
 
+enum Season: String, CaseIterable {
+    case spring = "Spring"
+    case summer = "Summer"
+    case autumn = "Autumn"
+    case winter = "Winter"
+}
+
 struct FlowerContext {
     var location: CLPlacemark?
     var country: String?
@@ -364,6 +432,7 @@ struct FlowerContext {
     var holiday: Holiday?
     var zodiacSign: ZodiacSign?
     var timeOfDay: String?
+    var weather: Weather?
     
     func generateContextualMeaning() -> String? {
         var elements: [String] = []
@@ -382,6 +451,28 @@ struct FlowerContext {
         
         if let season = season {
             elements.append("Blooming in the heart of \(season)")
+        }
+        
+        if let weather = weather {
+            let condition = weather.currentWeather.condition
+            let temp = weather.currentWeather.temperature
+            
+            switch condition {
+            case .clear:
+                elements.append("Flourishing under clear skies")
+            case .rain, .drizzle:
+                elements.append("Nourished by gentle rain")
+            case .snow:
+                elements.append("Thriving in winter's embrace")
+            default:
+                break
+            }
+            
+            if temp.value > 25 {
+                elements.append("Warmed by the sun")
+            } else if temp.value < 5 {
+                elements.append("Resilient in the cold")
+            }
         }
         
         return elements.isEmpty ? nil : elements.joined(separator: ". ")

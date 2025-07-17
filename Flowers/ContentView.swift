@@ -18,6 +18,7 @@ struct ContentView: View {
     @State private var showingOnboarding = false
     @State private var showingShareSheet = false
     @Environment(\.scenePhase) var scenePhase
+    @Environment(\.colorScheme) var colorScheme
     @State private var wasInBackground = false
     @AppStorage("userName") private var userName = ""
     
@@ -54,11 +55,10 @@ struct ContentView: View {
                 // Navigation bar
                 ZStack {
                     // Centered app title (absolutely centered)
-                    Image("FlowersSVG")
+                    Image(colorScheme == .dark ? "flowerssvggreen" : "FlowersSVG")
                         .resizable()
                         .scaledToFit()
                         .frame(height: 28)
-                        .foregroundColor(.flowerTextPrimary)
                         .frame(maxWidth: .infinity)
                     
                     // HStack for pill and settings button

@@ -12,6 +12,8 @@
 	<string>Get notified when your daily flower blooms</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Your location helps create unique flowers that reflect your city's character, local weather patterns, seasonal changes, and special calendar events - making each discovery truly personal to you.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Calendar access allows us to create special holiday flowers and seasonal collections that celebrate important dates and events in your life.</string>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>

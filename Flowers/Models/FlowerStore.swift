@@ -790,6 +790,66 @@ class FlowerStore: ObservableObject {
             // Get a random continent for now (will be replaced by AI-generated continent)
             flower.continent = Continent.allCases.randomElement()
             
+            // Capture weather and date information
+            if let weather = ContextualFlowerGenerator.shared.currentWeather {
+                let condition = weather.currentWeather.condition
+                let temperature = weather.currentWeather.temperature
+                
+                // Convert weather condition to readable string
+                let weatherCondition: String
+                switch condition {
+                case .clear:
+                    weatherCondition = "Sunny"
+                case .cloudy:
+                    weatherCondition = "Cloudy"
+                case .mostlyCloudy:
+                    weatherCondition = "Mostly Cloudy"
+                case .partlyCloudy:
+                    weatherCondition = "Partly Cloudy"
+                case .rain:
+                    weatherCondition = "Rainy"
+                case .drizzle:
+                    weatherCondition = "Drizzle"
+                case .snow:
+                    weatherCondition = "Snowy"
+                case .sleet:
+                    weatherCondition = "Sleet"
+                case .hail:
+                    weatherCondition = "Hail"
+                case .thunderstorms:
+                    weatherCondition = "Thunderstorms"
+                case .fog:
+                    weatherCondition = "Foggy"
+                case .haze:
+                    weatherCondition = "Hazy"
+                case .smoky:
+                    weatherCondition = "Smoky"
+                case .breezy:
+                    weatherCondition = "Breezy"
+                case .windy:
+                    weatherCondition = "Windy"
+                case .hot:
+                    weatherCondition = "Hot"
+                case .frigid:
+                    weatherCondition = "Frigid"
+                default:
+                    weatherCondition = "Unknown"
+                }
+                
+                flower.captureWeatherAndDate(
+                    weatherCondition: weatherCondition,
+                    temperature: temperature.value,
+                    temperatureUnit: temperature.unit == .celsius ? "°C" : "°F"
+                )
+            } else {
+                // Capture date info even without weather
+                flower.captureWeatherAndDate(
+                    weatherCondition: nil,
+                    temperature: nil,
+                    temperatureUnit: nil
+                )
+            }
+            
             // Always generate details for every flower
             if apiConfig.hasValidOpenAIKey {
                 do {

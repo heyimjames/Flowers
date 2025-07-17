@@ -88,10 +88,43 @@ struct FlowerIconButtonStyle: ButtonStyle {
     }
 }
 
+// Onboarding button style with lighter weight text
+struct FlowerOnboardingButtonStyle: ButtonStyle {
+    let color: Color
+    let textColor: Color
+    
+    init(color: Color = .flowerPrimary, textColor: Color = .white) {
+        self.color = color
+        self.textColor = textColor
+    }
+    
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 17, weight: .regular))
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .frame(height: 56)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(color)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(configuration.isPressed ? Color.black.opacity(0.1) : Color.clear)
+                    )
+            )
+            .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
+            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
+    }
+}
+
 // Extension to make it easy to apply
 extension View {
     func flowerButtonStyle(color: Color = .flowerPrimary, textColor: Color = .white) -> some View {
         self.buttonStyle(FlowerButtonStyle(color: color, textColor: textColor))
+    }
+    
+    func flowerOnboardingButtonStyle(color: Color = .flowerPrimary, textColor: Color = .white) -> some View {
+        self.buttonStyle(FlowerOnboardingButtonStyle(color: color, textColor: textColor))
     }
     
     func flowerSecondaryButtonStyle() -> some View {

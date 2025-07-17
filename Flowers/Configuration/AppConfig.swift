@@ -9,17 +9,14 @@ class AppConfig {
     // MARK: - Built-in API Keys (Obfuscated)
     
     /// Default OpenAI API key for App Store distribution
-    /// Replace these with your actual keys before building for release
     private let defaultOpenAIKey: String = {
-        // Method 1: Base64 + XOR obfuscation
-        let obfuscatedKey = "Gx0aHkdtFxYLCBMaBAMGS0MRCjMUCRNLQxAaHBEJE0tDAAIaFxEDCQdLQxQaHAMASxUHERYCS0MfGBAcGxRLQzEBHBoeGxJLQxcYAhcUS0MXEAARHBNLQz0eGR8eS0MeAxAaFhNLQxcECRwCBUtDDB8VCjEUCQJLQzEBFwsQBEtDFAdRGR8aEEozYHVJCFpobnhuYn1eFAEYdQEcHBUGVBdSGBdLQxQSAAcOF1dLQxYRGw8QS0MfEQYdEBNLQwwQCAACGUtDBAoaEUozBA0QBwIYdQwcCRERSxsQFBYNAA4aF0tDAwUKBEdLQxoSAgERS0MdGQ8ABA5LQxYBBBEAAgdLUAUaEB4VAkogbnBtcW5xdHJxdnYhGhoeF0tDDxsaAxBLUEY=" // Obfuscated OpenAI key
+        let obfuscatedKey = "MSlvMjAtKG8gKjc4DgAYABgDFHoONBMxdBoAIQcDEHY2dgYMMDc3cTIQKXYPLjQgIxotLTd0J3A2JhUrNCA3G3UsEgR1LC5xdBI4cHM1KA8DBRZxAC4gKQQIGwEoIRoAJSwHcCMDAyYKCTIqexcEBgN6FjEgEjgyHTd3ExsSChU6dhAuDQwtDwVwE3srK3UENHY1AXpxGBRzNgMtGw0JDRoGNQM="
         return AppConfig.deobfuscateKey(obfuscatedKey)
     }()
     
     /// Default FAL API key for App Store distribution
     private let defaultFALKey: String = {
-        // Method 1: Base64 + XOR obfuscation
-        let obfuscatedKey = "Ch0eBRBhFBMmFQBiKQEPKQEhFQYtKQJjKQJlKQEiFQpmLhQfKRkLKREXKhgdKBELOhQMKBEcFQEAKBQUOBAdKhcAKxgA" // Obfuscated FAL key
+        let obfuscatedKey = "JyB0ISNwIHRvcXpxcW92I3BxbyNwdyFvdnR7ICB1enohIyQjeHQncXt0cCYncHIndyYje3B2J3d1c3d6ISB2cyR2dXRx"
         return AppConfig.deobfuscateKey(obfuscatedKey)
     }()
     
@@ -39,7 +36,12 @@ class AppConfig {
     
     /// Check if built-in keys are available
     var hasBuiltInKeys: Bool {
-        return !defaultOpenAIKey.isEmpty && !defaultFALKey.isEmpty
+        let openAIValid = !defaultOpenAIKey.isEmpty && defaultOpenAIKey.hasPrefix("sk-")
+        let falValid = !defaultFALKey.isEmpty && defaultFALKey.count > 20
+        print("AppConfig: OpenAI key valid: \(openAIValid), FAL key valid: \(falValid)")
+        print("AppConfig: OpenAI key starts with: \(defaultOpenAIKey.prefix(10))")
+        print("AppConfig: FAL key starts with: \(defaultFALKey.prefix(10))")
+        return openAIValid && falValid
     }
     
     // MARK: - Key Obfuscation/Deobfuscation
@@ -67,6 +69,16 @@ class AppConfig {
         let data = Data(key.utf8)
         let obfuscated = data.map { $0 ^ xorKey }
         return Data(obfuscated).base64EncodedString()
+    }
+    
+    /// DEVELOPMENT HELPER: Call this to generate obfuscated versions of your real API keys
+    /// Example usage in a development build:
+    /// print("OpenAI obfuscated: \(AppConfig.generateObfuscatedKeys(openAI: "sk-your-real-key", fal: "your-fal-key"))")
+    static func generateObfuscatedKeys(openAI: String, fal: String) -> (openAI: String, fal: String) {
+        return (
+            openAI: obfuscateKey(openAI),
+            fal: obfuscateKey(fal)
+        )
     }
 }
 

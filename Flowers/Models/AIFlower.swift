@@ -64,6 +64,13 @@ struct AIFlower: Identifiable, Codable, Equatable {
     var discoveryLongitude: Double? // Longitude where flower was discovered
     var discoveryLocationName: String? // Human-readable location name
     
+    // Weather and date information
+    var discoveryWeatherCondition: String? // Weather condition (e.g., "Sunny", "Cloudy", "Rainy")
+    var discoveryTemperature: Double? // Temperature in Celsius
+    var discoveryTemperatureUnit: String? // Temperature unit (C or F)
+    var discoveryDayOfWeek: String? // Day of the week (e.g., "Monday")
+    var discoveryFormattedDate: String? // Formatted date (e.g., "15th June 2025")
+    
     // Ownership tracking
     var originalOwner: FlowerOwner?
     var ownershipHistory: [FlowerOwner]
@@ -91,6 +98,11 @@ struct AIFlower: Identifiable, Codable, Equatable {
          discoveryLatitude: Double? = nil,
          discoveryLongitude: Double? = nil,
          discoveryLocationName: String? = nil,
+         discoveryWeatherCondition: String? = nil,
+         discoveryTemperature: Double? = nil,
+         discoveryTemperatureUnit: String? = nil,
+         discoveryDayOfWeek: String? = nil,
+         discoveryFormattedDate: String? = nil,
          originalOwner: FlowerOwner? = nil,
          ownershipHistory: [FlowerOwner] = [],
          transferToken: String? = nil,
@@ -116,6 +128,11 @@ struct AIFlower: Identifiable, Codable, Equatable {
         self.discoveryLatitude = discoveryLatitude
         self.discoveryLongitude = discoveryLongitude
         self.discoveryLocationName = discoveryLocationName
+        self.discoveryWeatherCondition = discoveryWeatherCondition
+        self.discoveryTemperature = discoveryTemperature
+        self.discoveryTemperatureUnit = discoveryTemperatureUnit
+        self.discoveryDayOfWeek = discoveryDayOfWeek
+        self.discoveryFormattedDate = discoveryFormattedDate
         self.originalOwner = originalOwner
         self.ownershipHistory = ownershipHistory
         self.transferToken = transferToken
@@ -173,6 +190,52 @@ extension AIFlower {
         if originalOwner != nil { count += 1 }
         count += ownershipHistory.count
         return count + 1 // Plus current owner
+    }
+    
+    // Helper method to capture weather and date information
+    mutating func captureWeatherAndDate(weatherCondition: String?, temperature: Double?, temperatureUnit: String?) {
+        let now = Date()
+        
+        // Capture weather data
+        self.discoveryWeatherCondition = weatherCondition
+        self.discoveryTemperature = temperature
+        self.discoveryTemperatureUnit = temperatureUnit
+        
+        // Capture date information
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "EEEE" // Day of the week
+        self.discoveryDayOfWeek = dateFormatter.string(from: now)
+        
+        // Format the date as "15th June 2025"
+        let dayFormatter = DateFormatter()
+        dayFormatter.dateFormat = "d"
+        let day = dayFormatter.string(from: now)
+        
+        let monthFormatter = DateFormatter()
+        monthFormatter.dateFormat = "MMMM"
+        let month = monthFormatter.string(from: now)
+        
+        let yearFormatter = DateFormatter()
+        yearFormatter.dateFormat = "yyyy"
+        let year = yearFormatter.string(from: now)
+        
+        // Add ordinal suffix to day
+        let dayInt = Int(day) ?? 0
+        let ordinalSuffix: String
+        switch dayInt {
+        case 11, 12, 13:
+            ordinalSuffix = "th"
+        case _ where dayInt % 10 == 1:
+            ordinalSuffix = "st"
+        case _ where dayInt % 10 == 2:
+            ordinalSuffix = "nd"
+        case _ where dayInt % 10 == 3:
+            ordinalSuffix = "rd"
+        default:
+            ordinalSuffix = "th"
+        }
+        
+        self.discoveryFormattedDate = "\(day)\(ordinalSuffix) \(month) \(year)"
     }
 }
 
