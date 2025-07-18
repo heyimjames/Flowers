@@ -7,6 +7,22 @@ extension View {
             .presentationDragIndicator(.visible)
             .presentationBackground(Color.flowerSheetBackground)
     }
+    
+    /// Conditional view modifier
+    @ViewBuilder
+    func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content, else elseTransform: (Self) -> Content) -> some View {
+        if condition {
+            transform(self)
+        } else {
+            elseTransform(self)
+        }
+    }
+    
+    /// Apply a transformation that returns a View
+    @ViewBuilder
+    func apply<T: View>(@ViewBuilder _ transform: (Self) -> T) -> some View {
+        transform(self)
+    }
 }
 
 

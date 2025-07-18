@@ -1,5 +1,6 @@
 import Foundation
 import UIKit
+import CoreLocation
 
 class OnboardingAssetsService {
     static let shared = OnboardingAssetsService()
@@ -289,7 +290,8 @@ class OnboardingAssetsService {
                 imageData: imageData,
                 generatedDate: Date(),
                 meaning: "A warm welcome to your flower journey. This special flower represents the beginning of your daily discovery experience.",
-                origins: "Created especially for new users"
+                origins: "Created especially for new users",
+                originalOwner: createCurrentOwner()
             )
             
             storeOnboardingFlower(flower)
@@ -314,7 +316,8 @@ class OnboardingAssetsService {
             imageData: imageData,
             generatedDate: Date(),
             meaning: "A warm welcome to your flower journey. This special flower represents the beginning of your daily discovery experience.",
-            origins: "Created especially for new users"
+            origins: "Created especially for new users",
+            originalOwner: createCurrentOwner()
         )
         
         storeOnboardingFlower(flower)
@@ -335,5 +338,23 @@ class OnboardingAssetsService {
         clearStoredAssets()
         _ = await getOnboardingFlowerImages()
         _ = await getOnboardingFlowerForFirstPage()
+    }
+    
+    private func createCurrentOwner() -> FlowerOwner {
+        let userName = UserDefaults.standard.string(forKey: "userName") ?? "You"
+        let deviceID = UIDevice.current.identifierForVendor?.uuidString ?? "Unknown"
+        
+        // Try to get current location name for the owner
+        var locationName: String?
+        if let currentPlacemark = ContextualFlowerGenerator.shared.currentPlacemark {
+            locationName = currentPlacemark.locality ?? currentPlacemark.name
+        }
+        
+        return FlowerOwner(
+            name: userName,
+            deviceID: deviceID,
+            transferDate: Date(),
+            location: locationName
+        )
     }
 }

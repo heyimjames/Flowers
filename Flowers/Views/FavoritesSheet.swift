@@ -505,6 +505,16 @@ struct FlowerDetailSheet: View {
                                                 icon: "text.alignleft"
                                             )
                                         }
+                                        
+                                        // Weather card
+                                        if flowerItem.discoveryWeatherCondition != nil || flowerItem.discoveryTemperature != nil {
+                                            WeatherDetailCard(flower: flowerItem)
+                                        }
+                                        
+                                        // Ownership history
+                                        if flowerItem.originalOwner != nil || !flowerItem.ownershipHistory.isEmpty {
+                                            OwnershipHistoryCard(flower: flowerItem)
+                                        }
                                     }
                                     .padding(.top, 32)
                                     .padding(.horizontal, 24)
@@ -805,4 +815,172 @@ struct DetailSection: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
+}
+
+struct WeatherDetailCard: View {
+    let flower: AIFlower
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                Image(systemName: "cloud.sun")
+                    .font(.system(size: 16))
+                    .foregroundColor(.flowerPrimary)
+                
+                Text("Discovery Weather")
+                    .font(.system(size: 18, weight: .light, design: .serif))
+                    .foregroundColor(.flowerTextPrimary)
+            }
+            
+            VStack(alignment: .leading, spacing: 8) {
+                // Weather condition and temperature
+                HStack(spacing: 16) {
+                    if let condition = flower.discoveryWeatherCondition {
+                        HStack(spacing: 6) {
+                            Image(systemName: weatherIcon(for: condition))
+                                .font(.system(size: 14))
+                                .foregroundColor(.flowerSecondary)
+                            Text(condition)
+                                .font(.system(size: 14))
+                                .foregroundColor(.flowerTextSecondary)
+                        }
+                    }
+                    
+                    if let temperature = flower.discoveryTemperature {
+                        HStack(spacing: 4) {
+                            Image(systemName: "thermometer")
+                                .font(.system(size: 12))
+                                .foregroundColor(.flowerSecondary)
+                            Text("\(Int(temperature))\(flower.discoveryTemperatureUnit ?? "°C")")
+                                .font(.system(size: 14))
+                                .foregroundColor(.flowerTextSecondary)
+                        }
+                    }
+                }
+                
+                // Date information
+                if let dayOfWeek = flower.discoveryDayOfWeek,
+                   let formattedDate = flower.discoveryFormattedDate {
+                    HStack(spacing: 6) {
+                        Image(systemName: "calendar")
+                            .font(.system(size: 12))
+                            .foregroundColor(.flowerSecondary)
+                        Text("\(dayOfWeek), \(formattedDate)")
+                            .font(.system(size: 14))
+                            .foregroundColor(.flowerTextSecondary)
+                    }
+                }
+            }
+        }
+    }
+    
+    private func weatherIcon(for condition: String) -> String {
+        switch condition.lowercased() {
+        case "sunny", "clear":
+            return "sun.max"
+        case "cloudy", "mostly cloudy":
+            return "cloud"
+        case "partly cloudy":
+            return "cloud.sun"
+        case "rainy", "rain":
+            return "cloud.rain"
+        case "drizzle":
+            return "cloud.drizzle"
+        case "snowy", "snow":
+            return "cloud.snow"
+        case "thunderstorms":
+            return "cloud.bolt"
+        case "windy", "breezy":
+            return "wind"
+        case "hazy":
+            return "cloud.fog"
+        case "hot":
+            return "thermometer.sun"
+        case "frigid":
+            return "thermometer.snowflake"
+        default:
+            return "cloud"
+        }
+    }
+}
+
+struct OwnershipHistoryCard: View {
+    let flower: AIFlower
+    @AppStorage("userName") private var userName = ""
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                Image(systemName: "person.2")
+                    .font(.system(size: 16))
+                    .foregroundColor(.flowerPrimary)
+                
+                Text("Ownership History")
+                    .font(.system(size: 18, weight: .light, design: .serif))
+                    .foregroundColor(.flowerTextPrimary)
+            }
+            
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(Array(flower.ownershipHistory.enumerated()), id: \.element.id) { index, owner in
+                    HStack(spacing: 12) {
+                        // Timeline indicator
+                        VStack {
+                            Circle()
+                                .fill(index == 0 ? Color.flowerPrimary : Color.flowerSecondary)
+                                .frame(width: 8, height: 8)
+                            
+                            if index < flower.ownershipHistory.count - 1 {
+                                Rectangle()
+                                    .fill(Color.flowerTextTertiary.opacity(0.3))
+                                    .frame(width: 1, height: 20)
+                            }
+                        }
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            HStack {
+                                Text(owner.name)
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(.flowerTextPrimary)
+                                
+                                if index == 0 {
+                                    if !userName.isEmpty {
+                                        Text("(\(userName))")
+                                            .font(.system(size: 12))
+                                            .foregroundColor(.flowerTextSecondary)
+                                    } else {
+                                        Text("(You)")
+                                            .font(.system(size: 12))
+                                            .foregroundColor(.flowerTextSecondary)
+                                    }
+                                }
+                            }
+                            
+                            HStack(spacing: 8) {
+                                Text(DateFormatter.shortDate.string(from: owner.transferDate))
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.flowerTextSecondary)
+                                
+                                if let location = owner.location {
+                                    Text("• \(location)")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.flowerTextSecondary)
+                                }
+                            }
+                        }
+                        
+                        Spacer()
+                    }
+                }
+            }
+        }
+    }
+}
+
+extension DateFormatter {
+    static let shortDate: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        formatter.timeStyle = .none
+        return formatter
+    }()
 } 

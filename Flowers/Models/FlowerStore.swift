@@ -2,6 +2,7 @@ import Foundation
 import SwiftUI
 import UIKit
 import UserNotifications
+import WeatherKit
 
 @MainActor
 class FlowerStore: ObservableObject {
@@ -222,6 +223,7 @@ class FlowerStore: ObservableObject {
                     discoveryLatitude: 51.5054, // Canary Wharf coordinates
                     discoveryLongitude: -0.0235,
                     discoveryLocationName: "Canary Wharf, London",
+                    originalOwner: FlowerOwner(name: "James (App Creator)", deviceID: "Creator", transferDate: Date(timeIntervalSince1970: 1669334400), location: "Canary Wharf, London"),
                     isGiftable: false // Special flower cannot be gifted
                 )
                 
@@ -263,6 +265,7 @@ class FlowerStore: ObservableObject {
             discoveryLatitude: 51.5055, // London coordinates
             discoveryLongitude: -0.0196,
             discoveryLocationName: "Canary Wharf, London",
+            originalOwner: FlowerOwner(name: "James (App Creator)", deviceID: "Creator", transferDate: Date(timeIntervalSince1970: 1669334400), location: "Canary Wharf, London"),
             isGiftable: false // Special flower cannot be gifted
         )
         
@@ -308,7 +311,11 @@ class FlowerStore: ObservableObject {
                             holidayName: oldFlower.holidayName,
                             discoveryLatitude: oldFlower.discoveryLatitude,
                             discoveryLongitude: oldFlower.discoveryLongitude,
-                            discoveryLocationName: oldFlower.discoveryLocationName
+                            discoveryLocationName: oldFlower.discoveryLocationName,
+                            originalOwner: oldFlower.originalOwner,
+                            ownershipHistory: oldFlower.ownershipHistory,
+                            transferToken: oldFlower.transferToken,
+                            isGiftable: oldFlower.isGiftable
                         )
                         
                         self.discoveredFlowers[index] = updatedFlower
@@ -630,6 +637,17 @@ class FlowerStore: ObservableObject {
             flower.discoveryLocationName = currentPlacemark.locality ?? currentPlacemark.name
         }
         
+        // Capture current weather data
+        if let weather = ContextualFlowerGenerator.shared.currentWeather {
+            let weatherCondition = getWeatherConditionString(from: weather.currentWeather.condition)
+            let temperature = weather.currentWeather.temperature.value
+            flower.captureWeatherAndDate(
+                weatherCondition: weatherCondition,
+                temperature: temperature,
+                temperatureUnit: "°C"
+            )
+        }
+        
         currentFlower = flower
         hasUnrevealedFlower = false
         pendingFlower = nil
@@ -784,7 +802,8 @@ class FlowerStore: ObservableObject {
                 holidayName: holiday?.name,
                 discoveryLatitude: latitude,
                 discoveryLongitude: longitude,
-                discoveryLocationName: locationName
+                discoveryLocationName: locationName,
+                originalOwner: createCurrentOwner()
             )
             
             // Get a random continent for now (will be replaced by AI-generated continent)
@@ -992,7 +1011,8 @@ class FlowerStore: ObservableObject {
             descriptor: desc,
             imageData: imageData,
             continent: Continent.allCases.randomElement(),
-            discoveryDate: Date()
+            discoveryDate: Date(),
+            originalOwner: createCurrentOwner()
         )
     }
     
@@ -1163,14 +1183,15 @@ class FlowerStore: ObservableObject {
     }
     
     // MARK: - Discovered Flowers Management
-    func addToDiscoveredFlowers(_ flower: AIFlower) {
+    func addToDiscoveredFlowers(_ flower: AIFlower, autoSaveToPhotos: Bool? = nil) {
         // Check if flower already exists in discovered list
         if !discoveredFlowers.contains(where: { $0.id == flower.id }) {
             discoveredFlowers.insert(flower, at: 0)
             saveDiscoveredFlowers()
             
-            // Auto-save to photo library if enabled
-            if autoSaveToPhotos {
+            // Auto-save to photo library if enabled (use parameter or default setting)
+            let shouldAutoSave = autoSaveToPhotos ?? self.autoSaveToPhotos
+            if shouldAutoSave {
                 PhotoLibraryService.shared.saveFlowerToLibrary(flower) { success, error in
                     if success {
                         print("Successfully saved flower to photo library")
@@ -1238,7 +1259,8 @@ class FlowerStore: ObservableObject {
                 holidayName: "Achievement Milestone",
                 discoveryLatitude: ContextualFlowerGenerator.shared.currentLocation?.coordinate.latitude,
                 discoveryLongitude: ContextualFlowerGenerator.shared.currentLocation?.coordinate.longitude,
-                discoveryLocationName: ContextualFlowerGenerator.shared.currentPlacemark?.locality
+                discoveryLocationName: ContextualFlowerGenerator.shared.currentPlacemark?.locality,
+                originalOwner: createCurrentOwner()
             )
             
             // Set continent
@@ -1396,7 +1418,8 @@ class FlowerStore: ObservableObject {
                 holidayName: "Development Testing",
                 discoveryLatitude: 37.7749, // San Francisco coordinates (tech hub)
                 discoveryLongitude: -122.4194,
-                discoveryLocationName: "San Francisco, CA"
+                discoveryLocationName: "San Francisco, CA",
+                originalOwner: createCurrentOwner()
             )
             
             // Set as pending flower to trigger reveal view
@@ -1426,7 +1449,8 @@ class FlowerStore: ObservableObject {
                 holidayName: "Development Testing",
                 discoveryLatitude: 37.7749,
                 discoveryLongitude: -122.4194,
-                discoveryLocationName: "San Francisco, CA"
+                discoveryLocationName: "San Francisco, CA",
+                originalOwner: createCurrentOwner()
             )
             
             await MainActor.run {
@@ -1488,7 +1512,7 @@ class FlowerStore: ObservableObject {
         objectWillChange.send()
     }
     
-    func generateCustomFlower(prompt: String) async throws {
+    func generateCustomFlower(prompt: String, name: String? = nil) async throws {
         isGenerating = true
         errorMessage = nil
         
@@ -1498,12 +1522,15 @@ class FlowerStore: ObservableObject {
             let imageData = image.pngData()
             
             // Generate flower details using OpenAI
+            let flowerName = name?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false ? name! : "Custom Creation"
             var flower = AIFlower(
-                name: "Custom Creation",
+                name: flowerName,
                 descriptor: prompt,
                 imageData: imageData,
                 generatedDate: Date(),
-                isFavorite: false
+                isFavorite: false,
+                discoveryDate: Date(),
+                originalOwner: createCurrentOwner()
             )
             
             // Generate details if OpenAI is available
@@ -1554,5 +1581,75 @@ class FlowerStore: ObservableObject {
         }
         
         isGenerating = false
+    }
+    
+    // MARK: - Helper Methods
+    
+    /// Creates a FlowerOwner instance for the current user
+    private func createCurrentOwner() -> FlowerOwner {
+        let userName = UserDefaults.standard.string(forKey: "userName") ?? "You"
+        let deviceID = UIDevice.current.identifierForVendor?.uuidString ?? "Unknown"
+        
+        // Try to get current location name for the owner
+        var locationName: String?
+        if let currentPlacemark = ContextualFlowerGenerator.shared.currentPlacemark {
+            locationName = currentPlacemark.locality ?? currentPlacemark.name
+        }
+        
+        return FlowerOwner(
+            name: userName,
+            deviceID: deviceID,
+            transferDate: Date(),
+            location: locationName
+        )
+    }
+    
+    private func getWeatherConditionString(from condition: WeatherCondition) -> String {
+        switch condition {
+        case .clear, .mostlyClear:
+            return "Clear"
+        case .partlyCloudy:
+            return "Partly Cloudy"
+        case .cloudy, .mostlyCloudy:
+            return "Cloudy"
+        case .rain:
+            return "Rain"
+        case .drizzle:
+            return "Drizzle"
+        case .snow:
+            return "Snow"
+        case .sleet:
+            return "Sleet"
+        case .hail:
+            return "Hail"
+        case .thunderstorms:
+            return "Thunderstorms"
+        case .tropicalStorm:
+            return "Tropical Storm"
+        case .blizzard:
+            return "Blizzard"
+        case .freezingRain:
+            return "Freezing Rain"
+        case .freezingDrizzle:
+            return "Freezing Drizzle"
+        case .heavyRain:
+            return "Heavy Rain"
+        case .heavySnow:
+            return "Heavy Snow"
+        case .isolatedThunderstorms:
+            return "Isolated Thunderstorms"
+        case .scatteredThunderstorms:
+            return "Scattered Thunderstorms"
+        case .strongStorms:
+            return "Strong Storms"
+        case .sunFlurries:
+            return "Sun Flurries"
+        case .windy:
+            return "Windy"
+        case .wintryMix:
+            return "Wintry Mix"
+        default:
+            return "Clear"
+        }
     }
 } 

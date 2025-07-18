@@ -22,6 +22,7 @@ struct SettingsSheet: View {
     @State private var currentAppIcon: String = ""
     @State private var showingIconChangeAlert = false
     @State private var showingCustomFlowerSheet = false
+    @AppStorage("userName") private var userName = ""
     
     // Developer detection
     private var isDeveloper: Bool {
@@ -418,6 +419,43 @@ struct SettingsSheet: View {
                                 .font(.system(size: 18, weight: .semibold))
                                 .foregroundColor(.flowerTextPrimary)
                             
+                            // Username display
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Username")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(.flowerTextSecondary)
+                                
+                                if !userName.isEmpty {
+                                    HStack {
+                                        Text(userName)
+                                            .font(.system(size: 16))
+                                            .foregroundColor(.flowerTextPrimary)
+                                        
+                                        Spacer()
+                                        
+                                        Button("Edit") {
+                                            // Trigger onboarding to edit username
+                                            flowerStore.shouldShowOnboarding = true
+                                            dismiss()
+                                        }
+                                        .font(.system(size: 14))
+                                        .foregroundColor(.flowerPrimary)
+                                    }
+                                } else {
+                                    Button("Set Username") {
+                                        // Trigger onboarding to set username
+                                        flowerStore.shouldShowOnboarding = true
+                                        dismiss()
+                                    }
+                                    .font(.system(size: 16))
+                                    .foregroundColor(.flowerPrimary)
+                                }
+                            }
+                            .padding(.bottom, 8)
+                            
+                            Divider()
+                                .background(Color.flowerTextTertiary)
+                            
                             Button(action: {
                                 showingResetConfirmation = true
                             }) {
@@ -595,6 +633,7 @@ struct SettingsSheet: View {
         .sheet(isPresented: $showingCustomFlowerSheet) {
             CustomFlowerGenerationSheet()
                 .environmentObject(flowerStore)
+                .presentationCornerRadius(32)
         }
     }
     
@@ -892,11 +931,15 @@ struct SettingsSheet: View {
             return
         }
         
+        print("Attempting to change app icon to: \(iconName ?? "nil (default)")")
+        
         UIApplication.shared.setAlternateIconName(iconName) { error in
             DispatchQueue.main.async {
                 if let error = error {
-                    print("Failed to change app icon: \(error.localizedDescription)")
+                    print("Failed to change app icon to \(iconName ?? "default"): \(error.localizedDescription)")
+                    print("Error details: \(error)")
                 } else {
+                    print("Successfully changed app icon to: \(iconName ?? "default")")
                     self.currentAppIcon = iconName ?? ""
                     self.showingIconChangeAlert = true
                     
@@ -922,6 +965,7 @@ struct CustomFlowerGenerationSheet: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var flowerStore: FlowerStore
     @State private var customPrompt = "A beautiful ethereal flower with luminous petals that seem to glow from within, featuring delicate crystalline structures and soft pastel colors that shift between lavender and rose gold"
+    @State private var customName = ""
     @State private var isGenerating = false
     @State private var errorMessage: String?
     @State private var showingSuccess = false
@@ -949,6 +993,26 @@ struct CustomFlowerGenerationSheet: View {
                 
                 ScrollView {
                     VStack(spacing: 24) {
+                        // Flower Name Section
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Flower Name")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundColor(.flowerTextPrimary)
+                            
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Custom Name")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(.flowerTextSecondary)
+                                
+                                TextField("Enter flower name (optional)", text: $customName)
+                                    .textFieldStyle(FlowerTextFieldStyle())
+                                    .autocorrectionDisabled()
+                                    .textInputAutocapitalization(.words)
+                            }
+                        }
+                        .padding(.horizontal, 24)
+                        .padding(.bottom, 32)
+                        
                         // Prompt Section
                         VStack(alignment: .leading, spacing: 16) {
                             Text("Flower Description")
@@ -968,7 +1032,7 @@ struct CustomFlowerGenerationSheet: View {
                                 TextEditor(text: $customPrompt)
                                     .frame(minHeight: 120)
                                     .padding(12)
-                                    .background(Color.flowerInputBackground)
+                                    .background(Color.clear)
                                     .cornerRadius(8)
                                     .font(.system(size: 16))
                             }
@@ -1069,7 +1133,7 @@ struct CustomFlowerGenerationSheet: View {
         
         Task {
             do {
-                try await flowerStore.generateCustomFlower(prompt: customPrompt)
+                try await flowerStore.generateCustomFlower(prompt: customPrompt, name: customName)
                 await MainActor.run {
                     isGenerating = false
                     showingSuccess = true

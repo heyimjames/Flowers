@@ -4,6 +4,7 @@ import MapKit
 import UIKit
 import Photos
 import EventKit
+import WeatherKit
 
 struct OnboardingView: View {
     @ObservedObject var flowerStore: FlowerStore
@@ -13,6 +14,11 @@ struct OnboardingView: View {
     @State private var selectedStarterIndex: Int?
     @State private var isGeneratingFlowers = false
     @State private var locationManager = CLLocationManager()
+    
+    // Permission tracking states
+    @State private var locationPermissionGranted = false
+    @State private var cameraRollPermissionGranted = false
+    @State private var calendarPermissionGranted = false
     
     // UserDefaults keys for onboarding persistence
     private static let onboardingPageKey = "onboardingCurrentPage"
@@ -46,24 +52,28 @@ struct OnboardingView: View {
                 HowItWorksPageView()
                     .tag(1)
                 
-                // Page 3: Location permission
-                LocationPermissionPageView(locationManager: locationManager)
+                // Page 3: Username setup
+                UsernameSetupPageView()
                     .tag(2)
                 
-                // Page 4: Camera roll permission
-                CameraRollPermissionPageView()
+                // Page 4: Location permission
+                LocationPermissionPageView(locationManager: locationManager)
                     .tag(3)
                 
-                // Page 5: Calendar permission
-                CalendarPermissionPageView()
+                // Page 5: Camera roll permission
+                CameraRollPermissionPageView()
                     .tag(4)
                 
-                // Page 6: Weather permission
-                WeatherPermissionPageView()
+                // Page 6: Calendar permission
+                CalendarPermissionPageView()
                     .tag(5)
                 
-                // Page 7: Starter flower selection - only show when currentPage is 6
-                if currentPage == 6 {
+                // Page 7: Weather permission
+                WeatherPermissionPageView()
+                    .tag(6)
+                
+                // Page 8: Starter flower selection - only show when currentPage is 7
+                if currentPage == 7 {
                     StarterFlowerSelectionView(
                         flowers: starterFlowers,
                         selectedIndex: $selectedStarterIndex,
@@ -72,57 +82,89 @@ struct OnboardingView: View {
                             selectStarterFlower(at: index)
                         }
                     )
-                    .tag(6)
+                    .tag(7)
                     .gesture(DragGesture()) // Prevents swiping back
                 }
             }
             .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-            
-            // Custom page indicator
-            VStack {
-                Spacer()
-                
-                if currentPage < 6 {
-                    VStack(spacing: 24) {
-                        // Page dots - only show 6 dots since user can't manually navigate to page 7
-                        HStack(spacing: 8) {
-                            ForEach(0..<6) { index in
-                                Circle()
-                                    .fill(index == currentPage ? Color.flowerPrimary : Color.flowerPrimary.opacity(0.3))
-                                    .frame(width: 8, height: 8)
-                                    .animation(.easeInOut, value: currentPage)
+            .gesture(
+                // Custom gesture to control swiping behavior
+                DragGesture()
+                    .onEnded { value in
+                        let threshold: CGFloat = 50
+                        if value.translation.width > threshold && currentPage > 0 {
+                            // Allow swipe right (backward)
+                            withAnimation {
+                                currentPage -= 1
                             }
                         }
-                        
-                        // Continue button
-                        Button(action: {
-                            withAnimation {
-                                if currentPage == 2 {
-                                    // Request location permission and continue to next page
-                                    locationManager.requestWhenInUseAuthorization()
-                                    currentPage += 1
-                                } else if currentPage == 3 {
-                                    // Request camera roll permission and continue
-                                    requestCameraRollPermission()
-                                    currentPage += 1
-                                } else if currentPage == 4 {
-                                    // Request calendar permission and continue
-                                    requestCalendarPermission()
-                                    currentPage += 1
-                                } else if currentPage == 5 {
-                                    // Weather doesn't need explicit permission, jump to flower selection
-                                    currentPage = 6
+                        // Don't allow forward swiping - users must use the button
+                    }
+            )
+            
+            // Page dots - positioned with overlay to avoid keyboard interference
+            if currentPage < 7 {
+                VStack {
+                    Spacer()
+                    HStack(spacing: 8) {
+                        ForEach(0..<7) { index in
+                            Circle()
+                                .fill(index == currentPage ? Color.flowerPrimary : Color.flowerPrimary.opacity(0.3))
+                                .frame(width: 8, height: 8)
+                                .animation(.easeInOut, value: currentPage)
+                        }
+                    }
+                    .padding(.bottom, 140) // Fixed distance from bottom
+                }
+                .allowsHitTesting(false) // Don't interfere with touch events
+            }
+            
+            // Continue button - positioned with overlay to avoid keyboard interference
+            if currentPage < 7 {
+                VStack {
+                    Spacer()
+                    Button(action: {
+                        withAnimation {
+                            if currentPage == 3 {
+                                // Location permission page
+                                if !locationPermissionGranted {
+                                    requestLocationPermission()
                                 } else {
                                     currentPage += 1
                                 }
+                            } else if currentPage == 4 {
+                                // Camera roll permission page
+                                if !cameraRollPermissionGranted {
+                                    requestCameraRollPermission()
+                                } else {
+                                    currentPage += 1
+                                }
+                            } else if currentPage == 5 {
+                                // Calendar permission page
+                                if !calendarPermissionGranted {
+                                    requestCalendarPermission()
+                                } else {
+                                    currentPage += 1
+                                }
+                            } else if currentPage == 6 {
+                                // Weather doesn't need explicit permission, jump to flower selection
+                                currentPage = 7
+                            } else {
+                                currentPage += 1
                             }
-                        }) {
-                            Text(getButtonText(for: currentPage))
                         }
-                        .flowerOnboardingButtonStyle()
-                        .padding(.horizontal, 32)
+                    }) {
+                        Text(getButtonText(for: currentPage))
                     }
-                    .padding(.bottom, 50)
+                    .apply { view in
+                        if isCurrentPageGranted() {
+                            view.flowerSecondaryButtonStyle()
+                        } else {
+                            view.flowerOnboardingButtonStyle()
+                        }
+                    }
+                    .padding(.horizontal, 32)
+                    .padding(.bottom, 50) // Fixed distance from bottom
                 }
             }
         }
@@ -131,8 +173,13 @@ struct OnboardingView: View {
             // Start generating flowers immediately when onboarding appears
             generateStarterFlowers()
         }
-        .onChange(of: currentPage) { _, newPage in
+        .onChange(of: currentPage) { oldPage, newPage in
             saveOnboardingProgress()
+            
+            // Dismiss keyboard when navigating away from username page (page 2)
+            if oldPage == 2 && newPage != 2 {
+                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+            }
         }
         .onChange(of: selectedStarterIndex) { _, newIndex in
             saveOnboardingProgress()
@@ -203,7 +250,7 @@ struct OnboardingView: View {
             if !hasAPIKeys {
                 print("OnboardingView: ERROR - No valid API keys available!")
                 await MainActor.run {
-                    // Create fallback flowers without images
+                    // Create fallback flowers with complete metadata but no images
                     self.starterFlowers = starterThemes.map { theme in
                         var flower = AIFlower(
                             name: theme.name,
@@ -211,9 +258,29 @@ struct OnboardingView: View {
                             imageData: nil,
                             generatedDate: Date(),
                             isFavorite: false,
-                            discoveryDate: Date()
+                            discoveryDate: Date(),
+                            originalOwner: self.createCurrentOwner()
                         )
                         flower.meaning = theme.meaning
+                        
+                        // Add location data if available
+                        if let location = ContextualFlowerGenerator.shared.currentLocation {
+                            flower.discoveryLatitude = location.coordinate.latitude
+                            flower.discoveryLongitude = location.coordinate.longitude
+                            flower.discoveryLocationName = ContextualFlowerGenerator.shared.currentPlacemark?.locality
+                        }
+                        
+                        // Add weather and date information
+                        if let weather = ContextualFlowerGenerator.shared.currentWeather {
+                            let weatherCondition = getWeatherConditionString(from: weather.currentWeather.condition)
+                            let temperature = weather.currentWeather.temperature.value
+                            flower.captureWeatherAndDate(
+                                weatherCondition: weatherCondition,
+                                temperature: temperature,
+                                temperatureUnit: "°C"
+                            )
+                        }
+                        
                         return flower
                     }
                     self.isGeneratingFlowers = false
@@ -234,14 +301,15 @@ struct OnboardingView: View {
                     
                     print("OnboardingView: Successfully generated image for \(theme.name)")
                     
-                    // Create flower with special first flower tag
+                    // Create flower with complete metadata
                     var flower = AIFlower(
                         name: theme.name,
                         descriptor: theme.descriptor,
                         imageData: imageData,
                         generatedDate: Date(),
                         isFavorite: false,
-                        discoveryDate: Date()
+                        discoveryDate: Date(),
+                        originalOwner: createCurrentOwner()
                     )
                     
                     // Add the description as meaning
@@ -254,18 +322,30 @@ struct OnboardingView: View {
                         flower.discoveryLocationName = ContextualFlowerGenerator.shared.currentPlacemark?.locality
                     }
                     
+                    // Add weather and date information
+                    if let weather = ContextualFlowerGenerator.shared.currentWeather {
+                        let weatherCondition = getWeatherConditionString(from: weather.currentWeather.condition)
+                        let temperature = weather.currentWeather.temperature.value
+                        flower.captureWeatherAndDate(
+                            weatherCondition: weatherCondition,
+                            temperature: temperature,
+                            temperatureUnit: "°C"
+                        )
+                    }
+                    
                     flowers.append(flower)
                 } catch {
                     print("OnboardingView: Failed to generate starter flower \(index): \(error)")
                     
-                    // Create a fallback flower with placeholder data
+                    // Create a fallback flower with complete metadata
                     var flower = AIFlower(
                         name: theme.name,
                         descriptor: theme.descriptor,
                         imageData: nil, // No image data
                         generatedDate: Date(),
                         isFavorite: false,
-                        discoveryDate: Date()
+                        discoveryDate: Date(),
+                        originalOwner: createCurrentOwner()
                     )
                     
                     // Add the description as meaning
@@ -276,6 +356,17 @@ struct OnboardingView: View {
                         flower.discoveryLatitude = location.coordinate.latitude
                         flower.discoveryLongitude = location.coordinate.longitude
                         flower.discoveryLocationName = ContextualFlowerGenerator.shared.currentPlacemark?.locality
+                    }
+                    
+                    // Add weather and date information
+                    if let weather = ContextualFlowerGenerator.shared.currentWeather {
+                        let weatherCondition = getWeatherConditionString(from: weather.currentWeather.condition)
+                        let temperature = weather.currentWeather.temperature.value
+                        flower.captureWeatherAndDate(
+                            weatherCondition: weatherCondition,
+                            temperature: temperature,
+                            temperatureUnit: "°C"
+                        )
                     }
                     
                     flowers.append(flower)
@@ -302,8 +393,8 @@ struct OnboardingView: View {
         // Add special metadata for first flower
         selectedFlower.properties = "This was your very first flower, chosen at the beginning of your journey. 🌱"
         
-        // Save the selected flower
-        flowerStore.addToDiscoveredFlowers(selectedFlower)
+        // Save the selected flower (disable auto-save to prevent unwanted photo library saves)
+        flowerStore.addToDiscoveredFlowers(selectedFlower, autoSaveToPhotos: false)
         flowerStore.currentFlower = selectedFlower
         
         // Mark onboarding as complete
@@ -375,26 +466,154 @@ struct OnboardingView: View {
     
     // MARK: - Permission Methods
     
+    private func requestLocationPermission() {
+        locationManager.requestWhenInUseAuthorization()
+        // We'll check the permission status after the request
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            checkLocationPermission()
+            // Auto-advance if permission was granted
+            if self.locationPermissionGranted {
+                withAnimation {
+                    self.currentPage += 1
+                }
+            }
+        }
+    }
+    
     private func requestCameraRollPermission() {
         PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
-            print("Camera roll permission status: \(status)")
+            DispatchQueue.main.async {
+                self.cameraRollPermissionGranted = status == .authorized || status == .limited
+                print("Camera roll permission status: \(status), granted: \(self.cameraRollPermissionGranted)")
+                // Auto-advance if permission was granted
+                if self.cameraRollPermissionGranted {
+                    withAnimation {
+                        self.currentPage += 1
+                    }
+                }
+            }
         }
     }
     
     private func requestCalendarPermission() {
         let eventStore = EKEventStore()
         eventStore.requestAccess(to: .event) { granted, error in
-            print("Calendar permission granted: \(granted), error: \(String(describing: error))")
+            DispatchQueue.main.async {
+                self.calendarPermissionGranted = granted
+                print("Calendar permission granted: \(granted), error: \(String(describing: error))")
+                // Auto-advance if permission was granted
+                if self.calendarPermissionGranted {
+                    withAnimation {
+                        self.currentPage += 1
+                    }
+                }
+            }
         }
+    }
+    
+    // Helper functions to check current permission status
+    private func checkLocationPermission() {
+        let status = locationManager.authorizationStatus
+        locationPermissionGranted = status == .authorizedWhenInUse || status == .authorizedAlways
+    }
+    
+    private func checkCameraRollPermission() {
+        let status = PHPhotoLibrary.authorizationStatus(for: .addOnly)
+        cameraRollPermissionGranted = status == .authorized || status == .limited
+    }
+    
+    private func checkCalendarPermission() {
+        let eventStore = EKEventStore()
+        let status = EKEventStore.authorizationStatus(for: .event)
+        calendarPermissionGranted = status == .authorized || status == .fullAccess
     }
     
     private func getButtonText(for page: Int) -> String {
         switch page {
-        case 2: return "Grant Location & Continue"
-        case 3: return "Grant Camera Roll & Continue"
-        case 4: return "Grant Calendar & Continue"
-        case 5: return "Continue"
+        case 2: return "Continue"
+        case 3: return locationPermissionGranted ? "Granted" : "Grant Location & Continue"
+        case 4: return cameraRollPermissionGranted ? "Granted" : "Grant Camera Roll & Continue"
+        case 5: return calendarPermissionGranted ? "Granted" : "Grant Calendar & Continue"
+        case 6: return "Continue"
         default: return "Continue"
+        }
+    }
+    
+    /// Check if the current page's permission is granted
+    private func isCurrentPageGranted() -> Bool {
+        switch currentPage {
+        case 3: return locationPermissionGranted
+        case 4: return cameraRollPermissionGranted
+        case 5: return calendarPermissionGranted
+        default: return false
+        }
+    }
+    
+    /// Creates a FlowerOwner instance for the current user
+    private func createCurrentOwner() -> FlowerOwner {
+        let userName = UserDefaults.standard.string(forKey: "userName") ?? "You"
+        let deviceID = UIDevice.current.identifierForVendor?.uuidString ?? "Unknown"
+        
+        // Try to get current location name for the owner
+        var locationName: String?
+        if let currentPlacemark = ContextualFlowerGenerator.shared.currentPlacemark {
+            locationName = currentPlacemark.locality ?? currentPlacemark.name
+        }
+        
+        return FlowerOwner(
+            name: userName,
+            deviceID: deviceID,
+            transferDate: Date(),
+            location: locationName
+        )
+    }
+    
+    private func getWeatherConditionString(from condition: WeatherCondition) -> String {
+        switch condition {
+        case .clear, .mostlyClear:
+            return "Clear"
+        case .partlyCloudy:
+            return "Partly Cloudy"
+        case .cloudy, .mostlyCloudy:
+            return "Cloudy"
+        case .rain:
+            return "Rain"
+        case .drizzle:
+            return "Drizzle"
+        case .snow:
+            return "Snow"
+        case .sleet:
+            return "Sleet"
+        case .hail:
+            return "Hail"
+        case .thunderstorms:
+            return "Thunderstorms"
+        case .tropicalStorm:
+            return "Tropical Storm"
+        case .blizzard:
+            return "Blizzard"
+        case .freezingRain:
+            return "Freezing Rain"
+        case .freezingDrizzle:
+            return "Freezing Drizzle"
+        case .heavyRain:
+            return "Heavy Rain"
+        case .heavySnow:
+            return "Heavy Snow"
+        case .isolatedThunderstorms:
+            return "Isolated Thunderstorms"
+        case .scatteredThunderstorms:
+            return "Scattered Thunderstorms"
+        case .strongStorms:
+            return "Strong Storms"
+        case .sunFlurries:
+            return "Sun Flurries"
+        case .windy:
+            return "Windy"
+        case .wintryMix:
+            return "Wintry Mix"
+        default:
+            return "Clear"
         }
     }
 }
@@ -1037,9 +1256,6 @@ struct WeatherPermissionPageView: View {
                 .padding(.horizontal, 20)
                 .padding(.vertical, 16)
                 
-                Divider()
-                    .background(Color.white.opacity(0.3))
-                
                 HStack {
                     Image(systemName: "flower.fill")
                         .font(.system(size: 16))
@@ -1262,5 +1478,125 @@ struct OnboardingFlowerMapPin: View {
             .frame(width: 8, height: 6)
             .shadow(color: .black.opacity(0.15), radius: 1, y: 1)
         }
+    }
+}
+
+struct UsernameSetupPageView: View {
+    @AppStorage("userName") private var userName = ""
+    @State private var tempUserName = ""
+    @State private var showingUsernameAlert = false
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Top spacer to move content to middle
+            Spacer()
+            
+            // Main content centered
+            VStack(spacing: 32) {
+                // Icon
+                Image(systemName: "at.circle")
+                    .font(.system(size: 80))
+                    .foregroundColor(.flowerPrimary)
+                    .padding(.bottom, 16)
+                
+                // Title and description
+                VStack(spacing: 16) {
+                    Text("Choose your username")
+                        .font(.system(size: 32, weight: .light, design: .serif))
+                        .foregroundColor(.flowerTextPrimary)
+                        .multilineTextAlignment(.center)
+                    
+                    Text("Your username will be shown when you share flowers with friends. Use only letters and numbers.")
+                        .font(.system(size: 16))
+                        .foregroundColor(.flowerTextSecondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
+                }
+                
+                // Username input with @ prefix
+                VStack(spacing: 16) {
+                    HStack(spacing: 0) {
+                        // Fixed @ symbol
+                        Text("@")
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundColor(.flowerTextPrimary)
+                            .padding(.leading, 16)
+                        
+                        // Username input field
+                        TextField("username", text: $tempUserName)
+                            .font(.system(size: 18))
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.never)
+                            .keyboardType(.asciiCapable)
+                            .onSubmit {
+                                saveUsername()
+                            }
+                            .onChange(of: tempUserName) { _, newValue in
+                                // Filter input to only allow lowercase letters and numbers
+                                let filtered = newValue.lowercased().filter { char in
+                                    char.isLetter || char.isNumber
+                                }
+                                if filtered != newValue {
+                                    tempUserName = filtered
+                                }
+                            }
+                            .padding(.trailing, 16)
+                            .padding(.vertical, 16)
+                    }
+                    .background(Color.flowerInputBackground)
+                    .cornerRadius(12)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.flowerPrimary.opacity(0.3), lineWidth: 1)
+                    )
+                    
+                    Text("Only letters and numbers allowed")
+                        .font(.system(size: 12))
+                        .foregroundColor(.flowerTextTertiary)
+                }
+                .padding(.horizontal, 40)
+            }
+            
+            // Bottom spacer to keep content centered
+            Spacer()
+        }
+        .onAppear {
+            // Remove @ prefix if it exists for editing
+            if userName.hasPrefix("@") {
+                tempUserName = String(userName.dropFirst())
+            } else {
+                tempUserName = userName
+            }
+        }
+        .onChange(of: tempUserName) { _, newValue in
+            // Auto-save as user types
+            saveUsername()
+        }
+    }
+    
+    private func saveUsername() {
+        let filtered = tempUserName.lowercased().filter { char in
+            char.isLetter || char.isNumber
+        }
+        
+        if !filtered.isEmpty {
+            userName = "@" + filtered
+        } else {
+            userName = ""
+        }
+    }
+}
+
+struct UsernameTextFieldStyle: TextFieldStyle {
+    func _body(configuration: TextField<Self._Label>) -> some View {
+        configuration
+            .padding(16)
+            .background(Color.flowerInputBackground)
+            .cornerRadius(12)
+            .font(.system(size: 18))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.flowerPrimary.opacity(0.3), lineWidth: 1)
+            )
     }
 } 
