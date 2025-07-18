@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "newflowers.svg",
+      "filename" : "flowersblack.svg",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "newflowers 1.svg",
+      "filename" : "flowersblack 1.svg",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "newflowers 2.svg",
+      "filename" : "flowersblack 2.svg",
       "idiom" : "universal",
       "scale" : "3x"
     }
