@@ -332,7 +332,10 @@ struct FlowerGridItem: View {
                 Text(flower.name)
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.flowerTextPrimary)
-                    .lineLimit(1)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+                    .minimumScaleFactor(0.9)
+                    .frame(height: 35)
             }
         }
     }
@@ -431,6 +434,10 @@ struct FlowerDetailSheet: View {
                                         .font(.system(size: 32, weight: .regular, design: .serif))
                                         .foregroundColor(.flowerTextPrimary)
                                         .multilineTextAlignment(.center)
+                                        .lineLimit(2)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                        .minimumScaleFactor(0.75)
+                                        .padding(.horizontal, 8)
                                     
                                     if flowerItem.isBouquet, let holidayName = flowerItem.holidayName {
                                         HStack(spacing: 6) {
@@ -506,8 +513,11 @@ struct FlowerDetailSheet: View {
                                             )
                                         }
                                         
-                                        // Weather card
-                                        if flowerItem.discoveryWeatherCondition != nil || flowerItem.discoveryTemperature != nil {
+                                        // Weather card - show if we have weather data OR date information
+                                        if flowerItem.discoveryWeatherCondition != nil || 
+                                           flowerItem.discoveryTemperature != nil ||
+                                           flowerItem.discoveryDayOfWeek != nil ||
+                                           flowerItem.discoveryFormattedDate != nil {
                                             WeatherDetailCard(flower: flowerItem)
                                         }
                                         
@@ -811,7 +821,8 @@ struct DetailSection: View {
             Text(content)
                 .font(.system(size: 15))
                 .foregroundColor(.flowerTextSecondary)
-                .lineSpacing(4)
+                .lineSpacing(6)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -833,27 +844,29 @@ struct WeatherDetailCard: View {
             }
             
             VStack(alignment: .leading, spacing: 8) {
-                // Weather condition and temperature
-                HStack(spacing: 16) {
-                    if let condition = flower.discoveryWeatherCondition {
-                        HStack(spacing: 6) {
-                            Image(systemName: weatherIcon(for: condition))
-                                .font(.system(size: 14))
-                                .foregroundColor(.flowerSecondary)
-                            Text(condition)
-                                .font(.system(size: 14))
-                                .foregroundColor(.flowerTextSecondary)
+                // Weather condition and temperature (if available)
+                if flower.discoveryWeatherCondition != nil || flower.discoveryTemperature != nil {
+                    HStack(spacing: 16) {
+                        if let condition = flower.discoveryWeatherCondition {
+                            HStack(spacing: 6) {
+                                Image(systemName: weatherIcon(for: condition))
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.flowerSecondary)
+                                Text(condition)
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.flowerTextSecondary)
+                            }
                         }
-                    }
-                    
-                    if let temperature = flower.discoveryTemperature {
-                        HStack(spacing: 4) {
-                            Image(systemName: "thermometer")
-                                .font(.system(size: 12))
-                                .foregroundColor(.flowerSecondary)
-                            Text("\(Int(temperature))\(flower.discoveryTemperatureUnit ?? "°C")")
-                                .font(.system(size: 14))
-                                .foregroundColor(.flowerTextSecondary)
+                        
+                        if let temperature = flower.discoveryTemperature {
+                            HStack(spacing: 4) {
+                                Image(systemName: "thermometer")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.flowerSecondary)
+                                Text("\(Int(temperature))\(flower.discoveryTemperatureUnit ?? "°C")")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.flowerTextSecondary)
+                            }
                         }
                     }
                 }
@@ -866,6 +879,16 @@ struct WeatherDetailCard: View {
                             .font(.system(size: 12))
                             .foregroundColor(.flowerSecondary)
                         Text("\(dayOfWeek), \(formattedDate)")
+                            .font(.system(size: 14))
+                            .foregroundColor(.flowerTextSecondary)
+                    }
+                } else {
+                    // Fallback to generated date if discovery date info is not available
+                    HStack(spacing: 6) {
+                        Image(systemName: "calendar")
+                            .font(.system(size: 12))
+                            .foregroundColor(.flowerSecondary)
+                        Text(flower.generatedDate.formatted(date: .abbreviated, time: .omitted))
                             .font(.system(size: 14))
                             .foregroundColor(.flowerTextSecondary)
                     }
@@ -920,51 +943,60 @@ struct OwnershipHistoryCard: View {
                     .foregroundColor(.flowerTextPrimary)
             }
             
-            VStack(alignment: .leading, spacing: 8) {
-                ForEach(Array(flower.ownershipHistory.enumerated()), id: \.element.id) { index, owner in
-                    HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 12) {
+                // Create complete ownership timeline
+                let allOwners = createOwnershipTimeline()
+                
+                ForEach(Array(allOwners.enumerated()), id: \.element.owner.id) { index, entry in
+                    HStack(alignment: .top, spacing: 12) {
                         // Timeline indicator
                         VStack {
                             Circle()
-                                .fill(index == 0 ? Color.flowerPrimary : Color.flowerSecondary)
+                                .fill(entry.isOriginal ? Color.flowerPrimary : entry.isCurrent ? Color.flowerSuccess : Color.flowerSecondary)
                                 .frame(width: 8, height: 8)
                             
-                            if index < flower.ownershipHistory.count - 1 {
+                            if index < allOwners.count - 1 {
                                 Rectangle()
                                     .fill(Color.flowerTextTertiary.opacity(0.3))
-                                    .frame(width: 1, height: 20)
+                                    .frame(width: 1, height: 30)
                             }
                         }
                         
-                        VStack(alignment: .leading, spacing: 2) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            // Name and role
                             HStack {
-                                Text(owner.name)
+                                Text(entry.owner.name)
                                     .font(.system(size: 14, weight: .medium))
                                     .foregroundColor(.flowerTextPrimary)
                                 
-                                if index == 0 {
-                                    if !userName.isEmpty {
-                                        Text("(\(userName))")
-                                            .font(.system(size: 12))
-                                            .foregroundColor(.flowerTextSecondary)
-                                    } else {
-                                        Text("(You)")
-                                            .font(.system(size: 12))
-                                            .foregroundColor(.flowerTextSecondary)
-                                    }
+                                if entry.isOriginal {
+                                    Text("🌱")
+                                        .font(.system(size: 12))
+                                } else if entry.isCurrent {
+                                    Text("(You)")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.flowerTextSecondary)
                                 }
                             }
                             
+                            // Date and location
                             HStack(spacing: 8) {
-                                Text(DateFormatter.shortDate.string(from: owner.transferDate))
+                                Text(DateFormatter.shortDate.string(from: entry.owner.transferDate))
                                     .font(.system(size: 12))
                                     .foregroundColor(.flowerTextSecondary)
                                 
-                                if let location = owner.location {
+                                if let location = entry.owner.location {
                                     Text("• \(location)")
                                         .font(.system(size: 12))
                                         .foregroundColor(.flowerTextSecondary)
                                 }
+                            }
+                            
+                            // Time held
+                            if let timeHeld = entry.timeHeld {
+                                Text(timeHeld)
+                                    .font(.system(size: 11, weight: .light))
+                                    .foregroundColor(.flowerTextTertiary)
                             }
                         }
                         
@@ -973,6 +1005,63 @@ struct OwnershipHistoryCard: View {
                 }
             }
         }
+    }
+    
+    // Create a complete ownership timeline including original owner and current owner
+    private func createOwnershipTimeline() -> [(owner: FlowerOwner, isOriginal: Bool, isCurrent: Bool, timeHeld: String?)] {
+        var timeline: [(owner: FlowerOwner, isOriginal: Bool, isCurrent: Bool, timeHeld: String?)] = []
+        
+        // Add original owner if exists
+        if let original = flower.originalOwner {
+            let timeHeld = calculateTimeHeld(from: original.transferDate, to: flower.ownershipHistory.first?.transferDate)
+            timeline.append((owner: original, isOriginal: true, isCurrent: false, timeHeld: timeHeld))
+        }
+        
+        // Add all previous owners
+        for (index, owner) in flower.ownershipHistory.enumerated() {
+            let nextDate = index < flower.ownershipHistory.count - 1 ? flower.ownershipHistory[index + 1].transferDate : Date()
+            let timeHeld = calculateTimeHeld(from: owner.transferDate, to: nextDate)
+            timeline.append((owner: owner, isOriginal: false, isCurrent: false, timeHeld: timeHeld))
+        }
+        
+        // Add current owner if not already in the list
+        if !flower.ownershipHistory.isEmpty || flower.originalOwner != nil {
+            let currentOwner = FlowerOwner(
+                name: userName.isEmpty ? "You" : userName,
+                transferDate: flower.ownershipHistory.last?.transferDate ?? flower.originalOwner?.transferDate ?? flower.generatedDate,
+                location: nil
+            )
+            let timeHeld = calculateTimeHeld(from: currentOwner.transferDate, to: Date())
+            timeline.append((owner: currentOwner, isOriginal: false, isCurrent: true, timeHeld: timeHeld))
+        }
+        
+        return timeline
+    }
+    
+    // Calculate time held in a human-readable format
+    private func calculateTimeHeld(from startDate: Date, to endDate: Date?) -> String {
+        guard let endDate = endDate else { return "Currently owned" }
+        
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.year, .month, .day], from: startDate, to: endDate)
+        
+        var parts: [String] = []
+        
+        if let years = components.year, years > 0 {
+            parts.append("\(years) year\(years == 1 ? "" : "s")")
+        }
+        if let months = components.month, months > 0 {
+            parts.append("\(months) month\(months == 1 ? "" : "s")")
+        }
+        if let days = components.day, days > 0 {
+            parts.append("\(days) day\(days == 1 ? "" : "s")")
+        }
+        
+        if parts.isEmpty {
+            return "Less than a day"
+        }
+        
+        return "Held for " + parts.prefix(2).joined(separator: ", ")
     }
 }
 

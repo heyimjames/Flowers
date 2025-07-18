@@ -39,6 +39,9 @@ struct GiftFlowerSheet: View {
                                 .font(.system(size: 28, weight: .light, design: .serif))
                                 .foregroundColor(.flowerTextPrimary)
                                 .multilineTextAlignment(.center)
+                                .lineLimit(2)
+                                .minimumScaleFactor(0.8)
+                                .fixedSize(horizontal: false, vertical: true)
                                 .padding(.horizontal, 24)
                         }
                         
@@ -61,7 +64,8 @@ struct GiftFlowerSheet: View {
                                 .font(.system(size: 15))
                                 .foregroundColor(.flowerTextSecondary)
                                 .multilineTextAlignment(.center)
-                                .lineSpacing(4)
+                                .lineSpacing(6)
+                                .fixedSize(horizontal: false, vertical: true)
                                 .padding(.horizontal, 24)
                             
                             if flower.hasOwnershipHistory {

@@ -63,13 +63,18 @@ struct ReceivedFlowerSheet: View {
                             Text(flower.name)
                                 .font(.system(size: 22, weight: .semibold))
                                 .foregroundColor(.flowerTextPrimary)
+                                .multilineTextAlignment(.center)
+                                .lineLimit(2)
+                                .minimumScaleFactor(0.8)
+                                .padding(.horizontal, 16)
                             
                             if let meaning = flower.meaning {
                                 Text(meaning)
                                     .font(.system(size: 14))
                                     .foregroundColor(.flowerTextSecondary)
                                     .multilineTextAlignment(.center)
-                                    .lineLimit(3)
+                                    .lineSpacing(5)
+                                    .lineLimit(4)
                                     .padding(.horizontal, 32)
                             }
                         }

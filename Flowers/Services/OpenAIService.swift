@@ -719,4 +719,104 @@ class OpenAIService {
         
         return shortDescription.trimmingCharacters(in: .whitespacesAndNewlines)
     }
+    
+    func generateFlowerPrompt() async throws -> String {
+        let apiKey = APIConfiguration.shared.effectiveOpenAIKey
+        guard !apiKey.isEmpty else {
+            throw OpenAIError.invalidAPIKey
+        }
+        
+        let systemPrompt = """
+        You are an expert botanical artist who creates beautiful, ethereal flower descriptions for AI image generation.
+        Your descriptions should be vivid, poetic, and focus on visual characteristics.
+        
+        Style guidelines:
+        - Use dreamy, ethereal language
+        - Focus on colors, textures, and visual details
+        - Include artistic elements like "soft watercolor texture", "delicate petals", "luminous"
+        - Mention specific color combinations and gradients
+        - Add atmospheric qualities like "glowing from within", "crystalline structures"
+        - Keep descriptions between 30-60 words
+        - Be specific about petal shapes, arrangements, and unique features
+        
+        Examples of good style:
+        "A beautiful ethereal flower with luminous petals that seem to glow from within, featuring delicate crystalline structures and soft pastel colors that shift between lavender and rose gold"
+        "Mystical bloom with translucent petals arranged in spiral patterns, featuring iridescent blue-green hues that shimmer like northern lights, with silver-edged leaves and dewdrops that catch the light"
+        
+        Respond with just the flower description, nothing else.
+        """
+        
+        // Get contextual information for variety
+        let season = getCurrentSeason()
+        let timeOfDay = getTimeOfDay()
+        
+        let userPrompt = """
+        Create a unique, beautiful flower description for AI image generation.
+        
+        Context for inspiration:
+        - Current season: \(season)
+        - Time of day: \(timeOfDay)
+        
+        Make it ethereal, dreamy, and visually stunning. Focus on unique color combinations and textures.
+        The description should inspire a one-of-a-kind botanical artwork.
+        """
+        
+        let request = ChatCompletionRequest(
+            model: "gpt-4o-mini",
+            messages: [
+                ChatCompletionRequest.Message(role: "system", content: systemPrompt),
+                ChatCompletionRequest.Message(role: "user", content: userPrompt)
+            ],
+            temperature: 0.9,
+            response_format: nil
+        )
+        
+        guard let url = URL(string: chatCompletionURL) else {
+            throw OpenAIError.invalidURL
+        }
+        
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+        urlRequest.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let encoder = JSONEncoder()
+        urlRequest.httpBody = try encoder.encode(request)
+        
+        let (data, response) = try await URLSession.shared.data(for: urlRequest)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw OpenAIError.networkError("Invalid response")
+        }
+        
+        if httpResponse.statusCode != 200 {
+            if let errorData = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let error = errorData["error"] as? [String: Any],
+               let message = error["message"] as? String {
+                throw OpenAIError.networkError(message)
+            }
+            throw OpenAIError.networkError("Status code: \(httpResponse.statusCode)")
+        }
+        
+        let decoder = JSONDecoder()
+        let completionResponse = try decoder.decode(ChatCompletionResponse.self, from: data)
+        
+        guard let prompt = completionResponse.choices.first?.message.content else {
+            throw OpenAIError.invalidResponse
+        }
+        
+        return prompt.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    
+    private func getTimeOfDay() -> String {
+        let hour = Calendar.current.component(.hour, from: Date())
+        switch hour {
+        case 5..<9: return "Dawn"
+        case 9..<12: return "Morning"
+        case 12..<17: return "Afternoon"
+        case 17..<20: return "Evening"
+        case 20..<23: return "Twilight"
+        default: return "Night"
+        }
+    }
 } 

@@ -92,6 +92,9 @@ struct SmallWidgetView: View {
                 Text(flower.name)
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.white)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+                    .minimumScaleFactor(0.8)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 6)
                     .background(
@@ -145,6 +148,9 @@ struct MediumWidgetView: View {
                 Text(flower.name)
                     .font(.system(size: 18, weight: .medium))
                     .foregroundColor(.primary)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.85)
+                    .fixedSize(horizontal: false, vertical: true)
                 
                 Text(flower.generatedDate, style: .date)
                     .font(.system(size: 12))

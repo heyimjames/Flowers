@@ -104,8 +104,7 @@ struct OnboardingView: View {
             
             // Page dots - positioned with overlay to avoid keyboard interference
             if currentPage < 7 {
-                VStack {
-                    Spacer()
+                GeometryReader { geometry in
                     HStack(spacing: 8) {
                         ForEach(0..<7) { index in
                             Circle()
@@ -114,9 +113,13 @@ struct OnboardingView: View {
                                 .animation(.easeInOut, value: currentPage)
                         }
                     }
-                    .padding(.bottom, 140) // Fixed distance from bottom
+                    .position(
+                        x: geometry.size.width / 2,
+                        y: geometry.size.height - 140 // Fixed distance from bottom
+                    )
                 }
                 .allowsHitTesting(false) // Don't interfere with touch events
+                .ignoresSafeArea(.keyboard, edges: .bottom) // Ignore keyboard safe area
             }
             
             // Continue button - positioned with overlay to avoid keyboard interference
@@ -279,6 +282,13 @@ struct OnboardingView: View {
                                 temperature: temperature,
                                 temperatureUnit: "°C"
                             )
+                        } else {
+                            // Always capture date even without weather
+                            flower.captureWeatherAndDate(
+                                weatherCondition: nil,
+                                temperature: nil,
+                                temperatureUnit: nil
+                            )
                         }
                         
                         return flower
@@ -331,6 +341,13 @@ struct OnboardingView: View {
                             temperature: temperature,
                             temperatureUnit: "°C"
                         )
+                    } else {
+                        // Always capture date even without weather
+                        flower.captureWeatherAndDate(
+                            weatherCondition: nil,
+                            temperature: nil,
+                            temperatureUnit: nil
+                        )
                     }
                     
                     flowers.append(flower)
@@ -366,6 +383,13 @@ struct OnboardingView: View {
                             weatherCondition: weatherCondition,
                             temperature: temperature,
                             temperatureUnit: "°C"
+                        )
+                    } else {
+                        // Always capture date even without weather
+                        flower.captureWeatherAndDate(
+                            weatherCondition: nil,
+                            temperature: nil,
+                            temperatureUnit: nil
                         )
                     }
                     
@@ -1265,6 +1289,7 @@ struct WeatherPermissionPageView: View {
                         .font(.system(size: 14))
                         .foregroundColor(.white.opacity(0.9))
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 20)
                 .padding(.bottom, 16)
             }
@@ -1483,6 +1508,7 @@ struct UsernameSetupPageView: View {
     @AppStorage("userName") private var userName = ""
     @State private var tempUserName = ""
     @State private var showingUsernameAlert = false
+    @FocusState private var isInputFocused: Bool
     
     var body: some View {
         VStack(spacing: 0) {
@@ -1526,6 +1552,7 @@ struct UsernameSetupPageView: View {
                             .autocorrectionDisabled()
                             .textInputAutocapitalization(.never)
                             .keyboardType(.asciiCapable)
+                            .focused($isInputFocused)
                             .onSubmit {
                                 saveUsername()
                             }
@@ -1564,6 +1591,10 @@ struct UsernameSetupPageView: View {
                 tempUserName = String(userName.dropFirst())
             } else {
                 tempUserName = userName
+            }
+            // Auto-focus the input field
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                isInputFocused = true
             }
         }
         .onChange(of: tempUserName) { _, newValue in

@@ -245,7 +245,7 @@ class FlowerStore: ObservableObject {
     
     private func createJennyFlowerSynchronously() {
         // Use a placeholder image for Jenny flower to ensure it's available immediately
-        let jennyFlower = AIFlower(
+        var jennyFlower = AIFlower(
             name: "Jennifer's Blessing",
             descriptor: "elegant pink and white rose with delicate petals, soft romantic colors, graceful and beautiful",
             imageData: UIImage(systemName: "flower.fill")?.pngData(), // Placeholder initially
@@ -267,6 +267,13 @@ class FlowerStore: ObservableObject {
             discoveryLocationName: "Canary Wharf, London",
             originalOwner: FlowerOwner(name: "James (App Creator)", deviceID: "Creator", transferDate: Date(timeIntervalSince1970: 1669334400), location: "Canary Wharf, London"),
             isGiftable: false // Special flower cannot be gifted
+        )
+        
+        // Set weather data for Jennifer's Blessing (a beautiful autumn day in London)
+        jennyFlower.captureWeatherAndDate(
+            weatherCondition: "Partly Cloudy",
+            temperature: 15.0,
+            temperatureUnit: "°C"
         )
         
         // Add to discovered flowers immediately
@@ -291,7 +298,7 @@ class FlowerStore: ObservableObject {
                         let oldFlower = self.discoveredFlowers[index]
                         
                         // Create a new flower with updated imageData
-                        let updatedFlower = AIFlower(
+                        var updatedFlower = AIFlower(
                             id: oldFlower.id,
                             name: oldFlower.name,
                             descriptor: oldFlower.descriptor,
@@ -317,6 +324,13 @@ class FlowerStore: ObservableObject {
                             transferToken: oldFlower.transferToken,
                             isGiftable: oldFlower.isGiftable
                         )
+                        
+                        // Preserve weather data
+                        updatedFlower.discoveryWeatherCondition = oldFlower.discoveryWeatherCondition
+                        updatedFlower.discoveryTemperature = oldFlower.discoveryTemperature
+                        updatedFlower.discoveryTemperatureUnit = oldFlower.discoveryTemperatureUnit
+                        updatedFlower.discoveryDayOfWeek = oldFlower.discoveryDayOfWeek
+                        updatedFlower.discoveryFormattedDate = oldFlower.discoveryFormattedDate
                         
                         self.discoveredFlowers[index] = updatedFlower
                         

@@ -283,6 +283,9 @@ struct ContentView: View {
                         .font(.system(size: 28, weight: .regular, design: .serif))
                         .foregroundColor(.flowerTextPrimary)
                         .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .minimumScaleFactor(0.8)
                     
                     if flower.isBouquet, let holidayName = flower.holidayName {
                         HStack(spacing: 6) {
@@ -314,7 +317,7 @@ struct ContentView: View {
                                 Text(meaning)
                                     .font(.system(size: 13))
                                     .foregroundColor(.flowerTextSecondary)
-                                    .lineSpacing(3)
+                                    .lineSpacing(5)
                                     .lineLimit(3)
                             }
                         }
@@ -333,7 +336,7 @@ struct ContentView: View {
                                 Text(properties)
                                     .font(.system(size: 13))
                                     .foregroundColor(.flowerTextSecondary)
-                                    .lineSpacing(3)
+                                    .lineSpacing(5)
                                     .lineLimit(3)
                             }
                         }
@@ -352,7 +355,7 @@ struct ContentView: View {
                                 Text(bouquetFlowers.joined(separator: " • "))
                                     .font(.system(size: 13))
                                     .foregroundColor(.flowerTextSecondary)
-                                    .lineSpacing(3)
+                                    .lineSpacing(5)
                                     .fixedSize(horizontal: false, vertical: true)
                             }
                         }

@@ -20,7 +20,6 @@ struct SettingsSheet: View {
     @State private var importedSenderInfo: FlowerOwner?
     @State private var showingImportConfirmation = false
     @State private var currentAppIcon: String = ""
-    @State private var showingIconChangeAlert = false
     @State private var showingCustomFlowerSheet = false
     @AppStorage("userName") private var userName = ""
     
@@ -577,11 +576,6 @@ struct SettingsSheet: View {
                 )
             }
         }
-        .alert("App Icon Changed", isPresented: $showingIconChangeAlert) {
-            Button("OK") { }
-        } message: {
-            Text("Your app icon has been updated successfully!")
-        }
         .onAppear {
             checkNotificationPermissionStatus()
             updateCurrentAppIcon()
@@ -941,7 +935,6 @@ struct SettingsSheet: View {
                 } else {
                     print("Successfully changed app icon to: \(iconName ?? "default")")
                     self.currentAppIcon = iconName ?? ""
-                    self.showingIconChangeAlert = true
                     
                     // Haptic feedback for successful icon change
                     UINotificationFeedbackGenerator().notificationOccurred(.success)
@@ -967,6 +960,7 @@ struct CustomFlowerGenerationSheet: View {
     @State private var customPrompt = "A beautiful ethereal flower with luminous petals that seem to glow from within, featuring delicate crystalline structures and soft pastel colors that shift between lavender and rose gold"
     @State private var customName = ""
     @State private var isGenerating = false
+    @State private var isGeneratingPrompt = false
     @State private var errorMessage: String?
     @State private var showingSuccess = false
     
@@ -993,48 +987,87 @@ struct CustomFlowerGenerationSheet: View {
                 
                 ScrollView {
                     VStack(spacing: 24) {
-                        // Flower Name Section
-                        VStack(alignment: .leading, spacing: 16) {
-                            Text("Flower Name")
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundColor(.flowerTextPrimary)
-                            
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Custom Name")
-                                    .font(.system(size: 14, weight: .medium))
+                        // Main Flower Generation Container
+                        VStack(alignment: .leading, spacing: 24) {
+                            // Flower Description Section
+                            VStack(alignment: .leading, spacing: 16) {
+                                Text("Flower Description")
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .foregroundColor(.flowerTextPrimary)
+                                
+                                Text("Describe the flower you'd like to generate. Be as detailed as possible - include colors, textures, style, and any special characteristics.")
+                                    .font(.system(size: 14))
                                     .foregroundColor(.flowerTextSecondary)
                                 
-                                TextField("Enter flower name (optional)", text: $customName)
-                                    .textFieldStyle(FlowerTextFieldStyle())
-                                    .autocorrectionDisabled()
-                                    .textInputAutocapitalization(.words)
-                            }
-                        }
-                        .padding(.horizontal, 24)
-                        .padding(.bottom, 32)
-                        
-                        // Prompt Section
-                        VStack(alignment: .leading, spacing: 16) {
-                            Text("Flower Description")
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundColor(.flowerTextPrimary)
-                            
-                            Text("Describe the flower you'd like to generate. Be as detailed as possible - include colors, textures, style, and any special characteristics.")
-                                .font(.system(size: 14))
-                                .foregroundColor(.flowerTextSecondary)
-                            
-                            // Text Editor
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Prompt")
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundColor(.flowerTextSecondary)
-                                
-                                TextEditor(text: $customPrompt)
+                                // Text Editor
+                                VStack(alignment: .leading, spacing: 8) {
+                                    HStack {
+                                        Text("Prompt")
+                                            .font(.system(size: 14, weight: .medium))
+                                            .foregroundColor(.flowerTextSecondary)
+                                        
+                                        Spacer()
+                                        
+                                        Button(action: generatePrompt) {
+                                            HStack(spacing: 4) {
+                                                if isGeneratingPrompt {
+                                                    ProgressView()
+                                                        .scaleEffect(0.6)
+                                                        .progressViewStyle(CircularProgressViewStyle(tint: Color.flowerPrimary))
+                                                } else {
+                                                    Image(systemName: "sparkles")
+                                                        .font(.system(size: 12))
+                                                }
+                                                Text("Generate")
+                                                    .font(.system(size: 12, weight: .medium))
+                                            }
+                                            .padding(.horizontal, 12)
+                                            .padding(.vertical, 6)
+                                            .background(Color.flowerPrimary.opacity(0.1))
+                                            .foregroundColor(.flowerPrimary)
+                                            .cornerRadius(12)
+                                        }
+                                        .disabled(isGeneratingPrompt)
+                                    }
+                                    
+                                    ZStack(alignment: .topLeading) {
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(Color.flowerInputBackground)
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 12)
+                                                    .stroke(Color.flowerTextTertiary.opacity(0.2), lineWidth: 1)
+                                            )
+                                        
+                                        TextEditor(text: $customPrompt)
+                                            .padding(12)
+                                            .scrollContentBackground(.hidden)
+                                            .background(Color.clear)
+                                            .font(.system(size: 16))
+                                            .foregroundColor(.flowerTextPrimary)
+                                    }
                                     .frame(minHeight: 120)
-                                    .padding(12)
-                                    .background(Color.clear)
-                                    .cornerRadius(8)
-                                    .font(.system(size: 16))
+                                }
+                            }
+                            
+                            Divider()
+                                .background(Color.flowerTextTertiary.opacity(0.3))
+                            
+                            // Flower Name Section
+                            VStack(alignment: .leading, spacing: 16) {
+                                Text("Custom Name (Optional)")
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .foregroundColor(.flowerTextPrimary)
+                                
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Give your flower a unique name")
+                                        .font(.system(size: 14))
+                                        .foregroundColor(.flowerTextSecondary)
+                                    
+                                    TextField("Enter flower name", text: $customName)
+                                        .textFieldStyle(FlowerTextFieldStyle())
+                                        .autocorrectionDisabled()
+                                        .textInputAutocapitalization(.words)
+                                }
                             }
                             
                             // Generate Button
@@ -1067,9 +1100,10 @@ struct CustomFlowerGenerationSheet: View {
                                     .padding(.top, 8)
                             }
                         }
-                        .padding(20)
-                        .background(Color.black.opacity(0.05))
-                        .cornerRadius(25)
+                        .padding(24)
+                        .background(Color.flowerCardBackground)
+                        .cornerRadius(16)
+                        .padding(.horizontal, 24)
                         
                         // Tips Section
                         VStack(alignment: .leading, spacing: 16) {
@@ -1103,11 +1137,11 @@ struct CustomFlowerGenerationSheet: View {
                                 )
                             }
                         }
-                        .padding(20)
-                        .background(Color.black.opacity(0.05))
-                        .cornerRadius(25)
+                        .padding(24)
+                        .background(Color.flowerCardBackground)
+                        .cornerRadius(16)
+                        .padding(.horizontal, 24)
                     }
-                    .padding(.horizontal, 24)
                     .padding(.bottom, 40)
                 }
             }
@@ -1142,6 +1176,26 @@ struct CustomFlowerGenerationSheet: View {
                 await MainActor.run {
                     isGenerating = false
                     errorMessage = "Failed to generate flower: \(error.localizedDescription)"
+                }
+            }
+        }
+    }
+    
+    private func generatePrompt() {
+        isGeneratingPrompt = true
+        errorMessage = nil
+        
+        Task {
+            do {
+                let generatedPrompt = try await OpenAIService.shared.generateFlowerPrompt()
+                await MainActor.run {
+                    customPrompt = generatedPrompt
+                    isGeneratingPrompt = false
+                }
+            } catch {
+                await MainActor.run {
+                    isGeneratingPrompt = false
+                    errorMessage = "Failed to generate prompt: \(error.localizedDescription)"
                 }
             }
         }
