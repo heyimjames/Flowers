@@ -1264,8 +1264,6 @@ struct WeatherPermissionPageView: View {
                     Text("Perfect weather for picking flowers")
                         .font(.system(size: 14))
                         .foregroundColor(.white.opacity(0.9))
-                    
-                    Spacer()
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 16)
