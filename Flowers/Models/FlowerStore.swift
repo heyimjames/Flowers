@@ -9,6 +9,7 @@ class FlowerStore: ObservableObject {
     @Published var currentFlower: AIFlower?
     @Published var favorites: [AIFlower] = []
     @Published var discoveredFlowers: [AIFlower] = []
+    @Published var herbariumSpecies: Set<String> = [] // Scientific names of collected species
     @Published var isGenerating = false
     @Published var errorMessage: String?
     @Published var hasUnrevealedFlower = false
@@ -24,6 +25,7 @@ class FlowerStore: ObservableObject {
     private let dailyFlowerKey = "dailyFlower"
     private let dailyFlowerDateKey = "dailyFlowerDate"
     private let discoveredFlowersKey = "discoveredFlowers"
+    private let herbariumSpeciesKey = "herbariumSpecies"
     private let pendingFlowerKey = "pendingFlower"
     private let lastScheduledDateKey = "lastScheduledFlowerDate"
     private let nextFlowerTimeKey = "nextFlowerTime"
@@ -46,6 +48,21 @@ class FlowerStore: ObservableObject {
     // Computed properties for stats
     var totalDiscoveredCount: Int {
         discoveredFlowers.count
+    }
+    
+    var herbariumSpeciesCount: Int {
+        herbariumSpecies.count
+    }
+    
+    var uniqueSpeciesDiscovered: Int {
+        Set(discoveredFlowers.compactMap { $0.scientificName }).count
+    }
+    
+    var herbariumCompletionPercentage: Double {
+        // Estimate based on roughly 400,000 known flowering plant species
+        // For UI purposes, we'll use a more achievable number like 10,000
+        let totalEstimatedSpecies = 10000.0
+        return Double(herbariumSpeciesCount) / totalEstimatedSpecies * 100.0
     }
     
     var allUsedFlowerNames: Set<String> {
@@ -156,6 +173,7 @@ class FlowerStore: ObservableObject {
         
         loadFavorites()
         loadDiscoveredFlowers()
+        loadHerbariumSpecies()
         
         // Add Jenny flower for first-time users IMMEDIATELY
         if isFirstTimeUser &&
@@ -1174,6 +1192,7 @@ class FlowerStore: ObservableObject {
     func refreshCollection() {
         loadFavorites()
         loadDiscoveredFlowers()
+        loadHerbariumSpecies()
     }
     
     private func loadFavorites() {
@@ -1200,7 +1219,19 @@ class FlowerStore: ObservableObject {
     func addToDiscoveredFlowers(_ flower: AIFlower, autoSaveToPhotos: Bool? = nil) {
         // Check if flower already exists in discovered list
         if !discoveredFlowers.contains(where: { $0.id == flower.id }) {
-            discoveredFlowers.insert(flower, at: 0)
+            var updatedFlower = flower
+            
+            // Auto-add to herbarium if this is a new species with scientific name
+            if let scientificName = flower.scientificName, 
+               !scientificName.isEmpty,
+               !isSpeciesInHerbarium(scientificName) {
+                herbariumSpecies.insert(scientificName)
+                updatedFlower.isInHerbarium = true
+                saveHerbariumSpecies()
+                print("🌿 New species added to Herbarium: \(scientificName)")
+            }
+            
+            discoveredFlowers.insert(updatedFlower, at: 0)
             saveDiscoveredFlowers()
             
             // Auto-save to photo library if enabled (use parameter or default setting)
@@ -1324,6 +1355,22 @@ class FlowerStore: ObservableObject {
                     ($0.discoveryDate ?? $0.generatedDate) > ($1.discoveryDate ?? $1.generatedDate) 
                 }
             }
+        }
+    }
+    
+    private func loadHerbariumSpecies() {
+        if let data = userDefaults.data(forKey: herbariumSpeciesKey) {
+            let decoder = JSONDecoder()
+            if let decoded = try? decoder.decode(Set<String>.self, from: data) {
+                herbariumSpecies = decoded
+            }
+        }
+    }
+    
+    private func saveHerbariumSpecies() {
+        let encoder = JSONEncoder()
+        if let encoded = try? encoder.encode(herbariumSpecies) {
+            userDefaults.set(encoded, forKey: herbariumSpeciesKey)
         }
     }
     
@@ -1665,5 +1712,59 @@ class FlowerStore: ObservableObject {
         default:
             return "Clear"
         }
+    }
+    
+    // MARK: - Herbarium Management
+    
+    func addToHerbarium(_ flower: AIFlower) {
+        guard let scientificName = flower.scientificName, !scientificName.isEmpty else { 
+            print("Cannot add flower to herbarium: missing scientific name")
+            return 
+        }
+        
+        // Add to herbarium species set
+        herbariumSpecies.insert(scientificName)
+        
+        // Update the flower's herbarium status
+        if let index = discoveredFlowers.firstIndex(where: { $0.id == flower.id }) {
+            discoveredFlowers[index].isInHerbarium = true
+        }
+        
+        // Save changes
+        saveHerbariumSpecies()
+        saveDiscoveredFlowers()
+        
+        print("Added \(scientificName) to herbarium. Total species: \(herbariumSpeciesCount)")
+    }
+    
+    func removeFromHerbarium(_ flower: AIFlower) {
+        guard let scientificName = flower.scientificName else { return }
+        
+        herbariumSpecies.remove(scientificName)
+        
+        // Update all flowers with this scientific name
+        for index in discoveredFlowers.indices {
+            if discoveredFlowers[index].scientificName == scientificName {
+                discoveredFlowers[index].isInHerbarium = false
+            }
+        }
+        
+        saveHerbariumSpecies()
+        saveDiscoveredFlowers()
+    }
+    
+    func isSpeciesInHerbarium(_ scientificName: String) -> Bool {
+        return herbariumSpecies.contains(scientificName)
+    }
+    
+    func hasDiscoveredSpecies(_ scientificName: String) -> Bool {
+        return discoveredFlowers.contains { $0.scientificName == scientificName }
+    }
+    
+    // Get a random species that hasn't been discovered yet
+    func getRandomUndiscoveredSpecies() -> String? {
+        // This would ideally come from a comprehensive botanical database
+        // For now, return nil to indicate we should generate any real species
+        return nil
     }
 } 

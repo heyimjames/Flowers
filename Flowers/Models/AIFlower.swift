@@ -47,6 +47,18 @@ struct AIFlower: Identifiable, Codable, Equatable {
     let generatedDate: Date
     var isFavorite: Bool
     
+    // Botanical information
+    var scientificName: String? // e.g., "Rosa damascena"
+    var commonNames: [String]? // e.g., ["Damask Rose", "Bulgarian Rose"]
+    var family: String? // e.g., "Rosaceae"
+    var nativeRegions: [String]? // e.g., ["Middle East", "Central Asia"]
+    var bloomingSeason: String? // e.g., "Late spring to early summer"
+    var conservationStatus: String? // e.g., "Least Concern", "Endangered"
+    var uses: [String]? // e.g., ["Essential oil production", "Culinary", "Medicinal"]
+    var interestingFacts: [String]? // Array of fascinating facts about the species
+    var careInstructions: String? // Basic growing requirements
+    var rarityLevel: RarityLevel? // How rare/common this species is
+    
     // Detailed information about the flower
     var meaning: String?
     var properties: String?
@@ -63,6 +75,9 @@ struct AIFlower: Identifiable, Codable, Equatable {
     var discoveryLatitude: Double? // Latitude where flower was discovered
     var discoveryLongitude: Double? // Longitude where flower was discovered
     var discoveryLocationName: String? // Human-readable location name
+    
+    // Herbarium tracking
+    var isInHerbarium: Bool = false // Whether user has collected this species in their herbarium
     
     // Weather and date information
     var discoveryWeatherCondition: String? // Weather condition (e.g., "Sunny", "Cloudy", "Rainy")
@@ -83,6 +98,16 @@ struct AIFlower: Identifiable, Codable, Equatable {
          imageData: Data? = nil, 
          generatedDate: Date = Date(), 
          isFavorite: Bool = false,
+         scientificName: String? = nil,
+         commonNames: [String]? = nil,
+         family: String? = nil,
+         nativeRegions: [String]? = nil,
+         bloomingSeason: String? = nil,
+         conservationStatus: String? = nil,
+         uses: [String]? = nil,
+         interestingFacts: [String]? = nil,
+         careInstructions: String? = nil,
+         rarityLevel: RarityLevel? = nil,
          meaning: String? = nil,
          properties: String? = nil,
          origins: String? = nil,
@@ -98,6 +123,7 @@ struct AIFlower: Identifiable, Codable, Equatable {
          discoveryLatitude: Double? = nil,
          discoveryLongitude: Double? = nil,
          discoveryLocationName: String? = nil,
+         isInHerbarium: Bool = false,
          discoveryWeatherCondition: String? = nil,
          discoveryTemperature: Double? = nil,
          discoveryTemperatureUnit: String? = nil,
@@ -113,6 +139,16 @@ struct AIFlower: Identifiable, Codable, Equatable {
         self.imageData = imageData
         self.generatedDate = generatedDate
         self.isFavorite = isFavorite
+        self.scientificName = scientificName
+        self.commonNames = commonNames
+        self.family = family
+        self.nativeRegions = nativeRegions
+        self.bloomingSeason = bloomingSeason
+        self.conservationStatus = conservationStatus
+        self.uses = uses
+        self.interestingFacts = interestingFacts
+        self.careInstructions = careInstructions
+        self.rarityLevel = rarityLevel
         self.meaning = meaning
         self.properties = properties
         self.origins = origins
@@ -128,6 +164,7 @@ struct AIFlower: Identifiable, Codable, Equatable {
         self.discoveryLatitude = discoveryLatitude
         self.discoveryLongitude = discoveryLongitude
         self.discoveryLocationName = discoveryLocationName
+        self.isInHerbarium = isInHerbarium
         self.discoveryWeatherCondition = discoveryWeatherCondition
         self.discoveryTemperature = discoveryTemperature
         self.discoveryTemperatureUnit = discoveryTemperatureUnit
@@ -236,6 +273,38 @@ extension AIFlower {
         }
         
         self.discoveryFormattedDate = "\(day)\(ordinalSuffix) \(month) \(year)"
+    }
+}
+
+// Rarity levels for species
+enum RarityLevel: String, Codable, CaseIterable {
+    case common = "Common"
+    case uncommon = "Uncommon" 
+    case rare = "Rare"
+    case veryRare = "Very Rare"
+    case endangered = "Endangered"
+    case extinct = "Extinct in Wild"
+    
+    var emoji: String {
+        switch self {
+        case .common: return "🌱"
+        case .uncommon: return "🌿"
+        case .rare: return "🌺"
+        case .veryRare: return "💎"
+        case .endangered: return "⚠️"
+        case .extinct: return "🚨"
+        }
+    }
+    
+    var sortOrder: Int {
+        switch self {
+        case .common: return 0
+        case .uncommon: return 1
+        case .rare: return 2
+        case .veryRare: return 3
+        case .endangered: return 4
+        case .extinct: return 5
+        }
     }
 }
 

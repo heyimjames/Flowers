@@ -6,6 +6,45 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		57D784112E2AFC0900419E0B /* SecureConfig.swift.template in Resources */ = {isa = PBXBuildFile; fileRef = 57D783E72E2AFC0900419E0B /* SecureConfig.swift.template */; };
+		57D784122E2AFC0900419E0B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 57D7840B2E2AFC0900419E0B /* Assets.xcassets */; };
+		57D784132E2AFC0900419E0B /* AppIcon2@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 57D7840A2E2AFC0900419E0B /* AppIcon2@3x.png */; };
+		57D784142E2AFC0900419E0B /* AppIcon2-83.5@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 57D784082E2AFC0900419E0B /* AppIcon2-83.5@2x.png */; };
+		57D784152E2AFC0900419E0B /* AppIcon2@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 57D784092E2AFC0900419E0B /* AppIcon2@2x.png */; };
+		57D784172E2AFC0900419E0B /* AppIcon2-76@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 57D784072E2AFC0900419E0B /* AppIcon2-76@2x.png */; };
+		57D784182E2AFC0900419E0B /* FlowerStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D783EA2E2AFC0900419E0B /* FlowerStore.swift */; };
+		57D784192E2AFC0900419E0B /* FlowersApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D7840E2E2AFC0900419E0B /* FlowersApp.swift */; };
+		57D7841A2E2AFC0900419E0B /* ViewExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D784052E2AFC0900419E0B /* ViewExtensions.swift */; };
+		57D7841B2E2AFC0900419E0B /* APIConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D783EC2E2AFC0900419E0B /* APIConfiguration.swift */; };
+		57D7841C2E2AFC0900419E0B /* FlowerButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D783F92E2AFC0900419E0B /* FlowerButtonStyle.swift */; };
+		57D7841D2E2AFC0900419E0B /* RevealFlowerButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D784012E2AFC0900419E0B /* RevealFlowerButton.swift */; };
+		57D7841E2E2AFC0900419E0B /* GeneratorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D783FD2E2AFC0900419E0B /* GeneratorSheet.swift */; };
+		57D7841F2E2AFC0900419E0B /* SettingsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D784032E2AFC0900419E0B /* SettingsSheet.swift */; };
+		57D784202E2AFC0900419E0B /* FALService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D783EE2E2AFC0900419E0B /* FALService.swift */; };
+		57D784212E2AFC0900419E0B /* iCloudSyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D783F12E2AFC0900419E0B /* iCloudSyncManager.swift */; };
+		57D784222E2AFC0900419E0B /* OnboardingAssetsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D783F32E2AFC0900419E0B /* OnboardingAssetsService.swift */; };
+		57D784232E2AFC0900419E0B /* FavoritesSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D783F82E2AFC0900419E0B /* FavoritesSheet.swift */; };
+		57D784242E2AFC0900419E0B /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D783F22E2AFC0900419E0B /* LocationManager.swift */; };
+		57D784252E2AFC0900419E0B /* AIFlower.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D783E92E2AFC0900419E0B /* AIFlower.swift */; };
+		57D784262E2AFC0900419E0B /* ContextualFlowerGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D783ED2E2AFC0900419E0B /* ContextualFlowerGenerator.swift */; };
+		57D784272E2AFC0900419E0B /* SettingsIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D784022E2AFC0900419E0B /* SettingsIcon.swift */; };
+		57D784282E2AFC0900419E0B /* PhotoLibraryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D783F52E2AFC0900419E0B /* PhotoLibraryService.swift */; };
+		57D784292E2AFC0900419E0B /* FlowerMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D783FB2E2AFC0900419E0B /* FlowerMapView.swift */; };
+		57D7842A2E2AFC0900419E0B /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D7840C2E2AFC0900419E0B /* ContentView.swift */; };
+		57D7842B2E2AFC0900419E0B /* OpenAIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D783F42E2AFC0900419E0B /* OpenAIService.swift */; };
+		57D7842C2E2AFC0900419E0B /* ReceivedFlowerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D784002E2AFC0900419E0B /* ReceivedFlowerSheet.swift */; };
+		57D7842D2E2AFC0900419E0B /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D783E52E2AFC0900419E0B /* AppConfig.swift */; };
+		57D7842E2E2AFC0900419E0B /* FlowerRevealView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D783FC2E2AFC0900419E0B /* FlowerRevealView.swift */; };
+		57D7842F2E2AFC0900419E0B /* FlowerConfettiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D783FA2E2AFC0900419E0B /* FlowerConfettiView.swift */; };
+		57D784302E2AFC0900419E0B /* ShareSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D784042E2AFC0900419E0B /* ShareSheet.swift */; };
+		57D784312E2AFC0900419E0B /* SecureConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D783E62E2AFC0900419E0B /* SecureConfig.swift */; };
+		57D784322E2AFC0900419E0B /* FlowerTransferService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D783F02E2AFC0900419E0B /* FlowerTransferService.swift */; };
+		57D784332E2AFC0900419E0B /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D783FF2E2AFC0900419E0B /* OnboardingView.swift */; };
+		57D784342E2AFC0900419E0B /* GiftFlowerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D783FE2E2AFC0900419E0B /* GiftFlowerSheet.swift */; };
+		57D784352E2AFC0900419E0B /* FlowerNotificationSchedule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D783EF2E2AFC0900419E0B /* FlowerNotificationSchedule.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		570A02992E25859800C149C7 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,6 +66,44 @@
 		570A02872E25859600C149C7 /* Flowers.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flowers.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		570A02982E25859800C149C7 /* FlowersTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlowersTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		570A02A22E25859800C149C7 /* FlowersUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlowersUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		57D783E52E2AFC0900419E0B /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
+		57D783E62E2AFC0900419E0B /* SecureConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecureConfig.swift; sourceTree = "<group>"; };
+		57D783E72E2AFC0900419E0B /* SecureConfig.swift.template */ = {isa = PBXFileReference; lastKnownFileType = text; path = SecureConfig.swift.template; sourceTree = "<group>"; };
+		57D783E92E2AFC0900419E0B /* AIFlower.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIFlower.swift; sourceTree = "<group>"; };
+		57D783EA2E2AFC0900419E0B /* FlowerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowerStore.swift; sourceTree = "<group>"; };
+		57D783EC2E2AFC0900419E0B /* APIConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIConfiguration.swift; sourceTree = "<group>"; };
+		57D783ED2E2AFC0900419E0B /* ContextualFlowerGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextualFlowerGenerator.swift; sourceTree = "<group>"; };
+		57D783EE2E2AFC0900419E0B /* FALService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FALService.swift; sourceTree = "<group>"; };
+		57D783EF2E2AFC0900419E0B /* FlowerNotificationSchedule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowerNotificationSchedule.swift; sourceTree = "<group>"; };
+		57D783F02E2AFC0900419E0B /* FlowerTransferService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowerTransferService.swift; sourceTree = "<group>"; };
+		57D783F12E2AFC0900419E0B /* iCloudSyncManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iCloudSyncManager.swift; sourceTree = "<group>"; };
+		57D783F22E2AFC0900419E0B /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
+		57D783F32E2AFC0900419E0B /* OnboardingAssetsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingAssetsService.swift; sourceTree = "<group>"; };
+		57D783F42E2AFC0900419E0B /* OpenAIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIService.swift; sourceTree = "<group>"; };
+		57D783F52E2AFC0900419E0B /* PhotoLibraryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoLibraryService.swift; sourceTree = "<group>"; };
+		57D783F82E2AFC0900419E0B /* FavoritesSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesSheet.swift; sourceTree = "<group>"; };
+		57D783F92E2AFC0900419E0B /* FlowerButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowerButtonStyle.swift; sourceTree = "<group>"; };
+		57D783FA2E2AFC0900419E0B /* FlowerConfettiView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowerConfettiView.swift; sourceTree = "<group>"; };
+		57D783FB2E2AFC0900419E0B /* FlowerMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowerMapView.swift; sourceTree = "<group>"; };
+		57D783FC2E2AFC0900419E0B /* FlowerRevealView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowerRevealView.swift; sourceTree = "<group>"; };
+		57D783FD2E2AFC0900419E0B /* GeneratorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneratorSheet.swift; sourceTree = "<group>"; };
+		57D783FE2E2AFC0900419E0B /* GiftFlowerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GiftFlowerSheet.swift; sourceTree = "<group>"; };
+		57D783FF2E2AFC0900419E0B /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		57D784002E2AFC0900419E0B /* ReceivedFlowerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceivedFlowerSheet.swift; sourceTree = "<group>"; };
+		57D784012E2AFC0900419E0B /* RevealFlowerButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RevealFlowerButton.swift; sourceTree = "<group>"; };
+		57D784022E2AFC0900419E0B /* SettingsIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsIcon.swift; sourceTree = "<group>"; };
+		57D784032E2AFC0900419E0B /* SettingsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSheet.swift; sourceTree = "<group>"; };
+		57D784042E2AFC0900419E0B /* ShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheet.swift; sourceTree = "<group>"; };
+		57D784052E2AFC0900419E0B /* ViewExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewExtensions.swift; sourceTree = "<group>"; };
+		57D784072E2AFC0900419E0B /* AppIcon2-76@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon2-76@2x.png"; sourceTree = "<group>"; };
+		57D784082E2AFC0900419E0B /* AppIcon2-83.5@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon2-83.5@2x.png"; sourceTree = "<group>"; };
+		57D784092E2AFC0900419E0B /* AppIcon2@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon2@2x.png"; sourceTree = "<group>"; };
+		57D7840A2E2AFC0900419E0B /* AppIcon2@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon2@3x.png"; sourceTree = "<group>"; };
+		57D7840B2E2AFC0900419E0B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		57D7840C2E2AFC0900419E0B /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		57D7840D2E2AFC0900419E0B /* Flowers.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Flowers.entitlements; sourceTree = "<group>"; };
+		57D7840E2E2AFC0900419E0B /* FlowersApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowersApp.swift; sourceTree = "<group>"; };
+		57D7840F2E2AFC0900419E0B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -88,6 +165,7 @@
 		570A027E2E25859600C149C7 = {
 			isa = PBXGroup;
 			children = (
+				57D784102E2AFC0900419E0B /* Flowers */,
 				570A02892E25859600C149C7 /* Flowers */,
 				570A029B2E25859800C149C7 /* FlowersTests */,
 				570A02A52E25859800C149C7 /* FlowersUITests */,
@@ -103,6 +181,91 @@
 				570A02A22E25859800C149C7 /* FlowersUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		57D783E82E2AFC0900419E0B /* Configuration */ = {
+			isa = PBXGroup;
+			children = (
+				57D783E52E2AFC0900419E0B /* AppConfig.swift */,
+				57D783E62E2AFC0900419E0B /* SecureConfig.swift */,
+				57D783E72E2AFC0900419E0B /* SecureConfig.swift.template */,
+			);
+			path = Configuration;
+			sourceTree = "<group>";
+		};
+		57D783EB2E2AFC0900419E0B /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				57D783E92E2AFC0900419E0B /* AIFlower.swift */,
+				57D783EA2E2AFC0900419E0B /* FlowerStore.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		57D783F62E2AFC0900419E0B /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				57D783EC2E2AFC0900419E0B /* APIConfiguration.swift */,
+				57D783ED2E2AFC0900419E0B /* ContextualFlowerGenerator.swift */,
+				57D783EE2E2AFC0900419E0B /* FALService.swift */,
+				57D783EF2E2AFC0900419E0B /* FlowerNotificationSchedule.swift */,
+				57D783F02E2AFC0900419E0B /* FlowerTransferService.swift */,
+				57D783F12E2AFC0900419E0B /* iCloudSyncManager.swift */,
+				57D783F22E2AFC0900419E0B /* LocationManager.swift */,
+				57D783F32E2AFC0900419E0B /* OnboardingAssetsService.swift */,
+				57D783F42E2AFC0900419E0B /* OpenAIService.swift */,
+				57D783F52E2AFC0900419E0B /* PhotoLibraryService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		57D783F72E2AFC0900419E0B /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Theme;
+			sourceTree = "<group>";
+		};
+		57D784062E2AFC0900419E0B /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				57D783F82E2AFC0900419E0B /* FavoritesSheet.swift */,
+				57D783F92E2AFC0900419E0B /* FlowerButtonStyle.swift */,
+				57D783FA2E2AFC0900419E0B /* FlowerConfettiView.swift */,
+				57D783FB2E2AFC0900419E0B /* FlowerMapView.swift */,
+				57D783FC2E2AFC0900419E0B /* FlowerRevealView.swift */,
+				57D783FD2E2AFC0900419E0B /* GeneratorSheet.swift */,
+				57D783FE2E2AFC0900419E0B /* GiftFlowerSheet.swift */,
+				57D783FF2E2AFC0900419E0B /* OnboardingView.swift */,
+				57D784002E2AFC0900419E0B /* ReceivedFlowerSheet.swift */,
+				57D784012E2AFC0900419E0B /* RevealFlowerButton.swift */,
+				57D784022E2AFC0900419E0B /* SettingsIcon.swift */,
+				57D784032E2AFC0900419E0B /* SettingsSheet.swift */,
+				57D784042E2AFC0900419E0B /* ShareSheet.swift */,
+				57D784052E2AFC0900419E0B /* ViewExtensions.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		57D784102E2AFC0900419E0B /* Flowers */ = {
+			isa = PBXGroup;
+			children = (
+				57D783E82E2AFC0900419E0B /* Configuration */,
+				57D783EB2E2AFC0900419E0B /* Models */,
+				57D783F62E2AFC0900419E0B /* Services */,
+				57D783F72E2AFC0900419E0B /* Theme */,
+				57D784062E2AFC0900419E0B /* Views */,
+				57D784072E2AFC0900419E0B /* AppIcon2-76@2x.png */,
+				57D784082E2AFC0900419E0B /* AppIcon2-83.5@2x.png */,
+				57D784092E2AFC0900419E0B /* AppIcon2@2x.png */,
+				57D7840A2E2AFC0900419E0B /* AppIcon2@3x.png */,
+				57D7840B2E2AFC0900419E0B /* Assets.xcassets */,
+				57D7840C2E2AFC0900419E0B /* ContentView.swift */,
+				57D7840D2E2AFC0900419E0B /* Flowers.entitlements */,
+				57D7840E2E2AFC0900419E0B /* FlowersApp.swift */,
+				57D7840F2E2AFC0900419E0B /* Info.plist */,
+			);
+			path = Flowers;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -225,6 +388,12 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				57D784112E2AFC0900419E0B /* SecureConfig.swift.template in Resources */,
+				57D784122E2AFC0900419E0B /* Assets.xcassets in Resources */,
+				57D784132E2AFC0900419E0B /* AppIcon2@3x.png in Resources */,
+				57D784142E2AFC0900419E0B /* AppIcon2-83.5@2x.png in Resources */,
+				57D784152E2AFC0900419E0B /* AppIcon2@2x.png in Resources */,
+				57D784172E2AFC0900419E0B /* AppIcon2-76@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -249,6 +418,36 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				57D784182E2AFC0900419E0B /* FlowerStore.swift in Sources */,
+				57D784192E2AFC0900419E0B /* FlowersApp.swift in Sources */,
+				57D7841A2E2AFC0900419E0B /* ViewExtensions.swift in Sources */,
+				57D7841B2E2AFC0900419E0B /* APIConfiguration.swift in Sources */,
+				57D7841C2E2AFC0900419E0B /* FlowerButtonStyle.swift in Sources */,
+				57D7841D2E2AFC0900419E0B /* RevealFlowerButton.swift in Sources */,
+				57D7841E2E2AFC0900419E0B /* GeneratorSheet.swift in Sources */,
+				57D7841F2E2AFC0900419E0B /* SettingsSheet.swift in Sources */,
+				57D784202E2AFC0900419E0B /* FALService.swift in Sources */,
+				57D784212E2AFC0900419E0B /* iCloudSyncManager.swift in Sources */,
+				57D784222E2AFC0900419E0B /* OnboardingAssetsService.swift in Sources */,
+				57D784232E2AFC0900419E0B /* FavoritesSheet.swift in Sources */,
+				57D784242E2AFC0900419E0B /* LocationManager.swift in Sources */,
+				57D784252E2AFC0900419E0B /* AIFlower.swift in Sources */,
+				57D784262E2AFC0900419E0B /* ContextualFlowerGenerator.swift in Sources */,
+				57D784272E2AFC0900419E0B /* SettingsIcon.swift in Sources */,
+				57D784282E2AFC0900419E0B /* PhotoLibraryService.swift in Sources */,
+				57D784292E2AFC0900419E0B /* FlowerMapView.swift in Sources */,
+				57D7842A2E2AFC0900419E0B /* ContentView.swift in Sources */,
+				57D7842B2E2AFC0900419E0B /* OpenAIService.swift in Sources */,
+				57D7842C2E2AFC0900419E0B /* ReceivedFlowerSheet.swift in Sources */,
+				57D7842D2E2AFC0900419E0B /* AppConfig.swift in Sources */,
+				57D7842E2E2AFC0900419E0B /* FlowerRevealView.swift in Sources */,
+				57D7842F2E2AFC0900419E0B /* FlowerConfettiView.swift in Sources */,
+				57D784302E2AFC0900419E0B /* ShareSheet.swift in Sources */,
+				57D784312E2AFC0900419E0B /* SecureConfig.swift in Sources */,
+				57D784322E2AFC0900419E0B /* FlowerTransferService.swift in Sources */,
+				57D784332E2AFC0900419E0B /* OnboardingView.swift in Sources */,
+				57D784342E2AFC0900419E0B /* GiftFlowerSheet.swift in Sources */,
+				57D784352E2AFC0900419E0B /* FlowerNotificationSchedule.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

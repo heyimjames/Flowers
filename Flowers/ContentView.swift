@@ -12,6 +12,7 @@ import UserNotifications
 struct ContentView: View {
     @EnvironmentObject var flowerStore: FlowerStore
     @State private var showingFavorites = false
+    @State private var showingHerbarium = false
     @State private var showingSettings = false
     @State private var showDiscoveryCount = true
     @State private var showingFlowerDetail = false
@@ -163,6 +164,13 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showingFavorites) {
             FavoritesSheet(flowerStore: flowerStore)
+                .presentationDetents([.large])
+                .presentationCornerRadius(32)
+                .presentationDragIndicator(.hidden)
+                .interactiveDismissDisabled()
+        }
+        .sheet(isPresented: $showingHerbarium) {
+            HerbariumSheet(flowerStore: flowerStore)
                 .presentationDetents([.large])
                 .presentationCornerRadius(32)
                 .presentationDragIndicator(.hidden)
@@ -575,6 +583,14 @@ struct ContentView: View {
             // Collection button - always active
             Button(action: { showingFavorites = true }) {
                 Image(systemName: "rectangle.grid.2x2.fill")
+                    .font(.system(size: 22))
+                    .foregroundColor(.flowerPrimary)
+            }
+            .flowerIconButtonStyle(backgroundColor: Color.flowerPrimary.opacity(0.1), isActive: true)
+            
+            // Herbarium button - always active
+            Button(action: { showingHerbarium = true }) {
+                Image(systemName: "book.closed")
                     .font(.system(size: 22))
                     .foregroundColor(.flowerPrimary)
             }

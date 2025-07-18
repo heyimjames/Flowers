@@ -513,12 +513,12 @@ struct FlowerDetailSheet: View {
                                             )
                                         }
                                         
-                                        // Weather card - show if we have weather data OR date information
-                                        if flowerItem.discoveryWeatherCondition != nil || 
-                                           flowerItem.discoveryTemperature != nil ||
-                                           flowerItem.discoveryDayOfWeek != nil ||
-                                           flowerItem.discoveryFormattedDate != nil {
-                                            WeatherDetailCard(flower: flowerItem)
+                                        // Weather card - always show (will show date at minimum)
+                                        WeatherDetailCard(flower: flowerItem)
+                                        
+                                        // Discovery location map - always show
+                                        if flowerItem.discoveryLatitude != nil && flowerItem.discoveryLongitude != nil {
+                                            FlowerMapView(flower: flowerItem, showCoordinates: false)
                                         }
                                         
                                         // Ownership history
@@ -581,13 +581,6 @@ struct FlowerDetailSheet: View {
                                     }
                                     .padding(.vertical, 40)
                                     .padding(.horizontal, 24)
-                                }
-                                
-                                // Discovery location map (shown independently of other details)
-                                if flowerItem.discoveryLatitude != nil && flowerItem.discoveryLongitude != nil {
-                                    FlowerMapView(flower: flowerItem, showCoordinates: false)
-                                        .padding(.top, 20)
-                                        .padding(.horizontal, 24)
                                 }
                                 
                                 // Extra bottom padding to prevent clipping
@@ -831,98 +824,212 @@ struct DetailSection: View {
 struct WeatherDetailCard: View {
     let flower: AIFlower
     
+    // Get formatted date string
+    private var dateString: String {
+        if let dayOfWeek = flower.discoveryDayOfWeek,
+           let formattedDate = flower.discoveryFormattedDate {
+            return "\(dayOfWeek), \(formattedDate)"
+        } else {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "EEEE, d MMMM"
+            return formatter.string(from: flower.generatedDate)
+        }
+    }
+    
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 8) {
-                Image(systemName: "cloud.sun")
-                    .font(.system(size: 16))
-                    .foregroundColor(.flowerPrimary)
+        VStack(spacing: 16) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(dateString)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.white)
+                    
+                    Text(flower.discoveryLocationName ?? "Beautiful location")
+                        .font(.system(size: 14))
+                        .foregroundColor(.white.opacity(0.8))
+                }
                 
-                Text("Discovery Weather")
-                    .font(.system(size: 18, weight: .light, design: .serif))
-                    .foregroundColor(.flowerTextPrimary)
-            }
-            
-            VStack(alignment: .leading, spacing: 8) {
-                // Weather condition and temperature (if available)
-                if flower.discoveryWeatherCondition != nil || flower.discoveryTemperature != nil {
-                    HStack(spacing: 16) {
-                        if let condition = flower.discoveryWeatherCondition {
-                            HStack(spacing: 6) {
-                                Image(systemName: weatherIcon(for: condition))
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.flowerSecondary)
-                                Text(condition)
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.flowerTextSecondary)
-                            }
+                Spacer()
+                
+                VStack(alignment: .trailing, spacing: 4) {
+                    if let condition = flower.discoveryWeatherCondition,
+                       let temperature = flower.discoveryTemperature {
+                        HStack(spacing: 8) {
+                            Image(systemName: weatherIcon(for: condition))
+                                .font(.system(size: 24))
+                                .foregroundColor(weatherIconColor(for: condition))
+                            
+                            Text("\(Int(temperature))\(flower.discoveryTemperatureUnit ?? "°C")")
+                                .font(.system(size: 24, weight: .semibold))
+                                .foregroundColor(.white)
                         }
                         
-                        if let temperature = flower.discoveryTemperature {
-                            HStack(spacing: 4) {
-                                Image(systemName: "thermometer")
-                                    .font(.system(size: 12))
-                                    .foregroundColor(.flowerSecondary)
-                                Text("\(Int(temperature))\(flower.discoveryTemperatureUnit ?? "°C")")
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.flowerTextSecondary)
-                            }
-                        }
-                    }
-                }
-                
-                // Date information
-                if let dayOfWeek = flower.discoveryDayOfWeek,
-                   let formattedDate = flower.discoveryFormattedDate {
-                    HStack(spacing: 6) {
-                        Image(systemName: "calendar")
-                            .font(.system(size: 12))
-                            .foregroundColor(.flowerSecondary)
-                        Text("\(dayOfWeek), \(formattedDate)")
+                        Text(condition)
                             .font(.system(size: 14))
-                            .foregroundColor(.flowerTextSecondary)
-                    }
-                } else {
-                    // Fallback to generated date if discovery date info is not available
-                    HStack(spacing: 6) {
-                        Image(systemName: "calendar")
-                            .font(.system(size: 12))
-                            .foregroundColor(.flowerSecondary)
-                        Text(flower.generatedDate.formatted(date: .abbreviated, time: .omitted))
-                            .font(.system(size: 14))
-                            .foregroundColor(.flowerTextSecondary)
+                            .foregroundColor(.white.opacity(0.8))
+                    } else {
+                        // No weather data - show flower icon
+                        Image(systemName: "flower.fill")
+                            .font(.system(size: 24))
+                            .foregroundColor(.white.opacity(0.9))
                     }
                 }
             }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
+            
+            HStack {
+                Image(systemName: "flower.fill")
+                    .font(.system(size: 16))
+                    .foregroundColor(.white)
+                
+                Text("Perfect weather for picking flowers")
+                    .font(.system(size: 14))
+                    .foregroundColor(.white.opacity(0.9))
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 20)
+            .padding(.bottom, 16)
         }
+        .background(
+            LinearGradient(
+                colors: weatherGradientColors(for: flower.discoveryWeatherCondition),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .cornerRadius(16)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color(red: 1/255, green: 1/255, blue: 1/255).opacity(0.12), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
     }
     
     private func weatherIcon(for condition: String) -> String {
         switch condition.lowercased() {
         case "sunny", "clear":
-            return "sun.max"
+            return "sun.max.fill"
         case "cloudy", "mostly cloudy":
-            return "cloud"
+            return "cloud.fill"
         case "partly cloudy":
-            return "cloud.sun"
+            return "cloud.sun.fill"
         case "rainy", "rain":
-            return "cloud.rain"
+            return "cloud.rain.fill"
         case "drizzle":
-            return "cloud.drizzle"
+            return "cloud.drizzle.fill"
         case "snowy", "snow":
-            return "cloud.snow"
+            return "cloud.snow.fill"
         case "thunderstorms":
-            return "cloud.bolt"
+            return "cloud.bolt.fill"
         case "windy", "breezy":
             return "wind"
         case "hazy":
-            return "cloud.fog"
+            return "cloud.fog.fill"
         case "hot":
-            return "thermometer.sun"
+            return "thermometer.sun.fill"
         case "frigid":
             return "thermometer.snowflake"
         default:
-            return "cloud"
+            return "cloud.fill"
+        }
+    }
+    
+    private func weatherIconColor(for condition: String) -> Color {
+        switch condition.lowercased() {
+        case "sunny", "clear":
+            return .yellow
+        case "cloudy", "mostly cloudy", "partly cloudy":
+            return .white.opacity(0.9)
+        case "rainy", "rain", "drizzle":
+            return .white.opacity(0.9)
+        case "snowy", "snow":
+            return .white
+        case "thunderstorms":
+            return .yellow
+        case "windy", "breezy":
+            return .white.opacity(0.9)
+        case "hazy":
+            return .white.opacity(0.7)
+        case "hot":
+            return .orange
+        case "frigid":
+            return .cyan
+        default:
+            return .white.opacity(0.9)
+        }
+    }
+    
+    private func weatherGradientColors(for condition: String?) -> [Color] {
+        guard let condition = condition else {
+            // Default gradient for no weather data
+            return [
+                Color(red: 135/255, green: 206/255, blue: 250/255), // Light sky blue
+                Color(red: 30/255, green: 144/255, blue: 255/255)   // Dodger blue
+            ]
+        }
+        
+        switch condition.lowercased() {
+        case "sunny", "clear":
+            return [
+                Color(red: 255/255, green: 223/255, blue: 0/255),   // Gold
+                Color(red: 255/255, green: 165/255, blue: 0/255)    // Orange
+            ]
+        case "cloudy", "mostly cloudy":
+            return [
+                Color(red: 169/255, green: 169/255, blue: 169/255), // Dark gray
+                Color(red: 128/255, green: 128/255, blue: 128/255)  // Gray
+            ]
+        case "partly cloudy":
+            return [
+                Color(red: 135/255, green: 206/255, blue: 235/255), // Sky blue
+                Color(red: 119/255, green: 136/255, blue: 153/255)  // Light slate gray
+            ]
+        case "rainy", "rain":
+            return [
+                Color(red: 64/255, green: 64/255, blue: 128/255),   // Dark slate blue
+                Color(red: 70/255, green: 130/255, blue: 180/255)   // Steel blue
+            ]
+        case "drizzle":
+            return [
+                Color(red: 119/255, green: 136/255, blue: 153/255), // Light slate gray
+                Color(red: 176/255, green: 196/255, blue: 222/255)  // Light steel blue
+            ]
+        case "snowy", "snow":
+            return [
+                Color(red: 240/255, green: 248/255, blue: 255/255), // Alice blue
+                Color(red: 176/255, green: 224/255, blue: 230/255)  // Powder blue
+            ]
+        case "thunderstorms":
+            return [
+                Color(red: 75/255, green: 0/255, blue: 130/255),    // Indigo
+                Color(red: 72/255, green: 61/255, blue: 139/255)    // Dark slate blue
+            ]
+        case "windy", "breezy":
+            return [
+                Color(red: 135/255, green: 206/255, blue: 235/255), // Sky blue
+                Color(red: 0/255, green: 191/255, blue: 255/255)    // Deep sky blue
+            ]
+        case "hazy":
+            return [
+                Color(red: 188/255, green: 143/255, blue: 143/255), // Rosy brown
+                Color(red: 210/255, green: 180/255, blue: 140/255)  // Tan
+            ]
+        case "hot":
+            return [
+                Color(red: 255/255, green: 69/255, blue: 0/255),    // Red orange
+                Color(red: 255/255, green: 140/255, blue: 0/255)    // Dark orange
+            ]
+        case "frigid":
+            return [
+                Color(red: 0/255, green: 191/255, blue: 255/255),   // Deep sky blue
+                Color(red: 135/255, green: 206/255, blue: 250/255)  // Light sky blue
+            ]
+        default:
+            return [
+                Color(red: 135/255, green: 206/255, blue: 250/255), // Light sky blue
+                Color(red: 30/255, green: 144/255, blue: 255/255)   // Dodger blue
+            ]
         }
     }
 }
