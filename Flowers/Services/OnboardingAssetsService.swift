@@ -1,6 +1,7 @@
 import Foundation
 import UIKit
 import CoreLocation
+import WeatherKit
 
 class OnboardingAssetsService {
     static let shared = OnboardingAssetsService()
@@ -128,6 +129,7 @@ class OnboardingAssetsService {
                     let (generatedImage, _) = try await FALService.shared.generateFlowerImage(descriptor: descriptor)
                     image = generatedImage
                 } else if !APIConfiguration.shared.openAIKey.isEmpty {
+                    // Use OpenAI service legacy method for descriptor-based generation
                     let (generatedImage, _) = try await OpenAIService.shared.generateFlowerImage(descriptor: descriptor)
                     image = generatedImage
                 } else {
@@ -271,6 +273,7 @@ class OnboardingAssetsService {
                 let (generatedImage, _) = try await FALService.shared.generateFlowerImage(descriptor: descriptor)
                 image = generatedImage
             } else if !APIConfiguration.shared.openAIKey.isEmpty {
+                // Use OpenAI service legacy method for descriptor-based generation
                 let (generatedImage, _) = try await OpenAIService.shared.generateFlowerImage(descriptor: descriptor)
                 image = generatedImage
             } else {
@@ -283,7 +286,7 @@ class OnboardingAssetsService {
                 return createPlaceholderOnboardingFlower()
             }
             
-            let flower = AIFlower(
+            var flower = AIFlower(
                 id: UUID(),
                 name: name,
                 descriptor: descriptor,
@@ -293,6 +296,9 @@ class OnboardingAssetsService {
                 origins: "Created especially for new users",
                 originalOwner: createCurrentOwner()
             )
+            
+            // Capture current weather and location data
+            captureWeatherAndLocation(for: &flower)
             
             storeOnboardingFlower(flower)
             return flower
@@ -309,7 +315,7 @@ class OnboardingAssetsService {
             return nil
         }
         
-        let flower = AIFlower(
+        var flower = AIFlower(
             id: UUID(),
             name: "Jenny's Welcome Flower",
             descriptor: "beautiful welcoming flower with white background",
@@ -319,6 +325,9 @@ class OnboardingAssetsService {
             origins: "Created especially for new users",
             originalOwner: createCurrentOwner()
         )
+        
+        // Capture current weather and location data
+        captureWeatherAndLocation(for: &flower)
         
         storeOnboardingFlower(flower)
         return flower
@@ -356,5 +365,75 @@ class OnboardingAssetsService {
             transferDate: Date(),
             location: locationName
         )
+    }
+    
+    // MARK: - Weather and Location Capture
+    
+    private func captureWeatherAndLocation(for flower: inout AIFlower) {
+        // Capture current location
+        if let currentLocation = ContextualFlowerGenerator.shared.currentLocation {
+            flower.discoveryLatitude = currentLocation.coordinate.latitude
+            flower.discoveryLongitude = currentLocation.coordinate.longitude
+        }
+        
+        // Capture placemark (human-readable location)
+        if let currentPlacemark = ContextualFlowerGenerator.shared.currentPlacemark {
+            flower.discoveryLocationName = currentPlacemark.locality ?? currentPlacemark.name
+        }
+        
+        // Capture current weather
+        if let weather = ContextualFlowerGenerator.shared.currentWeather {
+            let weatherCondition = OnboardingAssetsService.getWeatherConditionString(from: weather.currentWeather.condition)
+            let temperature = weather.currentWeather.temperature.value
+            
+            flower.captureWeatherAndDate(
+                weatherCondition: weatherCondition,
+                temperature: temperature,
+                temperatureUnit: "°C"
+            )
+        }
+    }
+    
+    static func getWeatherConditionString(from condition: WeatherCondition) -> String {
+        switch condition {
+        case .clear, .mostlyClear:
+            return "Clear"
+        case .partlyCloudy:
+            return "Partly Cloudy"
+        case .cloudy, .mostlyCloudy:
+            return "Cloudy"
+        case .foggy, .haze:
+            return "Foggy"
+        case .rain, .drizzle:
+            return "Rainy"
+        case .heavyRain:
+            return "Heavy Rain"
+        case .snow, .flurries:
+            return "Snowy"
+        case .sleet, .freezingRain:
+            return "Sleet"
+        case .hail:
+            return "Hail"
+        case .thunderstorms:
+            return "Stormy"
+        case .heavySnow:
+            return "Heavy Snow"
+        case .isolatedThunderstorms:
+            return "Isolated Thunderstorms"
+        case .scatteredThunderstorms:
+            return "Scattered Thunderstorms"
+        case .strongStorms:
+            return "Strong Storms"
+        case .sunFlurries:
+            return "Sun Flurries"
+        case .windy:
+            return "Windy"
+        case .wintryMix:
+            return "Wintry Mix"
+        case .freezingDrizzle:
+            return "Freezing Drizzle"
+        @unknown default:
+            return "Unknown"
+        }
     }
 }

@@ -50,6 +50,20 @@ class FlowerStore: ObservableObject {
         discoveredFlowers.count
     }
     
+    var generatedFlowersCount: Int {
+        discoveredFlowers.filter { flower in
+            // Generated flowers have no ownership history (only original owner is current user)
+            flower.ownershipHistory.isEmpty
+        }.count
+    }
+    
+    var receivedFlowersCount: Int {
+        discoveredFlowers.filter { flower in
+            // Received flowers have ownership history (transferred from others)
+            !flower.ownershipHistory.isEmpty
+        }.count
+    }
+    
     var herbariumSpeciesCount: Int {
         herbariumSpecies.count
     }
@@ -671,7 +685,7 @@ class FlowerStore: ObservableObject {
         
         // Capture current weather data
         if let weather = ContextualFlowerGenerator.shared.currentWeather {
-            let weatherCondition = getWeatherConditionString(from: weather.currentWeather.condition)
+            let weatherCondition = OnboardingAssetsService.getWeatherConditionString(from: weather.currentWeather.condition)
             let temperature = weather.currentWeather.temperature.value
             flower.captureWeatherAndDate(
                 weatherCondition: weatherCondition,
@@ -722,7 +736,8 @@ class FlowerStore: ObservableObject {
         errorMessage = nil
         
         do {
-            var actualDescriptor = descriptor ?? FlowerDescriptors.random()
+            var selectedSpecies: BotanicalSpecies?
+            var actualDescriptor: String
             var flowerContext: FlowerContext?
             var isContextual = false
             var isBouquet = false
@@ -736,18 +751,32 @@ class FlowerStore: ObservableObject {
                 actualDescriptor = currentHoliday.bouquetTheme ?? "festive holiday bouquet"
                 isContextual = true
             }
-            // Otherwise check if we should use contextual generation (only if no descriptor provided)
-            else if descriptor == nil && ContextualFlowerGenerator.shared.shouldUseContextualGeneration() {
-                if let contextualResult = ContextualFlowerGenerator.shared.generateContextualDescriptor() {
-                    actualDescriptor = contextualResult.descriptor
+            // Otherwise select a real botanical species
+            else if descriptor == nil {
+                // Get list of existing species to avoid duplicates
+                let existingSpecies = discoveredFlowers.compactMap { $0.scientificName }
+                
+                // Try contextual selection first
+                if let contextualResult = ContextualFlowerGenerator.shared.selectContextualSpecies(existingSpecies: existingSpecies) {
+                    selectedSpecies = contextualResult.species
                     flowerContext = contextualResult.context
                     isContextual = true
+                    actualDescriptor = selectedSpecies!.imagePrompt
+                } else {
+                    // Fallback to random species
+                    selectedSpecies = ContextualFlowerGenerator.shared.getRandomSpecies(existingSpecies: existingSpecies)
+                    actualDescriptor = selectedSpecies?.imagePrompt ?? "Rosa damascena damask rose with double pink fragrant flowers"
                 }
             }
+            else {
+                // Use provided descriptor (for custom flowers)
+                actualDescriptor = descriptor ?? "beautiful flower with elegant petals"
+            }
             
-            // Always use FAL for image generation
+            // Use FAL for image generation with botanically accurate prompts
+            let imageDescriptor = selectedSpecies?.imagePrompt ?? actualDescriptor
             let (image, prompt) = try await FALService.shared.generateFlowerImage(
-                descriptor: actualDescriptor, 
+                descriptor: imageDescriptor, 
                 isBouquet: isBouquet,
                 personalMessage: holiday?.personalMessage
             )
@@ -776,23 +805,31 @@ class FlowerStore: ObservableObject {
                 
                 // Generate list of flowers in the bouquet
                 bouquetFlowerNames = generateBouquetFlowerNames(for: holiday)
-            } else if apiConfig.hasValidOpenAIKey {
+            } else if let species = selectedSpecies {
+                // Use real botanical species name
                 if isFirstFlower {
-                    // Generate a Jenny-related name for the first flower
+                    name = "Jenny's \(species.primaryCommonName)"
+                    userDefaults.set(true, forKey: "hasGeneratedFirstFlower")
+                } else {
+                    name = OpenAIService.shared.generateFlowerName(species: species, context: flowerContext)
+                }
+            } else if apiConfig.hasValidOpenAIKey {
+                // Fallback to OpenAI generation for custom flowers
+                if isFirstFlower {
                     name = try await OpenAIService.shared.generateJennyFlowerName(
                         descriptor: actualDescriptor,
                         existingNames: allUsedFlowerNames
                     )
                     userDefaults.set(true, forKey: "hasGeneratedFirstFlower")
                 } else {
-                    name = try await OpenAIService.shared.generateFlowerName(
+                    name = try await OpenAIService.shared.generateFlowerNameLegacy(
                         descriptor: actualDescriptor,
                         existingNames: allUsedFlowerNames,
                         context: flowerContext
                     )
                 }
             } else {
-                // Fallback to extracting from descriptor if no OpenAI key
+                // Final fallback if no API key
                 if isFirstFlower {
                     name = "Jenny's \(extractFlowerName(from: actualDescriptor))"
                     userDefaults.set(true, forKey: "hasGeneratedFirstFlower")
@@ -820,26 +857,38 @@ class FlowerStore: ObservableObject {
                 locationName = currentPlacemark?.locality ?? currentPlacemark?.name
             }
             
+            // Create flower with real botanical information
             var flower = AIFlower(
                 name: name,
-                descriptor: actualDescriptor,
+                descriptor: selectedSpecies?.description ?? actualDescriptor,
                 imageData: imageData,
                 generatedDate: Date(),
                 isFavorite: false,
+                scientificName: selectedSpecies?.scientificName,
+                commonNames: selectedSpecies?.commonNames,
+                family: selectedSpecies?.family,
+                nativeRegions: selectedSpecies?.nativeRegions,
+                bloomingSeason: selectedSpecies?.bloomingSeason,
+                conservationStatus: selectedSpecies?.conservationStatus,
+                uses: selectedSpecies?.uses,
+                interestingFacts: selectedSpecies?.interestingFacts,
+                careInstructions: selectedSpecies?.careInstructions,
+                rarityLevel: selectedSpecies?.rarityLevel,
                 discoveryDate: Date(),
                 contextualGeneration: isContextual,
-                generationContext: isContextual ? actualDescriptor : nil,
+                generationContext: isContextual ? "\(selectedSpecies?.scientificName ?? actualDescriptor)" : nil,
                 isBouquet: isBouquet,
                 bouquetFlowers: bouquetFlowerNames,
                 holidayName: holiday?.name,
                 discoveryLatitude: latitude,
                 discoveryLongitude: longitude,
                 discoveryLocationName: locationName,
+                isInHerbarium: false, // Will be set when added to herbarium
                 originalOwner: createCurrentOwner()
             )
             
-            // Get a random continent for now (will be replaced by AI-generated continent)
-            flower.continent = Continent.allCases.randomElement()
+            // Set continent from botanical species data
+            flower.continent = selectedSpecies?.primaryContinent ?? Continent.allCases.randomElement()
             
             // Capture weather and date information
             if let weather = ContextualFlowerGenerator.shared.currentWeather {
@@ -899,15 +948,23 @@ class FlowerStore: ObservableObject {
                 )
             }
             
-            // Always generate details for every flower
+            // Generate accurate botanical details for real species
             if apiConfig.hasValidOpenAIKey {
                 do {
-                    let details = try await OpenAIService.shared.generateFlowerDetails(for: flower, context: flowerContext)
+                    let details = try await OpenAIService.shared.generateFlowerDetails(
+                        for: flower, 
+                        species: selectedSpecies, 
+                        context: flowerContext
+                    )
                     flower.meaning = details.meaning
                     flower.properties = details.properties
                     flower.origins = details.origins
                     flower.detailedDescription = details.detailedDescription
-                    flower.continent = Continent(rawValue: details.continent) ?? flower.continent
+                    
+                    // Only override continent if not already set from species data
+                    if selectedSpecies == nil {
+                        flower.continent = Continent(rawValue: details.continent) ?? flower.continent
+                    }
                     
                     // Add contextual meaning if available
                     if let contextualMeaning = flowerContext?.generateContextualMeaning() {
@@ -919,10 +976,23 @@ class FlowerStore: ObservableObject {
                         flower.properties = (flower.properties ?? "") + "\n\n" + personalMessage
                     }
                 } catch {
-                    // Continue without details if generation fails
-                    print("Failed to generate flower details: \(error)")
-                    errorMessage = "Flower created, but details unavailable"
+                    // Use botanical species data as fallback
+                    if let species = selectedSpecies {
+                        flower.meaning = "This \(species.primaryCommonName) represents the natural beauty and diversity of our botanical world."
+                        flower.properties = species.description
+                        flower.origins = "Native to \(species.nativeRegions.joined(separator: ", ")). \(species.habitat)."
+                        flower.detailedDescription = "\(species.description) Blooms \(species.bloomingSeason.lowercased()). Conservation status: \(species.conservationStatus)."
+                    } else {
+                        print("Failed to generate flower details: \(error)")
+                        errorMessage = "Flower created, but details unavailable"
+                    }
                 }
+            } else if let species = selectedSpecies {
+                // Use botanical species data when no API key
+                flower.meaning = "This \(species.primaryCommonName) represents the natural beauty and botanical diversity of \(species.nativeRegions.first ?? "the world")."
+                flower.properties = species.description
+                flower.origins = "Native to \(species.nativeRegions.joined(separator: ", ")). \(species.habitat)."
+                flower.detailedDescription = "\(species.description) This species blooms \(species.bloomingSeason.lowercased()) and has a conservation status of \(species.conservationStatus)."
             }
             
             if isDaily {
@@ -942,8 +1012,8 @@ class FlowerStore: ObservableObject {
                 // Immediate reveal for manual generation
                 currentFlower = flower
                 
-                // Add to discovered flowers
-                addToDiscoveredFlowers(flower)
+                // Add to discovered flowers and herbarium if it's a new species
+                addToDiscoveredFlowers(flower, autoSaveToPhotos: true)
                 
                 // Save to shared container for widget
                 if let encoded = try? JSONEncoder().encode(flower) {
@@ -1483,6 +1553,18 @@ class FlowerStore: ObservableObject {
                 originalOwner: createCurrentOwner()
             )
             
+            // Capture current weather for test flower
+            if let weather = ContextualFlowerGenerator.shared.currentWeather {
+                let weatherCondition = OnboardingAssetsService.getWeatherConditionString(from: weather.currentWeather.condition)
+                let temperature = weather.currentWeather.temperature.value
+                
+                testFlower.captureWeatherAndDate(
+                    weatherCondition: weatherCondition,
+                    temperature: temperature,
+                    temperatureUnit: "°C"
+                )
+            }
+            
             // Set as pending flower to trigger reveal view
             await MainActor.run {
                 self.pendingFlower = testFlower
@@ -1491,7 +1573,7 @@ class FlowerStore: ObservableObject {
             
         } catch {
             // Fallback to enhanced placeholder if API fails
-            let testFlower = AIFlower(
+            var testFlower = AIFlower(
                 name: "Developer's Garden Bouquet",
                 descriptor: descriptor,
                 imageData: createPlaceholderImage(),
@@ -1513,6 +1595,18 @@ class FlowerStore: ObservableObject {
                 discoveryLocationName: "San Francisco, CA",
                 originalOwner: createCurrentOwner()
             )
+            
+            // Capture current weather for fallback test flower
+            if let weather = ContextualFlowerGenerator.shared.currentWeather {
+                let weatherCondition = OnboardingAssetsService.getWeatherConditionString(from: weather.currentWeather.condition)
+                let temperature = weather.currentWeather.temperature.value
+                
+                testFlower.captureWeatherAndDate(
+                    weatherCondition: weatherCondition,
+                    temperature: temperature,
+                    temperatureUnit: "°C"
+                )
+            }
             
             await MainActor.run {
                 self.pendingFlower = testFlower
@@ -1665,54 +1759,6 @@ class FlowerStore: ObservableObject {
         )
     }
     
-    private func getWeatherConditionString(from condition: WeatherCondition) -> String {
-        switch condition {
-        case .clear, .mostlyClear:
-            return "Clear"
-        case .partlyCloudy:
-            return "Partly Cloudy"
-        case .cloudy, .mostlyCloudy:
-            return "Cloudy"
-        case .rain:
-            return "Rain"
-        case .drizzle:
-            return "Drizzle"
-        case .snow:
-            return "Snow"
-        case .sleet:
-            return "Sleet"
-        case .hail:
-            return "Hail"
-        case .thunderstorms:
-            return "Thunderstorms"
-        case .tropicalStorm:
-            return "Tropical Storm"
-        case .blizzard:
-            return "Blizzard"
-        case .freezingRain:
-            return "Freezing Rain"
-        case .freezingDrizzle:
-            return "Freezing Drizzle"
-        case .heavyRain:
-            return "Heavy Rain"
-        case .heavySnow:
-            return "Heavy Snow"
-        case .isolatedThunderstorms:
-            return "Isolated Thunderstorms"
-        case .scatteredThunderstorms:
-            return "Scattered Thunderstorms"
-        case .strongStorms:
-            return "Strong Storms"
-        case .sunFlurries:
-            return "Sun Flurries"
-        case .windy:
-            return "Windy"
-        case .wintryMix:
-            return "Wintry Mix"
-        default:
-            return "Clear"
-        }
-    }
     
     // MARK: - Herbarium Management
     

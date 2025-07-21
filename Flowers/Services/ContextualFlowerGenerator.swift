@@ -87,28 +87,23 @@ class ContextualFlowerGenerator: NSObject, ObservableObject, CLLocationManagerDe
         return Int.random(in: 1...4) == 1
     }
     
-    func generateContextualDescriptor() -> (descriptor: String, context: FlowerContext)? {
-        var contextElements: [String] = []
+    func selectContextualSpecies(existingSpecies: [String] = []) -> (species: BotanicalSpecies, context: FlowerContext)? {
         var context = FlowerContext()
         
         // Location-based context
+        var targetContinent: Continent?
         if let placemark = currentPlacemark {
             context.location = placemark
             
-            // Country-specific elements
+            // Country-specific continent mapping
             if let country = placemark.country {
                 context.country = country
-                if let countryColors = getCountryColors(country) {
-                    contextElements.append(countryColors)
-                }
+                targetContinent = getContinent(for: country)
             }
             
             // City/region specific
             if let city = placemark.locality {
                 context.city = city
-                if Int.random(in: 1...2) == 1 {
-                    contextElements.append("\(city)-inspired")
-                }
             }
         }
         
@@ -120,128 +115,74 @@ class ContextualFlowerGenerator: NSObject, ObservableObject, CLLocationManagerDe
         // Seasonal elements
         let season = getCurrentSeason()
         context.season = season.rawValue
-        if Int.random(in: 1...3) == 1 {
-            contextElements.append("\(season.rawValue.lowercased())")
-        }
         
         // Holiday elements
         if let holiday = getCurrentHoliday() {
             context.holiday = holiday
-            contextElements.append(holiday.descriptor)
         }
         
         // Zodiac elements
         if let zodiac = getCurrentZodiacSign() {
             context.zodiacSign = zodiac
-            if Int.random(in: 1...3) == 1 {
-                contextElements.append(zodiac.descriptor)
-            }
         }
         
         // Time of day
         if let hour = components.hour {
             if hour >= 5 && hour < 9 {
                 context.timeOfDay = "morning"
-                if Int.random(in: 1...3) == 1 {
-                    contextElements.append("dawn-kissed")
-                }
             } else if hour >= 17 && hour < 21 {
                 context.timeOfDay = "evening"
-                if Int.random(in: 1...3) == 1 {
-                    contextElements.append("sunset-hued")
-                }
             } else if hour >= 21 || hour < 5 {
                 context.timeOfDay = "night"
-                if Int.random(in: 1...3) == 1 {
-                    contextElements.append("moonlit")
-                }
             }
         }
         
         // Weather-based context
         if let weather = currentWeather {
             context.weather = weather
-            let condition = weather.currentWeather.condition
-            let temperature = weather.currentWeather.temperature
-            
-            // Add weather-based descriptors
-            switch condition {
-            case .clear:
-                if Int.random(in: 1...3) == 1 {
-                    contextElements.append("sun-kissed")
-                }
-            case .cloudy, .mostlyCloudy:
-                if Int.random(in: 1...3) == 1 {
-                    contextElements.append("cloud-soft")
-                }
-            case .rain, .drizzle:
-                if Int.random(in: 1...3) == 1 {
-                    contextElements.append("rain-blessed")
-                }
-            case .snow:
-                if Int.random(in: 1...3) == 1 {
-                    contextElements.append("snow-touched")
-                }
-            default:
-                break
-            }
-            
-            // Temperature-based colors
-            if temperature.value < 10 {
-                if Int.random(in: 1...3) == 1 {
-                    contextElements.append("frost-blue")
-                }
-            } else if temperature.value > 25 {
-                if Int.random(in: 1...3) == 1 {
-                    contextElements.append("warmth-golden")
-                }
-            }
         }
         
-        // Combine with base flower type
-        let baseFlowers = ["rose", "orchid", "lily", "dahlia", "iris", "bloom", "blossom", "wildflower", "lotus"]
-        let baseFlower = baseFlowers.randomElement() ?? "flower"
+        // Get appropriate species from botanical database
+        let species = BotanicalDatabase.shared.getContextualSpecies(
+            continent: targetContinent,
+            season: season.rawValue,
+            existingSpecies: existingSpecies
+        )
         
-        // Build descriptor
-        let descriptor: String
-        if contextElements.isEmpty {
-            return nil
-        } else if contextElements.count == 1 {
-            descriptor = "\(contextElements[0]) \(baseFlower)"
-        } else {
-            // Pick 1-2 context elements
-            let selectedElements = contextElements.shuffled().prefix(Int.random(in: 1...2))
-            descriptor = selectedElements.joined(separator: " ") + " \(baseFlower)"
-        }
+        guard let selectedSpecies = species else { return nil }
         
-        return (descriptor, context)
+        return (selectedSpecies, context)
     }
     
-    private func getCountryColors(_ country: String) -> String? {
-        let countryColorMap: [String: String] = [
-            "Portugal": "red and green Portuguese",
-            "Spain": "red and yellow Spanish",
-            "France": "blue, white and red French",
-            "Italy": "green, white and red Italian",
-            "Germany": "black, red and gold German",
-            "Brazil": "green and yellow Brazilian",
-            "Japan": "red and white Japanese",
-            "India": "saffron, white and green Indian",
-            "Mexico": "green, white and red Mexican",
-            "Canada": "red and white Canadian maple",
-            "Australia": "green and gold Australian",
-            "United Kingdom": "red, white and blue British",
-            "Ireland": "green, white and orange Irish",
-            "Netherlands": "orange Dutch",
-            "Greece": "blue and white Greek",
-            "Sweden": "blue and yellow Swedish",
-            "Norway": "red, white and blue Norwegian",
-            "Denmark": "red and white Danish",
-            "Switzerland": "red and white Swiss",
-            "Austria": "red and white Austrian"
+    private func getContinent(for country: String) -> Continent? {
+        let continentMap: [String: Continent] = [
+            "Portugal": .europe, "Spain": .europe, "France": .europe, "Italy": .europe,
+            "Germany": .europe, "United Kingdom": .europe, "Ireland": .europe,
+            "Netherlands": .europe, "Greece": .europe, "Sweden": .europe,
+            "Norway": .europe, "Denmark": .europe, "Switzerland": .europe,
+            "Austria": .europe, "Poland": .europe, "Czech Republic": .europe,
+            
+            "United States": .northAmerica, "Canada": .northAmerica, "Mexico": .northAmerica,
+            "Guatemala": .northAmerica, "Costa Rica": .northAmerica,
+            
+            "Brazil": .southAmerica, "Argentina": .southAmerica, "Chile": .southAmerica,
+            "Peru": .southAmerica, "Colombia": .southAmerica, "Venezuela": .southAmerica,
+            
+            "Japan": .asia, "China": .asia, "India": .asia, "South Korea": .asia,
+            "Thailand": .asia, "Vietnam": .asia, "Indonesia": .asia, "Malaysia": .asia,
+            "Singapore": .asia, "Philippines": .asia, "Russia": .asia,
+            
+            "South Africa": .africa, "Egypt": .africa, "Morocco": .africa,
+            "Kenya": .africa, "Nigeria": .africa, "Ghana": .africa,
+            
+            "Australia": .oceania, "New Zealand": .oceania, "Fiji": .oceania
         ]
         
-        return countryColorMap[country]
+        return continentMap[country]
+    }
+    
+    func getRandomSpecies(existingSpecies: [String] = []) -> BotanicalSpecies? {
+        return BotanicalDatabase.shared.getRandomSpecies(excluding: existingSpecies)
     }
     
     func getCurrentSeason() -> Season {

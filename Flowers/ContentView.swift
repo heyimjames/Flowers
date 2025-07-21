@@ -17,7 +17,6 @@ struct ContentView: View {
     @State private var showDiscoveryCount = true
     @State private var showingFlowerDetail = false
     @State private var showingOnboarding = false
-    @State private var showingShareSheet = false
     @Environment(\.scenePhase) var scenePhase
     @Environment(\.colorScheme) var colorScheme
     @State private var wasInBackground = false
@@ -40,7 +39,7 @@ struct ContentView: View {
                     // Error message if any
                     if let errorMessage = flowerStore.errorMessage {
                         Text(errorMessage)
-                            .font(.system(size: 14))
+                            .font(.system(size: 14, design: .rounded))
                             .foregroundColor(.flowerError)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 40)
@@ -69,13 +68,13 @@ struct ContentView: View {
                             // Discovery count view
                             HStack(spacing: 4) {
                                 Image(systemName: "sparkles")
-                                    .font(.system(size: 12))
+                                    .font(.system(size: 12, design: .rounded))
                                     .foregroundColor(.flowerPrimary)
                                 Text("\(flowerStore.totalDiscoveredCount)")
-                                    .font(.system(size: 14, weight: .semibold))
+                                    .font(.system(size: 14, weight: .semibold, design: .rounded))
                                     .foregroundColor(.flowerTextPrimary)
                                 Text("found")
-                                    .font(.system(size: 11))
+                                    .font(.system(size: 11, design: .rounded))
                                     .foregroundColor(.flowerTextSecondary)
                             }
                             .opacity(showDiscoveryCount ? 1 : 0)
@@ -84,15 +83,15 @@ struct ContentView: View {
                             // Countdown view
                             HStack(spacing: 4) {
                                 Image(systemName: "clock")
-                                    .font(.system(size: 12))
+                                    .font(.system(size: 12, design: .rounded))
                                     .foregroundColor(.flowerPrimary)
                                 if let nextTime = flowerStore.nextFlowerTime {
                                     CountdownText(targetDate: nextTime)
-                                        .font(.system(size: 11))
+                                        .font(.system(size: 11, design: .rounded))
                                         .foregroundColor(.flowerTextSecondary)
                                 } else {
                                     Text("Soon")
-                                        .font(.system(size: 11))
+                                        .font(.system(size: 11, design: .rounded))
                                         .foregroundColor(.flowerTextSecondary)
                                 }
                             }
@@ -239,12 +238,6 @@ struct ContentView: View {
                 break
             }
         }
-        .sheet(isPresented: $showingShareSheet) {
-            if let flower = flowerStore.currentFlower {
-                ShareSheet(flower: flower)
-                    .ignoresSafeArea()
-            }
-        }
 
     }
     
@@ -298,10 +291,10 @@ struct ContentView: View {
                     if flower.isBouquet, let holidayName = flower.holidayName {
                         HStack(spacing: 6) {
                             Image(systemName: "gift.fill")
-                                .font(.system(size: 14))
+                                .font(.system(size: 14, design: .rounded))
                                 .foregroundColor(.flowerSecondary)
                             Text("Special \(holidayName) Collection")
-                                .font(.system(size: 14, weight: .medium))
+                                .font(.system(size: 14, weight: .medium, design: .rounded))
                                 .foregroundColor(.flowerTextSecondary)
                         }
                     }
@@ -315,15 +308,15 @@ struct ContentView: View {
                             VStack(alignment: .leading, spacing: 4) {
                                 HStack(spacing: 6) {
                                     Image(systemName: "book")
-                                        .font(.system(size: 12))
+                                        .font(.system(size: 12, design: .rounded))
                                         .foregroundColor(.flowerPrimary)
                                     Text("Meaning")
-                                        .font(.system(size: 14, weight: .medium))
+                                        .font(.system(size: 14, weight: .medium, design: .rounded))
                                         .foregroundColor(.flowerTextPrimary)
                                 }
                                 
                                 Text(meaning)
-                                    .font(.system(size: 13))
+                                    .font(.system(size: 13, design: .rounded))
                                     .foregroundColor(.flowerTextSecondary)
                                     .lineSpacing(5)
                                     .lineLimit(3)
@@ -334,15 +327,15 @@ struct ContentView: View {
                             VStack(alignment: .leading, spacing: 4) {
                                 HStack(spacing: 6) {
                                     Image(systemName: "leaf")
-                                        .font(.system(size: 12))
+                                        .font(.system(size: 12, design: .rounded))
                                         .foregroundColor(.flowerPrimary)
                                     Text("Characteristics")
-                                        .font(.system(size: 14, weight: .medium))
+                                        .font(.system(size: 14, weight: .medium, design: .rounded))
                                         .foregroundColor(.flowerTextPrimary)
                                 }
                                 
                                 Text(properties)
-                                    .font(.system(size: 13))
+                                    .font(.system(size: 13, design: .rounded))
                                     .foregroundColor(.flowerTextSecondary)
                                     .lineSpacing(5)
                                     .lineLimit(3)
@@ -353,15 +346,15 @@ struct ContentView: View {
                             VStack(alignment: .leading, spacing: 4) {
                                 HStack(spacing: 6) {
                                     Image(systemName: "leaf.circle")
-                                        .font(.system(size: 12))
+                                        .font(.system(size: 12, design: .rounded))
                                         .foregroundColor(.flowerPrimary)
                                     Text("Includes")
-                                        .font(.system(size: 14, weight: .medium))
+                                        .font(.system(size: 14, weight: .medium, design: .rounded))
                                         .foregroundColor(.flowerTextPrimary)
                                 }
                                 
                                 Text(bouquetFlowers.joined(separator: " • "))
-                                    .font(.system(size: 13))
+                                    .font(.system(size: 13, design: .rounded))
                                     .foregroundColor(.flowerTextSecondary)
                                     .lineSpacing(5)
                                     .fixedSize(horizontal: false, vertical: true)
@@ -371,10 +364,10 @@ struct ContentView: View {
                         if let continent = flower.continent {
                             HStack(spacing: 6) {
                                 Image(systemName: "globe")
-                                    .font(.system(size: 12))
+                                    .font(.system(size: 12, design: .rounded))
                                     .foregroundColor(.flowerPrimary)
                                 Text(flower.isBouquet ? "Tradition from \(continent.rawValue)" : "Native to \(continent.rawValue)")
-                                    .font(.system(size: 13))
+                                    .font(.system(size: 13, design: .rounded))
                                     .foregroundColor(.flowerTextSecondary)
                             }
                         }
@@ -384,10 +377,10 @@ struct ContentView: View {
                             VStack(alignment: .leading, spacing: 8) {
                                 HStack(spacing: 6) {
                                     Image(systemName: "person.2")
-                                        .font(.system(size: 12))
+                                        .font(.system(size: 12, design: .rounded))
                                         .foregroundColor(.flowerPrimary)
                                     Text("Ownership History")
-                                        .font(.system(size: 14, weight: .medium))
+                                        .font(.system(size: 14, weight: .medium, design: .rounded))
                                         .foregroundColor(.flowerTextPrimary)
                                 }
                                 
@@ -396,14 +389,14 @@ struct ContentView: View {
                                     if let original = flower.originalOwner {
                                         HStack(spacing: 4) {
                                             Text("🌱")
-                                                .font(.system(size: 12))
+                                                .font(.system(size: 12, design: .rounded))
                                             Text("Originally grown by \(original.name)")
-                                                .font(.system(size: 12))
+                                                .font(.system(size: 12, design: .rounded))
                                                 .foregroundColor(.flowerTextSecondary)
                                         }
                                         if let location = original.location {
                                             Text("\(original.transferDate.formatted(date: .abbreviated, time: .omitted)) • \(location)")
-                                                .font(.system(size: 11))
+                                                .font(.system(size: 11, design: .rounded))
                                                 .foregroundColor(.flowerTextTertiary)
                                                 .padding(.leading, 20)
                                         }
@@ -412,19 +405,19 @@ struct ContentView: View {
                                     // Previous owners
                                     if !flower.ownershipHistory.isEmpty {
                                         Text("🤝 Previously owned by:")
-                                            .font(.system(size: 12))
+                                            .font(.system(size: 12, design: .rounded))
                                             .foregroundColor(.flowerTextSecondary)
                                         
                                         ForEach(flower.ownershipHistory, id: \.id) { owner in
                                             VStack(alignment: .leading, spacing: 2) {
                                                 Text("• \(owner.name)")
-                                                    .font(.system(size: 12))
+                                                    .font(.system(size: 12, design: .rounded))
                                                     .foregroundColor(.flowerTextSecondary)
                                                     .padding(.leading, 12)
                                                 
                                                 if let location = owner.location {
                                                     Text("\(owner.transferDate.formatted(date: .abbreviated, time: .omitted)) • \(location)")
-                                                        .font(.system(size: 11))
+                                                        .font(.system(size: 11, design: .rounded))
                                                         .foregroundColor(.flowerTextTertiary)
                                                         .padding(.leading, 24)
                                                 }
@@ -449,7 +442,7 @@ struct ContentView: View {
                             .scaleEffect(0.8)
                             .tint(.flowerPrimary)
                         Text("Studying this beautiful flower...")
-                            .font(.system(size: 14))
+                            .font(.system(size: 14, design: .rounded))
                             .foregroundColor(.flowerTextSecondary)
                     }
                     .padding(.horizontal, 20)
@@ -464,10 +457,10 @@ struct ContentView: View {
                     }) {
                         HStack(spacing: 8) {
                             Image(systemName: "info.circle")
-                                .font(.system(size: 14))
+                                .font(.system(size: 14, design: .rounded))
                                 .foregroundColor(.flowerPrimary)
                             Text("Tap to learn more about this flower")
-                                .font(.system(size: 13))
+                                .font(.system(size: 13, design: .rounded))
                                 .foregroundColor(.flowerTextSecondary)
                         }
                     }
@@ -499,10 +492,10 @@ struct ContentView: View {
                     .overlay(
                         VStack(spacing: 16) {
                             Image(systemName: "leaf.circle")
-                                .font(.system(size: 48))
+                                .font(.system(size: 48, design: .rounded))
                                 .foregroundColor(.flowerTextTertiary)
                             Text("Your garden awaits...")
-                                .font(.system(size: 16))
+                                .font(.system(size: 16, design: .rounded))
                                 .foregroundColor(.flowerTextSecondary)
                         }
                     )
@@ -511,97 +504,79 @@ struct ContentView: View {
     }
     
     private var actionButtons: some View {
-        HStack(spacing: 16) {
-            // Next flower timing or empty space
+        VStack(spacing: 16) {
+            // Next flower timing tag
             if !flowerStore.hasUnrevealedFlower {
-                // Show next flower timing
-                VStack(spacing: 4) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "clock")
-                            .font(.system(size: 14))
-                            .foregroundColor(.flowerTextSecondary)
-                        Text("Next flower arrives")
-                            .font(.system(size: 13))
-                            .foregroundColor(.flowerTextSecondary)
-                    }
+                HStack(spacing: 6) {
+                    Image(systemName: "clock")
+                        .font(.system(size: 12, design: .rounded))
+                        .foregroundColor(.flowerPrimary)
+                    Text("Next flower arrives")
+                        .font(.system(size: 13, design: .rounded))
+                        .foregroundColor(.flowerTextSecondary)
                     if let nextTime = flowerStore.nextFlowerTime {
                         Text("in \(nextTime, style: .relative)")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(.flowerTextSecondary)
+                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .foregroundColor(.flowerTextPrimary)
                     } else {
                         Text("soon")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(.flowerTextSecondary)
+                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .foregroundColor(.flowerTextPrimary)
                     }
                 }
-                .frame(maxWidth: .infinity)
-                .frame(height: 56)
-            } else {
-                // Empty space when flower is ready to reveal
-                Color.clear
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(Color.flowerPrimary.opacity(0.1))
+                .cornerRadius(20)
+            }
+            
+            // Collection and Herbarium buttons
+            HStack(spacing: 16) {
+                // Collection button with label
+                Button(action: { showingFavorites = true }) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "rectangle.grid.2x2.fill")
+                            .font(.system(size: 20, design: .rounded))
+                            .foregroundColor(.flowerPrimary)
+                        Text("Collection")
+                            .font(.system(size: 16, weight: .medium, design: .rounded))
+                            .foregroundColor(.flowerTextPrimary)
+                    }
                     .frame(maxWidth: .infinity)
-                    .frame(height: 56)
-            }
-            
-            // Heart button
-            Button(action: { 
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                    flowerStore.toggleFavorite()
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 14)
+                    .background(Color.flowerPrimary.opacity(0.1))
+                    .cornerRadius(25)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 25)
+                            .strokeBorder(Color.flowerPrimary.opacity(0.3), lineWidth: 1)
+                    )
                 }
-                // Haptic feedback
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            }) {
-                Image(systemName: flowerStore.currentFlower?.isFavorite == true ? "heart.fill" : "heart")
-                    .font(.system(size: 22))
-                    .foregroundColor(
-                        flowerStore.currentFlower == nil ? .flowerTextTertiary.opacity(0.5) : 
-                        (flowerStore.currentFlower?.isFavorite == true ? .flowerPrimary : .flowerTextSecondary)
+                
+                // Herbarium button with label
+                Button(action: { showingHerbarium = true }) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "book.closed")
+                            .font(.system(size: 20, design: .rounded))
+                            .foregroundColor(.flowerPrimary)
+                        Text("Herbarium")
+                            .font(.system(size: 16, weight: .medium, design: .rounded))
+                            .foregroundColor(.flowerTextPrimary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 14)
+                    .background(Color.flowerPrimary.opacity(0.1))
+                    .cornerRadius(25)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 25)
+                            .strokeBorder(Color.flowerPrimary.opacity(0.3), lineWidth: 1)
                     )
+                }
             }
-            .flowerIconButtonStyle(
-                backgroundColor: Color.flowerTextTertiary.opacity(0.1), 
-                isActive: flowerStore.currentFlower?.isFavorite == true
-            )
-            .disabled(flowerStore.currentFlower == nil)
-            .opacity(flowerStore.currentFlower == nil ? 0.6 : 1.0)
-            
-            // Share button
-            Button(action: {
-                shareFlower()
-            }) {
-                Image(systemName: "square.and.arrow.up")
-                    .font(.system(size: 22))
-                    .foregroundColor(
-                        flowerStore.currentFlower == nil ? .flowerTextTertiary.opacity(0.5) : .flowerTextSecondary
-                    )
-            }
-            .flowerIconButtonStyle(backgroundColor: Color.flowerTextTertiary.opacity(0.1))
-            .disabled(flowerStore.currentFlower == nil)
-            .opacity(flowerStore.currentFlower == nil ? 0.6 : 1.0)
-            .accessibilityLabel("Share flower image")
-            
-            // Collection button - always active
-            Button(action: { showingFavorites = true }) {
-                Image(systemName: "rectangle.grid.2x2.fill")
-                    .font(.system(size: 22))
-                    .foregroundColor(.flowerPrimary)
-            }
-            .flowerIconButtonStyle(backgroundColor: Color.flowerPrimary.opacity(0.1), isActive: true)
-            
-            // Herbarium button - always active
-            Button(action: { showingHerbarium = true }) {
-                Image(systemName: "book.closed")
-                    .font(.system(size: 22))
-                    .foregroundColor(.flowerPrimary)
-            }
-            .flowerIconButtonStyle(backgroundColor: Color.flowerPrimary.opacity(0.1), isActive: true)
         }
     }
     
-    private func shareFlower() {
-        guard flowerStore.currentFlower != nil else { return }
-        showingShareSheet = true
-    }
 }
 
 // Countdown text view that updates every minute
@@ -660,7 +635,7 @@ struct PulsingFlowerRevealView: View {
             .overlay(
                 VStack(spacing: 20) {
                     Image(systemName: "gift")
-                        .font(.system(size: 64))
+                        .font(.system(size: 64, design: .rounded))
                         .foregroundColor(.flowerPrimary)
                         .scaleEffect(isPulsing ? 1.1 : 1.0)
                         .offset(y: -20)

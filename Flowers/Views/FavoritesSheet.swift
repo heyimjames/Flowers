@@ -72,7 +72,7 @@ struct FavoritesSheet: View {
                         .foregroundColor(.flowerTextPrimary)
                             
                             Text("\(flowerStore.totalDiscoveredCount) flowers discovered")
-                                .font(.system(size: 14))
+                                .font(.system(size: 14, design: .rounded))
                                 .foregroundColor(.flowerTextSecondary)
                         }
                         
@@ -81,30 +81,53 @@ struct FavoritesSheet: View {
                         Button("Done") {
                             dismiss()
                         }
-                        .font(.system(size: 17, weight: .medium))
+                        .font(.system(size: 17, weight: .medium, design: .rounded))
                         .foregroundColor(.flowerPrimary)
                     }
                     .padding(.horizontal, 24)
                     .padding(.top, 20)
                     .padding(.bottom, 16)
                     
-                    // Filter toggle and sort menu
-                    HStack(spacing: 12) {
-                        FilterButton(
-                            title: "All Flowers",
-                            count: flowerStore.totalDiscoveredCount,
-                            isSelected: !showFavoritesOnly,
-                            action: { showFavoritesOnly = false }
-                        )
-                        
-                        FilterButton(
-                            title: "Favorites",
-                            count: flowerStore.favorites.count,
-                            isSelected: showFavoritesOnly,
-                            action: { showFavoritesOnly = true }
-                        )
-                        
-                        Spacer()
+                    // Filter pills and sort menu
+                    HStack {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 12) {
+                                FilterButton(
+                                    title: "All Flowers",
+                                    count: flowerStore.totalDiscoveredCount,
+                                    isSelected: !showFavoritesOnly,
+                                    action: { showFavoritesOnly = false }
+                                )
+                                
+                                FilterButton(
+                                    title: "Generated",
+                                    count: flowerStore.generatedFlowersCount,
+                                    isSelected: false,
+                                    action: { 
+                                        showFavoritesOnly = false 
+                                        // Could add generated filter state here
+                                    }
+                                )
+                                
+                                FilterButton(
+                                    title: "Received",
+                                    count: flowerStore.receivedFlowersCount,
+                                    isSelected: false,
+                                    action: { 
+                                        showFavoritesOnly = false
+                                        // Could add received filter state here
+                                    }
+                                )
+                                
+                                FilterButton(
+                                    title: "Favorites",
+                                    count: flowerStore.favorites.count,
+                                    isSelected: showFavoritesOnly,
+                                    action: { showFavoritesOnly = true }
+                                )
+                            }
+                            .padding(.horizontal, 24)
+                        }
                         
                         // Sort menu
                         Menu {
@@ -121,9 +144,9 @@ struct FavoritesSheet: View {
                         } label: {
                             HStack(spacing: 4) {
                                 Image(systemName: sortOption.icon)
-                                    .font(.system(size: 14))
+                                    .font(.system(size: 14, design: .rounded))
                                 Text("Sort")
-                                    .font(.system(size: 14, weight: .medium))
+                                    .font(.system(size: 14, weight: .medium, design: .rounded))
                             }
                             .foregroundColor(.flowerPrimary)
                             .padding(.horizontal, 12)
@@ -137,15 +160,15 @@ struct FavoritesSheet: View {
                                     )
                             )
                         }
+                        .padding(.trailing, 24)
                     }
-                    .padding(.horizontal, 24)
                     .padding(.bottom, 16)
                     
                     // Discovery location stats
                     if !showFavoritesOnly && !flowerStore.discoveryLocationStats.isEmpty {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Found in")
-                                .font(.system(size: 12, weight: .medium))
+                                .font(.system(size: 12, weight: .medium, design: .rounded))
                                 .foregroundColor(.flowerTextSecondary)
                                 .padding(.horizontal, 24)
                             
@@ -154,10 +177,10 @@ struct FavoritesSheet: View {
                                     ForEach(flowerStore.discoveryLocationStats.sorted(by: { $0.value > $1.value }).prefix(10), id: \.key) { location, count in
                                         VStack(spacing: 4) {
                                             Text("\(count)")
-                                                .font(.system(size: 16, weight: .semibold))
+                                                .font(.system(size: 16, weight: .semibold, design: .rounded))
                                                 .foregroundColor(.flowerPrimary)
                                             Text(location)
-                                                .font(.system(size: 11))
+                                                .font(.system(size: 11, design: .rounded))
                                                 .foregroundColor(.flowerTextSecondary)
                                                 .lineLimit(1)
                                                 .minimumScaleFactor(0.8)
@@ -184,21 +207,21 @@ struct FavoritesSheet: View {
                         // Empty state
                         VStack(spacing: 20) {
                             Image(systemName: showFavoritesOnly ? "heart.slash" : "flower")
-                                .font(.system(size: 60))
+                                .font(.system(size: 60, design: .rounded))
                                 .foregroundColor(.flowerTextTertiary)
                             
                             Text(showFavoritesOnly ? "No favorites yet" : "Your collection is empty")
-                                .font(.system(size: 20, weight: .medium))
+                                .font(.system(size: 20, weight: .medium, design: .rounded))
                                 .foregroundColor(.flowerTextPrimary)
                             
                             if showFavoritesOnly {
                                 Text("Tap the heart on flowers you love")
-                                    .font(.system(size: 16))
+                                    .font(.system(size: 16, design: .rounded))
                                     .foregroundColor(.flowerTextSecondary)
                                     .multilineTextAlignment(.center)
                             } else {
                                 Text("Start your journey by discovering flowers")
-                                    .font(.system(size: 16))
+                                    .font(.system(size: 16, design: .rounded))
                                     .foregroundColor(.flowerTextSecondary)
                                     .multilineTextAlignment(.center)
                             }
@@ -264,10 +287,10 @@ struct FilterButton: View {
         Button(action: action) {
             HStack(spacing: 6) {
                 Text(title)
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.system(size: 14, weight: .medium, design: .rounded))
                 
                 Text("\(count)")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
                     .background(
@@ -318,7 +341,7 @@ struct FlowerGridItem: View {
                     
                     if isFavorite {
                         Image(systemName: "heart.fill")
-                            .font(.system(size: 16))
+                            .font(.system(size: 16, design: .rounded))
                             .foregroundColor(.flowerSecondary)
                             .padding(8)
                             .background(
@@ -330,7 +353,7 @@ struct FlowerGridItem: View {
                 }
                 
                 Text(flower.name)
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.system(size: 14, weight: .medium, design: .rounded))
                     .foregroundColor(.flowerTextPrimary)
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
@@ -414,15 +437,15 @@ struct FlowerDetailSheet: View {
                                 if allFlowers.count > 1 {
                                     HStack(spacing: 16) {
                                         Image(systemName: "chevron.left")
-                                            .font(.system(size: 14, weight: .medium))
+                                            .font(.system(size: 14, weight: .medium, design: .rounded))
                                             .foregroundColor(index > 0 ? .gray : .gray.opacity(0.3))
                                         
                                         Text("\(index + 1) of \(allFlowers.count)")
-                                            .font(.system(size: 14))
+                                            .font(.system(size: 14, design: .rounded))
                                             .foregroundColor(.gray)
                                         
                                         Image(systemName: "chevron.right")
-                                            .font(.system(size: 14, weight: .medium))
+                                            .font(.system(size: 14, weight: .medium, design: .rounded))
                                             .foregroundColor(index < allFlowers.count - 1 ? .gray : .gray.opacity(0.3))
                                     }
                                     .padding(.top, 16)
@@ -442,7 +465,7 @@ struct FlowerDetailSheet: View {
                                     if flowerItem.isBouquet, let holidayName = flowerItem.holidayName {
                                         HStack(spacing: 6) {
                                             Image(systemName: "gift.fill")
-                                                .font(.system(size: 16))
+                                                .font(.system(size: 16, design: .rounded))
                                                 .foregroundColor(.flowerSecondary)
                                             Text("Special \(holidayName) Collection")
                                                 .font(.system(size: 16, weight: .medium))
@@ -454,7 +477,7 @@ struct FlowerDetailSheet: View {
                                     HStack(spacing: 16) {
                                         if let continent = flowerItem.continent {
                                             Label(flowerItem.isBouquet ? "Tradition from \(continent.rawValue)" : continent.rawValue, systemImage: "globe")
-                                                .font(.system(size: 14))
+                                                .font(.system(size: 14, design: .rounded))
                                                 .foregroundColor(.flowerTextSecondary)
                                         }
                                         
@@ -463,7 +486,7 @@ struct FlowerDetailSheet: View {
                                         } icon: {
                                             Image(systemName: "calendar")
                                         }
-                                        .font(.system(size: 14))
+                                        .font(.system(size: 14, design: .rounded))
                                         .foregroundColor(.flowerTextSecondary)
                                     }
                                 }
@@ -513,17 +536,17 @@ struct FlowerDetailSheet: View {
                                             )
                                         }
                                         
+                                        // Ownership history
+                                        if flowerItem.originalOwner != nil || !flowerItem.ownershipHistory.isEmpty {
+                                            OwnershipHistorySection(flower: flowerItem)
+                                        }
+                                        
                                         // Weather card - always show (will show date at minimum)
-                                        WeatherDetailCard(flower: flowerItem)
+                                        WeatherSection(flower: flowerItem)
                                         
                                         // Discovery location map - always show
                                         if flowerItem.discoveryLatitude != nil && flowerItem.discoveryLongitude != nil {
-                                            FlowerMapView(flower: flowerItem, showCoordinates: false)
-                                        }
-                                        
-                                        // Ownership history
-                                        if flowerItem.originalOwner != nil || !flowerItem.ownershipHistory.isEmpty {
-                                            OwnershipHistoryCard(flower: flowerItem)
+                                            LocationSection(flower: flowerItem)
                                         }
                                     }
                                     .padding(.top, 32)
@@ -534,7 +557,7 @@ struct FlowerDetailSheet: View {
                                         ProgressView()
                                             .tint(.flowerPrimary)
                                         Text("Discovering flower details...")
-                                            .font(.system(size: 14))
+                                            .font(.system(size: 14, design: .rounded))
                                             .foregroundColor(.flowerTextSecondary)
                                     }
                                     .padding(.vertical, 40)
@@ -549,7 +572,7 @@ struct FlowerDetailSheet: View {
                                             .foregroundColor(.flowerError)
                                         if let error = detailsError {
                                             Text(error)
-                                                .font(.system(size: 14))
+                                                .font(.system(size: 14, design: .rounded))
                                                 .foregroundColor(.flowerTextSecondary)
                                                 .multilineTextAlignment(.center)
                                         }
@@ -568,7 +591,7 @@ struct FlowerDetailSheet: View {
                                             .font(.system(size: 40))
                                             .foregroundColor(.flowerPrimary.opacity(0.5))
                                         Text("Discover more about this flower")
-                                            .font(.system(size: 16))
+                                            .font(.system(size: 16, design: .rounded))
                                             .foregroundColor(.flowerTextSecondary)
                                         
                                         Button(action: {
@@ -663,9 +686,9 @@ struct FlowerDetailSheet: View {
                         Button(action: { showingDeleteAlert = true }) {
                             HStack(spacing: 8) {
                                 Image(systemName: "sparkles.slash")
-                                    .font(.system(size: 16))
+                                    .font(.system(size: 16, design: .rounded))
                                 Text("Return Flower to Garden")
-                                    .font(.system(size: 15))
+                                    .font(.system(size: 15, design: .rounded))
                             }
                         }
                         .flowerSecondaryButtonStyle()
@@ -803,7 +826,7 @@ struct DetailSection: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 Image(systemName: icon)
-                    .font(.system(size: 16))
+                    .font(.system(size: 16, design: .rounded))
                     .foregroundColor(.flowerPrimary)
                 
                 Text(title)
@@ -812,7 +835,7 @@ struct DetailSection: View {
             }
             
             Text(content)
-                .font(.system(size: 15))
+                .font(.system(size: 15, design: .rounded))
                 .foregroundColor(.flowerTextSecondary)
                 .lineSpacing(6)
                 .fixedSize(horizontal: false, vertical: true)
@@ -821,7 +844,7 @@ struct DetailSection: View {
     }
 }
 
-struct WeatherDetailCard: View {
+struct WeatherSection: View {
     let flower: AIFlower
     
     // Get formatted date string
@@ -837,73 +860,62 @@ struct WeatherDetailCard: View {
     }
     
     var body: some View {
-        VStack(spacing: 16) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(dateString)
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.white)
-                    
-                    Text(flower.discoveryLocationName ?? "Beautiful location")
-                        .font(.system(size: 14))
-                        .foregroundColor(.white.opacity(0.8))
-                }
+        VStack(alignment: .leading, spacing: 12) {
+            // Standard section heading
+            HStack(spacing: 8) {
+                Image(systemName: "cloud.sun")
+                    .font(.system(size: 16, design: .rounded))
+                    .foregroundColor(.flowerPrimary)
                 
-                Spacer()
+                Text("Weather")
+                    .font(.system(size: 18, weight: .light, design: .serif))
+                    .foregroundColor(.flowerTextPrimary)
+            }
+            
+            // Weather content
+            VStack(alignment: .leading, spacing: 8) {
+                // Date and location
+                Text(dateString)
+                    .font(.system(size: 15, weight: .medium, design: .rounded))
+                    .foregroundColor(.flowerTextPrimary)
                 
-                VStack(alignment: .trailing, spacing: 4) {
-                    if let condition = flower.discoveryWeatherCondition,
-                       let temperature = flower.discoveryTemperature {
-                        HStack(spacing: 8) {
-                            Image(systemName: weatherIcon(for: condition))
-                                .font(.system(size: 24))
-                                .foregroundColor(weatherIconColor(for: condition))
-                            
-                            Text("\(Int(temperature))\(flower.discoveryTemperatureUnit ?? "°C")")
-                                .font(.system(size: 24, weight: .semibold))
-                                .foregroundColor(.white)
-                        }
+                Text(flower.discoveryLocationName ?? "Beautiful location")
+                    .font(.system(size: 14, design: .rounded))
+                    .foregroundColor(.flowerTextSecondary)
+                
+                // Weather conditions
+                if let condition = flower.discoveryWeatherCondition,
+                   let temperature = flower.discoveryTemperature {
+                    HStack(spacing: 12) {
+                        Image(systemName: weatherIcon(for: condition))
+                            .font(.system(size: 20))
+                            .foregroundColor(weatherIconColor(for: condition))
+                        
+                        Text("\(Int(temperature))\(flower.discoveryTemperatureUnit ?? "°C")")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(.flowerTextPrimary)
                         
                         Text(condition)
-                            .font(.system(size: 14))
-                            .foregroundColor(.white.opacity(0.8))
-                    } else {
-                        // No weather data - show flower icon
-                        Image(systemName: "flower.fill")
-                            .font(.system(size: 24))
-                            .foregroundColor(.white.opacity(0.9))
+                            .font(.system(size: 15, design: .rounded))
+                            .foregroundColor(.flowerTextSecondary)
                     }
+                    .padding(.top, 4)
+                } else {
+                    HStack(spacing: 8) {
+                        Image(systemName: "flower.fill")
+                            .font(.system(size: 16, design: .rounded))
+                            .foregroundColor(.flowerPrimary)
+                        
+                        Text("Perfect day for flower discovery")
+                            .font(.system(size: 15, design: .rounded))
+                            .foregroundColor(.flowerTextSecondary)
+                    }
+                    .padding(.top, 4)
                 }
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 16)
-            
-            HStack {
-                Image(systemName: "flower.fill")
-                    .font(.system(size: 16))
-                    .foregroundColor(.white)
-                
-                Text("Perfect weather for picking flowers")
-                    .font(.system(size: 14))
-                    .foregroundColor(.white.opacity(0.9))
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 20)
-            .padding(.bottom, 16)
+            .padding(.leading, 4)
         }
-        .background(
-            LinearGradient(
-                colors: weatherGradientColors(for: flower.discoveryWeatherCondition),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        )
-        .cornerRadius(16)
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Color(red: 1/255, green: 1/255, blue: 1/255).opacity(0.12), lineWidth: 1)
-        )
-        .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
     
     private func weatherIcon(for condition: String) -> String {
@@ -1034,15 +1046,16 @@ struct WeatherDetailCard: View {
     }
 }
 
-struct OwnershipHistoryCard: View {
+struct OwnershipHistorySection: View {
     let flower: AIFlower
     @AppStorage("userName") private var userName = ""
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
+            // Standard section heading
             HStack(spacing: 8) {
                 Image(systemName: "person.2")
-                    .font(.system(size: 16))
+                    .font(.system(size: 16, design: .rounded))
                     .foregroundColor(.flowerPrimary)
                 
                 Text("Ownership History")
@@ -1050,67 +1063,121 @@ struct OwnershipHistoryCard: View {
                     .foregroundColor(.flowerTextPrimary)
             }
             
-            VStack(alignment: .leading, spacing: 12) {
-                // Create complete ownership timeline
+            // Ownership timeline
+            VStack(alignment: .leading, spacing: 16) {
                 let allOwners = createOwnershipTimeline()
                 
                 ForEach(Array(allOwners.enumerated()), id: \.element.owner.id) { index, entry in
-                    HStack(alignment: .top, spacing: 12) {
-                        // Timeline indicator
-                        VStack {
-                            Circle()
-                                .fill(entry.isOriginal ? Color.flowerPrimary : entry.isCurrent ? Color.flowerSuccess : Color.flowerSecondary)
-                                .frame(width: 8, height: 8)
+                    HStack(alignment: .top, spacing: 16) {
+                        // Enhanced timeline indicator
+                        VStack(spacing: 0) {
+                            ZStack {
+                                Circle()
+                                    .fill(timelineBackgroundColor(for: entry))
+                                    .frame(width: 12, height: 12)
+                                
+                                Circle()
+                                    .fill(timelineColor(for: entry))
+                                    .frame(width: 8, height: 8)
+                            }
                             
+                            // Show connecting line to next owner (extends all the way to current owner)
                             if index < allOwners.count - 1 {
                                 Rectangle()
-                                    .fill(Color.flowerTextTertiary.opacity(0.3))
-                                    .frame(width: 1, height: 30)
+                                    .fill(Color.flowerTextTertiary.opacity(0.2))
+                                    .frame(width: 2, height: 72)
                             }
                         }
                         
-                        VStack(alignment: .leading, spacing: 4) {
-                            // Name and role
-                            HStack {
+                        VStack(alignment: .leading, spacing: 6) {
+                            // Owner name with status badge
+                            HStack(spacing: 8) {
                                 Text(entry.owner.name)
-                                    .font(.system(size: 14, weight: .medium))
+                                    .font(.system(size: 15, weight: .medium, design: .rounded))
                                     .foregroundColor(.flowerTextPrimary)
                                 
                                 if entry.isOriginal {
-                                    Text("🌱")
-                                        .font(.system(size: 12))
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "seedling")
+                                            .font(.system(size: 10))
+                                            .foregroundColor(.flowerPrimary)
+                                        Text("Original Owner")
+                                            .font(.system(size: 10, weight: .medium))
+                                            .foregroundColor(.flowerPrimary)
+                                    }
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(Color.flowerPrimary.opacity(0.1))
+                                    .cornerRadius(8)
                                 } else if entry.isCurrent {
-                                    Text("(You)")
-                                        .font(.system(size: 12))
-                                        .foregroundColor(.flowerTextSecondary)
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "person.fill")
+                                            .font(.system(size: 10))
+                                            .foregroundColor(.green)
+                                        Text("Current Owner")
+                                            .font(.system(size: 10, weight: .medium))
+                                            .foregroundColor(.green)
+                                    }
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(Color.green.opacity(0.1))
+                                    .cornerRadius(8)
                                 }
                             }
                             
                             // Date and location
-                            HStack(spacing: 8) {
-                                Text(DateFormatter.shortDate.string(from: entry.owner.transferDate))
-                                    .font(.system(size: 12))
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(DateFormatter.longDate.string(from: entry.owner.transferDate))
+                                    .font(.system(size: 13, design: .rounded))
                                     .foregroundColor(.flowerTextSecondary)
                                 
                                 if let location = entry.owner.location {
-                                    Text("• \(location)")
-                                        .font(.system(size: 12))
-                                        .foregroundColor(.flowerTextSecondary)
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "location")
+                                            .font(.system(size: 10))
+                                            .foregroundColor(.flowerTextTertiary)
+                                        Text(location)
+                                            .font(.system(size: 12, design: .rounded))
+                                            .foregroundColor(.flowerTextTertiary)
+                                    }
                                 }
                             }
                             
-                            // Time held
+                            // Time held with better formatting
                             if let timeHeld = entry.timeHeld {
                                 Text(timeHeld)
-                                    .font(.system(size: 11, weight: .light))
+                                    .font(.system(size: 12, weight: .light))
                                     .foregroundColor(.flowerTextTertiary)
+                                    .padding(.top, 2)
                             }
                         }
                         
                         Spacer()
                     }
+                    .padding(.leading, 4)
                 }
             }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+    
+    private func timelineColor(for entry: (owner: FlowerOwner, isOriginal: Bool, isCurrent: Bool, timeHeld: String?)) -> Color {
+        if entry.isOriginal {
+            return .green
+        } else if entry.isCurrent {
+            return .flowerPrimary
+        } else {
+            return .flowerSecondary
+        }
+    }
+    
+    private func timelineBackgroundColor(for entry: (owner: FlowerOwner, isOriginal: Bool, isCurrent: Bool, timeHeld: String?)) -> Color {
+        if entry.isOriginal {
+            return .green.opacity(0.2)
+        } else if entry.isCurrent {
+            return .flowerPrimary.opacity(0.2)
+        } else {
+            return .flowerSecondary.opacity(0.2)
         }
     }
     
@@ -1172,10 +1239,40 @@ struct OwnershipHistoryCard: View {
     }
 }
 
+struct LocationSection: View {
+    let flower: AIFlower
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Standard section heading
+            HStack(spacing: 8) {
+                Image(systemName: "location")
+                    .font(.system(size: 16, design: .rounded))
+                    .foregroundColor(.flowerPrimary)
+                
+                Text("Discovery Location")
+                    .font(.system(size: 18, weight: .light, design: .serif))
+                    .foregroundColor(.flowerTextPrimary)
+            }
+            
+            // Map view
+            FlowerMapView(flower: flower, showCoordinates: false)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
 extension DateFormatter {
     static let shortDate: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .short
+        formatter.timeStyle = .none
+        return formatter
+    }()
+    
+    static let longDate: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .long
         formatter.timeStyle = .none
         return formatter
     }()

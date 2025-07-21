@@ -833,7 +833,7 @@ struct FeatureRow: View {
                     .foregroundColor(.flowerTextPrimary)
                 
                 Text(description)
-                    .font(.system(size: 14))
+                    .font(.system(size: 14, design: .rounded))
                     .foregroundColor(.flowerTextSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -873,7 +873,7 @@ struct LocationPermissionPageView: View {
                     .multilineTextAlignment(.center)
                 
                 Text("We use your location to generate flowers that are personalized to your city and surroundings")
-                    .font(.system(size: 16))
+                    .font(.system(size: 16, design: .rounded))
                     .foregroundColor(.flowerTextSecondary)
                     .multilineTextAlignment(.center)
                     .lineSpacing(6.4) // 1.4em at 16pt font size
@@ -923,7 +923,7 @@ struct StarterFlowerSelectionView: View {
                     .foregroundColor(.flowerTextPrimary)
                 
                 Text("Select your first flower\nfrom these three options")
-                    .font(.system(size: 16))
+                    .font(.system(size: 16, design: .rounded))
                     .foregroundColor(.flowerTextSecondary)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
@@ -938,12 +938,12 @@ struct StarterFlowerSelectionView: View {
                         .tint(.flowerPrimary)
                     
                     Text("Cultivating your starter garden...")
-                        .font(.system(size: 16))
+                        .font(.system(size: 16, design: .rounded))
                         .foregroundColor(.flowerTextSecondary)
                         .multilineTextAlignment(.center)
                     
                     Text("Your flowers are being prepared while you explore the app")
-                        .font(.system(size: 14))
+                        .font(.system(size: 14, design: .rounded))
                         .foregroundColor(.flowerTextTertiary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 32)
@@ -1050,7 +1050,7 @@ struct CameraRollPermissionPageView: View {
                     .multilineTextAlignment(.center)
                 
                 Text("We use camera roll access to save your personalized flowers to your photo library")
-                    .font(.system(size: 16))
+                    .font(.system(size: 16, design: .rounded))
                     .foregroundColor(.flowerTextSecondary)
                     .multilineTextAlignment(.center)
                     .lineSpacing(6.4) // 1.4em at 16pt font size
@@ -1137,7 +1137,7 @@ struct CalendarPermissionPageView: View {
                     .multilineTextAlignment(.center)
                 
                 Text("We use calendar access to generate special flowers personalized to your holidays and important events")
-                    .font(.system(size: 16))
+                    .font(.system(size: 16, design: .rounded))
                     .foregroundColor(.flowerTextSecondary)
                     .multilineTextAlignment(.center)
                     .lineSpacing(6.4) // 1.4em at 16pt font size
@@ -1182,7 +1182,7 @@ struct CalendarPermissionPageView: View {
                                 .frame(width: 32, height: 32)
                             
                             Text("\(day)")
-                                .font(.system(size: 14))
+                                .font(.system(size: 14, design: .rounded))
                                 .foregroundColor(day == 17 ? .white : .flowerTextPrimary)
                             
                             if day == 17 {
@@ -1237,7 +1237,7 @@ struct WeatherPermissionPageView: View {
                     .multilineTextAlignment(.center)
                 
                 Text("We use weather data to generate flowers that are personalized to your current weather conditions")
-                    .font(.system(size: 16))
+                    .font(.system(size: 16, design: .rounded))
                     .foregroundColor(.flowerTextSecondary)
                     .multilineTextAlignment(.center)
                     .lineSpacing(6.4) // 1.4em at 16pt font size
@@ -1251,11 +1251,11 @@ struct WeatherPermissionPageView: View {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(currentDateString)
-                            .font(.system(size: 16, weight: .medium))
+                            .font(.system(size: 16, weight: .medium, design: .rounded))
                             .foregroundColor(.white)
                         
                         Text("Lisbon, Portugal")
-                            .font(.system(size: 14))
+                            .font(.system(size: 14, design: .rounded))
                             .foregroundColor(.white.opacity(0.8))
                     }
                     
@@ -1273,7 +1273,7 @@ struct WeatherPermissionPageView: View {
                         }
                         
                         Text("Sunny")
-                            .font(.system(size: 14))
+                            .font(.system(size: 14, design: .rounded))
                             .foregroundColor(.white.opacity(0.8))
                     }
                 }
@@ -1282,11 +1282,11 @@ struct WeatherPermissionPageView: View {
                 
                 HStack {
                     Image(systemName: "flower.fill")
-                        .font(.system(size: 16))
+                        .font(.system(size: 16, design: .rounded))
                         .foregroundColor(.white)
                     
                     Text("Perfect weather for picking flowers")
-                        .font(.system(size: 14))
+                        .font(.system(size: 14, design: .rounded))
                         .foregroundColor(.white.opacity(0.9))
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -1351,7 +1351,7 @@ struct StarterFlowerCard: View {
                             .foregroundColor(.flowerPrimary.opacity(0.6))
                         
                         Text("Loading...")
-                            .font(.system(size: 16))
+                            .font(.system(size: 16, design: .rounded))
                             .foregroundColor(.flowerTextSecondary)
                     }
                 }
@@ -1367,7 +1367,7 @@ struct StarterFlowerCard: View {
                 // Flower meaning/description
                 if let meaning = flower.meaning {
                     Text(meaning)
-                        .font(.system(size: 16))
+                        .font(.system(size: 16, design: .rounded))
                         .foregroundColor(.flowerTextSecondary)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
@@ -1485,7 +1485,7 @@ struct OnboardingFlowerMapPin: View {
                         .clipShape(Circle())
                 } else {
                     Image(systemName: "flower.fill")
-                        .font(.system(size: 16))
+                        .font(.system(size: 16, design: .rounded))
                         .foregroundColor(.flowerPrimary)
                 }
             }
@@ -1531,7 +1531,7 @@ struct UsernameSetupPageView: View {
                         .multilineTextAlignment(.center)
                     
                     Text("Your username will be shown when you share flowers with friends. Use only letters and numbers.")
-                        .font(.system(size: 16))
+                        .font(.system(size: 16, design: .rounded))
                         .foregroundColor(.flowerTextSecondary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 40)
@@ -1576,7 +1576,7 @@ struct UsernameSetupPageView: View {
                     )
                     
                     Text("Only letters and numbers allowed")
-                        .font(.system(size: 12))
+                        .font(.system(size: 12, design: .rounded))
                         .foregroundColor(.flowerTextTertiary)
                 }
                 .padding(.horizontal, 40)

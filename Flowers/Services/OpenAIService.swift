@@ -80,15 +80,33 @@ class OpenAIService {
         }
     }
     
+    func generateFlowerImage(species: BotanicalSpecies) async throws -> (UIImage, String) {
+        let apiKey = APIConfiguration.shared.effectiveOpenAIKey
+        guard !apiKey.isEmpty else {
+            throw OpenAIError.invalidAPIKey
+        }
+        
+        // Build botanically accurate prompt using real species data
+        let prompt = "ISOLATED on PLAIN WHITE BACKGROUND, \(species.imagePrompt), NOTHING ELSE IN FRAME, pure white empty background, NO SHADOWS on background, scientific botanical illustration style, accurate botanical details, realistic flower structure, proper petal arrangement, authentic colors, botanical accuracy, professional scientific illustration, COMPLETELY WHITE BACKGROUND, isolated subject, educational botanical art, highly detailed, 4K"
+        
+        return try await generateFlowerImageWithPrompt(prompt)
+    }
+    
+    // Legacy method for compatibility with onboarding and custom flowers
     func generateFlowerImage(descriptor: String) async throws -> (UIImage, String) {
         let apiKey = APIConfiguration.shared.effectiveOpenAIKey
         guard !apiKey.isEmpty else {
             throw OpenAIError.invalidAPIKey
         }
         
-        // Build the prompt using the consistent structure from PRD
+        // Build the prompt using the original structure
         let prompt = "ISOLATED on PLAIN WHITE BACKGROUND, a single \(descriptor) flower, NOTHING ELSE IN FRAME, pure white empty background, NO SHADOWS on background, botanical illustration style, soft watercolor texture, delicate petals, elegant stem with leaves, dreamy and ethereal, pastel colors with subtle gradients, professional botanical art, COMPLETELY WHITE BACKGROUND, isolated subject, minimalist presentation, highly detailed, 4K"
         
+        return try await generateFlowerImageWithPrompt(prompt)
+    }
+    
+    // Shared implementation
+    private func generateFlowerImageWithPrompt(_ prompt: String) async throws -> (UIImage, String) {
         let request = ImageGenerationRequest(prompt: prompt)
         
         guard let url = URL(string: baseURL) else {
@@ -97,7 +115,7 @@ class OpenAIService {
         
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "POST"
-        urlRequest.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        urlRequest.setValue("Bearer \(APIConfiguration.shared.effectiveOpenAIKey)", forHTTPHeaderField: "Authorization")
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
         let encoder = JSONEncoder()
@@ -136,7 +154,7 @@ class OpenAIService {
         return (image, imageData.revised_prompt ?? prompt)
     }
     
-    func generateFlowerDetails(for flower: AIFlower, context: FlowerContext? = nil) async throws -> FlowerDetails {
+    func generateFlowerDetails(for flower: AIFlower, species: BotanicalSpecies? = nil, context: FlowerContext? = nil) async throws -> FlowerDetails {
         let apiKey = APIConfiguration.shared.effectiveOpenAIKey
         guard !apiKey.isEmpty else {
             throw OpenAIError.invalidAPIKey
@@ -166,16 +184,17 @@ class OpenAIService {
             """
         } else {
             systemPrompt = """
-            You are a knowledgeable botanist and naturalist who creates detailed information about rare and beautiful flowers. 
+            You are a knowledgeable botanist and naturalist who provides accurate, educational information about real botanical species.
             You must respond with a valid JSON object with exactly these fields:
             {
-                "meaning": "Cultural and symbolic significance of this flower",
-                "properties": "Notable botanical characteristics and growth patterns",
-                "origins": "Geographic origins and natural habitat",
-                "detailedDescription": "Rich description of appearance and growth",
+                "meaning": "Cultural and symbolic significance of this species",
+                "properties": "Accurate botanical characteristics and growth patterns",
+                "origins": "True geographic origins and natural habitat",
+                "detailedDescription": "Rich, accurate description of appearance and botanical features",
                 "continent": "One of: North America, South America, Europe, Africa, Asia, Oceania, Antarctica"
             }
-            Make the information scientifically plausible yet poetic. Include seasonal context when relevant.
+            IMPORTANT: Provide only factually accurate information about real botanical species.
+            Include scientific details, conservation status, and educational content.
             Ensure the continent field EXACTLY matches one of the seven options provided.
             """
         }
@@ -198,7 +217,34 @@ class OpenAIService {
             4. Create a rich, emotional description of the bouquet arrangement
             5. Choose the continent where this holiday tradition is strongest
             """
+        } else if let botanicalSpecies = species {
+            // Use real botanical data for accurate information
+            userPrompt = """
+            Generate detailed information about the real botanical species \(botanicalSpecies.scientificName) (\(botanicalSpecies.primaryCommonName)).
+            
+            Scientific Information:
+            - Scientific name: \(botanicalSpecies.scientificName)
+            - Common names: \(botanicalSpecies.commonNames.joined(separator: ", "))
+            - Family: \(botanicalSpecies.family)
+            - Native regions: \(botanicalSpecies.nativeRegions.joined(separator: ", "))
+            - Blooming season: \(botanicalSpecies.bloomingSeason)
+            - Conservation status: \(botanicalSpecies.conservationStatus)
+            - Uses: \(botanicalSpecies.uses.joined(separator: ", "))
+            - Habitat: \(botanicalSpecies.habitat)
+            
+            Interesting facts to incorporate:
+            \(botanicalSpecies.interestingFacts.joined(separator: "\n"))
+            
+            Remember to:
+            1. Use ONLY accurate, factual information about this real species
+            2. Include cultural and symbolic significance based on actual history
+            3. Describe true botanical characteristics and properties
+            4. Mention actual geographic origins and native regions
+            5. Set continent to: \(botanicalSpecies.primaryContinent.rawValue)
+            6. Create educational, informative content that teaches users about real botany
+            """
         } else {
+            // Fallback for flowers without botanical species data
             userPrompt = """
             Generate detailed botanical information for a flower called "\(flower.name)" which is described as "\(flower.descriptor)".
             Remember to:
@@ -290,83 +336,85 @@ class OpenAIService {
         }
     }
     
-    func generateFlowerName(descriptor: String, existingNames: Set<String> = [], context: FlowerContext? = nil) async throws -> String {
+    func generateFlowerName(species: BotanicalSpecies, context: FlowerContext? = nil) -> String {
+        // For real botanical species, use the actual common name
+        // Optionally add contextual prefixes for variety
+        let baseName = species.primaryCommonName
+        
+        // 70% chance to use the standard name, 30% chance to add contextual prefix
+        if Int.random(in: 1...10) <= 7 {
+            return baseName
+        }
+        
+        // Add contextual prefix based on location or season
+        var contextualPrefix: String?
+        
+        if let city = context?.city, Int.random(in: 1...3) == 1 {
+            contextualPrefix = city
+        } else if let season = context?.season, Int.random(in: 1...3) == 1 {
+            contextualPrefix = season
+        } else if let timeOfDay = context?.timeOfDay, Int.random(in: 1...4) == 1 {
+            let timeMap = [
+                "morning": "Dawn",
+                "evening": "Sunset", 
+                "night": "Moonlit"
+            ]
+            contextualPrefix = timeMap[timeOfDay]
+        }
+        
+        if let prefix = contextualPrefix {
+            return "\(prefix) \(baseName)"
+        }
+        
+        return baseName
+    }
+    
+    // Legacy method for compatibility with existing code
+    func generateFlowerNameLegacy(descriptor: String, existingNames: Set<String> = [], context: FlowerContext? = nil) async throws -> String {
         let apiKey = APIConfiguration.shared.effectiveOpenAIKey
         guard !apiKey.isEmpty else {
             throw OpenAIError.invalidAPIKey
         }
         
-        // Randomly decide between Latin names and real-world names (60% Latin, 40% real-world)
-        let useRealWorldName = Int.random(in: 1...10) <= 4
+        // Generate contextual names based on location and time
+        let systemPrompt = """
+        You are a creative botanist who creates poetic names for real flower species.
+        Names should sound authentic and relate to the context provided.
+        Examples: "London Morning Rose", "Barcelona Sunset Orchid", "Alpine Spring Lily"
+        Respond with just the flower name, nothing else.
+        The name should be 2-4 words and sound like a real cultivar name.
+        """
         
-        let systemPrompt: String
-        var userPrompt: String
+        var contextElements: [String] = []
         
-        if useRealWorldName && context != nil {
-            // Generate real-world sounding names based on context
-            systemPrompt = """
-            You are a creative florist who names flowers with poetic, real-world names that evoke their location, time, or context.
-            Create names that sound like they could be found in a boutique flower shop or garden catalog.
-            Names should be evocative and beautiful, relating to the city, country, season, time of day, or current date.
-            Examples: "London Morning Mist", "Barcelona Sunset Rose", "Winter Solstice Bloom", "Tokyo Cherry Dream", "Manhattan Twilight", "Alpine Spring Glory"
-            Respond with just the flower name, nothing else.
-            The name should be 2-4 words and poetic.
-            """
-            
-            var contextElements: [String] = []
-            
-            // Add context-specific information
-            if let city = context?.city {
-                contextElements.append("City: \(city)")
-            }
-            if let country = context?.country {
-                contextElements.append("Country: \(country)")
-            }
-            if let season = context?.season {
-                contextElements.append("Season: \(season)")
-            }
-            if let timeOfDay = context?.timeOfDay {
-                contextElements.append("Time: \(timeOfDay)")
-            }
-            
-            // Add current date context
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "MMMM d"
-            let currentDate = dateFormatter.string(from: Date())
-            contextElements.append("Date: \(currentDate)")
-            
-            // Check for special days
-            let calendar = Calendar.current
-            let components = calendar.dateComponents([.month, .day], from: Date())
-            if components.month == 12 && components.day == 25 {
-                contextElements.append("Special: Christmas Day")
-            } else if components.month == 1 && components.day == 1 {
-                contextElements.append("Special: New Year's Day")
-            }
-            
-            userPrompt = """
-            Create a beautiful real-world name for a flower described as: \(descriptor)
-            
-            Context:
-            \(contextElements.joined(separator: "\n"))
-            
-            The name should relate to one or more of these contextual elements in a poetic way.
-            Focus on location names, seasonal references, or time-based poetry.
-            """
-        } else {
-            // Original Latin/Greek naming system
-            systemPrompt = """
-            You are a botanist who names newly discovered flower species. Create elegant, scientifically-plausible names 
-            that sound like they could be real flowers. Use combinations of Latin, Greek roots, or poetic English names.
-            Respond with just the flower name, nothing else.
-            IMPORTANT: The name must be completely unique and not match any existing flower names.
-            """
-            
-            userPrompt = """
-            Create a beautiful name for a flower described as: \(descriptor)
-            The name should be 2-3 words maximum and sound like it could be a real flower species.
-            """
+        // Add context-specific information
+        if let city = context?.city {
+            contextElements.append("City: \(city)")
         }
+        if let country = context?.country {
+            contextElements.append("Country: \(country)")
+        }
+        if let season = context?.season {
+            contextElements.append("Season: \(season)")
+        }
+        if let timeOfDay = context?.timeOfDay {
+            contextElements.append("Time: \(timeOfDay)")
+        }
+        
+        // Add current date context
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MMMM d"
+        let currentDate = dateFormatter.string(from: Date())
+        contextElements.append("Date: \(currentDate)")
+        
+        var userPrompt = """
+        Create a beautiful name for a flower described as: \(descriptor)
+        
+        Context:
+        \(contextElements.joined(separator: "\n"))
+        
+        The name should relate to the context and sound like a real flower variety name.
+        """
         
         if !existingNames.isEmpty {
             userPrompt += """
@@ -720,92 +768,11 @@ class OpenAIService {
         return shortDescription.trimmingCharacters(in: .whitespacesAndNewlines)
     }
     
+    // This method is now deprecated in favor of using real botanical species
     func generateFlowerPrompt() async throws -> String {
-        let apiKey = APIConfiguration.shared.effectiveOpenAIKey
-        guard !apiKey.isEmpty else {
-            throw OpenAIError.invalidAPIKey
-        }
-        
-        let systemPrompt = """
-        You are an expert botanical artist who creates beautiful, ethereal flower descriptions for AI image generation.
-        Your descriptions should be vivid, poetic, and focus on visual characteristics.
-        
-        Style guidelines:
-        - Use dreamy, ethereal language
-        - Focus on colors, textures, and visual details
-        - Include artistic elements like "soft watercolor texture", "delicate petals", "luminous"
-        - Mention specific color combinations and gradients
-        - Add atmospheric qualities like "glowing from within", "crystalline structures"
-        - Keep descriptions between 30-60 words
-        - Be specific about petal shapes, arrangements, and unique features
-        
-        Examples of good style:
-        "A beautiful ethereal flower with luminous petals that seem to glow from within, featuring delicate crystalline structures and soft pastel colors that shift between lavender and rose gold"
-        "Mystical bloom with translucent petals arranged in spiral patterns, featuring iridescent blue-green hues that shimmer like northern lights, with silver-edged leaves and dewdrops that catch the light"
-        
-        Respond with just the flower description, nothing else.
-        """
-        
-        // Get contextual information for variety
-        let season = getCurrentSeason()
-        let timeOfDay = getTimeOfDay()
-        
-        let userPrompt = """
-        Create a unique, beautiful flower description for AI image generation.
-        
-        Context for inspiration:
-        - Current season: \(season)
-        - Time of day: \(timeOfDay)
-        
-        Make it ethereal, dreamy, and visually stunning. Focus on unique color combinations and textures.
-        The description should inspire a one-of-a-kind botanical artwork.
-        """
-        
-        let request = ChatCompletionRequest(
-            model: "gpt-4o-mini",
-            messages: [
-                ChatCompletionRequest.Message(role: "system", content: systemPrompt),
-                ChatCompletionRequest.Message(role: "user", content: userPrompt)
-            ],
-            temperature: 0.9,
-            response_format: nil
-        )
-        
-        guard let url = URL(string: chatCompletionURL) else {
-            throw OpenAIError.invalidURL
-        }
-        
-        var urlRequest = URLRequest(url: url)
-        urlRequest.httpMethod = "POST"
-        urlRequest.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        let encoder = JSONEncoder()
-        urlRequest.httpBody = try encoder.encode(request)
-        
-        let (data, response) = try await URLSession.shared.data(for: urlRequest)
-        
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw OpenAIError.networkError("Invalid response")
-        }
-        
-        if httpResponse.statusCode != 200 {
-            if let errorData = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-               let error = errorData["error"] as? [String: Any],
-               let message = error["message"] as? String {
-                throw OpenAIError.networkError(message)
-            }
-            throw OpenAIError.networkError("Status code: \(httpResponse.statusCode)")
-        }
-        
-        let decoder = JSONDecoder()
-        let completionResponse = try decoder.decode(ChatCompletionResponse.self, from: data)
-        
-        guard let prompt = completionResponse.choices.first?.message.content else {
-            throw OpenAIError.invalidResponse
-        }
-        
-        return prompt.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Return a random species from the botanical database instead of generating fantasy flowers
+        let species = BotanicalDatabase.shared.getRandomSpecies()
+        return species?.imagePrompt ?? "Rosa damascena damask rose with double pink fragrant flowers, velvety petals, botanical illustration style"
     }
     
     private func getTimeOfDay() -> String {

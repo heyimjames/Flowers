@@ -96,7 +96,7 @@ struct HerbariumSheet: View {
                                 .foregroundColor(.flowerTextPrimary)
                             
                             Text("\(flowerStore.herbariumSpeciesCount) species collected")
-                                .font(.system(size: 14))
+                                .font(.system(size: 14, design: .rounded))
                                 .foregroundColor(.flowerTextSecondary)
                         }
                         
@@ -105,7 +105,7 @@ struct HerbariumSheet: View {
                         // Progress indicator
                         VStack(spacing: 2) {
                             Text("\(String(format: "%.1f", flowerStore.herbariumCompletionPercentage))%")
-                                .font(.system(size: 12, weight: .medium))
+                                .font(.system(size: 12, weight: .medium, design: .rounded))
                                 .foregroundColor(.flowerPrimary)
                             
                             ProgressView(value: flowerStore.herbariumCompletionPercentage / 100.0)
@@ -158,7 +158,7 @@ struct HerbariumSheet: View {
                             .foregroundColor(.flowerTextTertiary)
                         
                         Text(searchText.isEmpty ? "Start discovering flowers to build your herbarium" : "No species found")
-                            .font(.system(size: 16))
+                            .font(.system(size: 16, design: .rounded))
                             .foregroundColor(.flowerTextSecondary)
                             .multilineTextAlignment(.center)
                         
@@ -168,9 +168,9 @@ struct HerbariumSheet: View {
                 } else {
                     ScrollView {
                         LazyVGrid(columns: [
-                            GridItem(.flexible(), spacing: 12),
-                            GridItem(.flexible(), spacing: 12)
-                        ], spacing: 16) {
+                            GridItem(.flexible(), spacing: 16),
+                            GridItem(.flexible(), spacing: 16)
+                        ], spacing: 20) {
                             ForEach(filteredSpecies, id: \.scientificName) { species in
                                 SpeciesCard(
                                     species: species,
@@ -181,8 +181,9 @@ struct HerbariumSheet: View {
                                 )
                             }
                         }
-                        .padding(.horizontal, 24)
-                        .padding(.bottom, 100) // Extra space for navigation
+                        .padding(.horizontal, 20)
+                        .padding(.top, 8)
+                        .padding(.bottom, 120) // Extra space for navigation
                     }
                 }
             }
@@ -254,7 +255,7 @@ struct FilterPill: View {
                     .font(.system(size: 14, weight: .medium))
                 
                 Text("\(count)")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
                     .background(isSelected ? Color.white.opacity(0.2) : Color.flowerPrimary.opacity(0.1))
@@ -275,83 +276,129 @@ struct SpeciesCard: View {
     
     var body: some View {
         Button(action: action) {
-            VStack(alignment: .leading, spacing: 8) {
-                // Flower image
-                if let imageData = species.representativeFlower.imageData,
-                   let uiImage = UIImage(data: imageData) {
-                    Image(uiImage: uiImage)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(height: 120)
-                        .clipped()
-                        .cornerRadius(12, corners: [.topLeft, .topRight])
-                } else {
-                    Rectangle()
-                        .fill(Color.flowerInputBackground)
-                        .frame(height: 120)
-                        .overlay(
-                            Image(systemName: "flower")
-                                .font(.system(size: 32))
-                                .foregroundColor(.flowerTextTertiary)
-                        )
-                        .cornerRadius(12, corners: [.topLeft, .topRight])
-                }
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    // Rarity and collection status
-                    HStack {
-                        if let rarity = species.rarityLevel {
-                            Text(rarity.emoji)
-                                .font(.system(size: 16))
+            VStack(alignment: .leading, spacing: 0) {
+                // Flower image with overlay badges
+                ZStack {
+                    if let imageData = species.representativeFlower.imageData,
+                       let uiImage = UIImage(data: imageData) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(height: 140)
+                            .clipped()
+                    } else {
+                        Rectangle()
+                            .fill(Color.flowerInputBackground)
+                            .frame(height: 140)
+                            .overlay(
+                                Image(systemName: "flower")
+                                    .font(.system(size: 36))
+                                    .foregroundColor(.flowerTextTertiary)
+                            )
+                    }
+                    
+                    // Overlay badges
+                    VStack {
+                        HStack {
+                            // Rarity badge
+                            if let rarity = species.rarityLevel {
+                                HStack(spacing: 4) {
+                                    Text(rarity.emoji)
+                                        .font(.system(size: 12, design: .rounded))
+                                    
+                                    if rarity.sortOrder >= RarityLevel.rare.sortOrder {
+                                        Text(rarity.rawValue)
+                                            .font(.system(size: 10, weight: .medium))
+                                            .foregroundColor(.white)
+                                    }
+                                }
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(
+                                    Capsule()
+                                        .fill(Color.black.opacity(0.7))
+                                )
+                            }
+                            
+                            Spacer()
+                            
+                            // Collection status
+                            Image(systemName: species.isInHerbarium ? "checkmark.circle.fill" : "plus.circle")
+                                .font(.system(size: 20))
+                                .foregroundColor(species.isInHerbarium ? .green : .white)
+                                .background(
+                                    Circle()
+                                        .fill(Color.black.opacity(0.4))
+                                        .frame(width: 32, height: 32)
+                                )
                         }
+                        .padding(.top, 12)
+                        .padding(.horizontal, 12)
                         
                         Spacer()
                         
-                        if species.isInHerbarium {
-                            Image(systemName: "checkmark.circle.fill")
-                                .font(.system(size: 14))
-                                .foregroundColor(.green)
-                        } else {
-                            Image(systemName: "circle")
-                                .font(.system(size: 14))
-                                .foregroundColor(.flowerTextTertiary)
+                        // Discovery count badge
+                        if species.discoveryCount > 1 {
+                            HStack {
+                                Spacer()
+                                
+                                Text("\(species.discoveryCount)")
+                                    .font(.system(size: 12, weight: .bold))
+                                    .foregroundColor(.white)
+                                    .frame(width: 24, height: 24)
+                                    .background(
+                                        Circle()
+                                            .fill(Color.flowerPrimary)
+                                    )
+                                    .padding(.trailing, 12)
+                                    .padding(.bottom, 12)
+                            }
                         }
                     }
-                    
-                    // Names
+                }
+                .cornerRadius(16, corners: [.topLeft, .topRight])
+                
+                // Information section
+                VStack(alignment: .leading, spacing: 6) {
+                    // Common name
                     Text(species.commonName)
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.flowerTextPrimary)
-                        .lineLimit(1)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
                     
+                    // Scientific name
                     Text(species.scientificName)
-                        .font(.system(size: 12, design: .serif))
+                        .font(.system(size: 13, design: .serif))
                         .foregroundColor(.flowerTextSecondary)
                         .italic()
                         .lineLimit(1)
                     
+                    // Family
                     if let family = species.family {
                         Text(family)
-                            .font(.system(size: 11))
+                            .font(.system(size: 12, weight: .medium, design: .rounded))
                             .foregroundColor(.flowerTextTertiary)
                             .lineLimit(1)
                     }
                     
-                    // Discovery count
-                    if species.discoveryCount > 1 {
-                        Text("\(species.discoveryCount) discovered")
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundColor(.flowerPrimary)
-                            .padding(.top, 2)
-                    }
+                    // First discovered date
+                    Text("Discovered \(species.firstDiscovered.formatted(date: .abbreviated, time: .omitted))")
+                        .font(.system(size: 11))
+                        .foregroundColor(.flowerPrimary)
+                        .padding(.top, 4)
                 }
-                .padding(.horizontal, 12)
-                .padding(.bottom, 12)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
             }
         }
+        .buttonStyle(PlainButtonStyle())
         .background(Color.flowerCardBackground)
-        .cornerRadius(16)
-        .shadow(color: .black.opacity(0.05), radius: 8, y: 2)
+        .cornerRadius(20)
+        .shadow(color: .black.opacity(0.08), radius: 12, x: 0, y: 4)
+        .scaleEffect(1.0)
+        .animation(.easeInOut(duration: 0.1), value: species.isInHerbarium)
     }
 }
 

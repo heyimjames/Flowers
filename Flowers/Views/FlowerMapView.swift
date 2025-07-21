@@ -76,16 +76,6 @@ struct FlowerMapView: View {
     var body: some View {
         if flower.discoveryLatitude != nil && flower.discoveryLongitude != nil {
             VStack(alignment: .leading, spacing: 12) {
-                HStack(spacing: 6) {
-                    Image(systemName: "map")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.flowerPrimary)
-                    Text("Discovery Location")
-                        .font(.system(size: 16, weight: .light, design: .serif))
-                        .foregroundColor(.flowerTextPrimary)
-                    Spacer()
-                }
-                
                 Button(action: {
                     showingFullMap = true
                 }) {

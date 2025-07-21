@@ -89,10 +89,10 @@ struct SettingsSheet: View {
                                 if AppConfig.shared.hasBuiltInKeys {
                                     HStack(spacing: 4) {
                                         Image(systemName: "checkmark.circle.fill")
-                                            .font(.system(size: 12))
+                                            .font(.system(size: 12, design: .rounded))
                                             .foregroundColor(.green)
                                         Text("Built-in")
-                                            .font(.system(size: 12))
+                                            .font(.system(size: 12, design: .rounded))
                                             .foregroundColor(.flowerTextSecondary)
                                     }
                                 }
@@ -126,7 +126,7 @@ struct SettingsSheet: View {
                             
                             if AppConfig.shared.hasBuiltInKeys {
                                 Text("✨ Built-in API keys are provided. Leave fields empty to use them, or enter your own keys to override.")
-                                    .font(.system(size: 12))
+                                    .font(.system(size: 12, design: .rounded))
                                     .foregroundColor(.flowerTextSecondary)
                                     .padding(.top, 8)
                             }
@@ -136,7 +136,7 @@ struct SettingsSheet: View {
                                     Image(systemName: "info.circle")
                                     Text("How to get API keys")
                                 }
-                                .font(.system(size: 14))
+                                .font(.system(size: 14, design: .rounded))
                                 .foregroundColor(.flowerPrimary)
                             }
                         }
@@ -157,10 +157,10 @@ struct SettingsSheet: View {
                             Toggle(isOn: $flowerStore.autoSaveToPhotos) {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text("Auto-Save to Photos")
-                                        .font(.system(size: 16, weight: .medium))
+                                        .font(.system(size: 16, weight: .medium, design: .rounded))
                                         .foregroundColor(.flowerTextPrimary)
                                     Text("Automatically save new flowers to a 'Flowers' album in your photo library")
-                                        .font(.system(size: 12))
+                                        .font(.system(size: 12, design: .rounded))
                                         .foregroundColor(.flowerTextSecondary)
                                         .fixedSize(horizontal: false, vertical: true)
                                 }
@@ -185,11 +185,11 @@ struct SettingsSheet: View {
                             Toggle(isOn: $notificationsEnabled) {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text("Daily Flower Notifications")
-                                        .font(.system(size: 16, weight: .medium))
+                                        .font(.system(size: 16, weight: .medium, design: .rounded))
                                         .foregroundColor(.flowerTextPrimary)
                                     
                                     Text("Get notified when your daily flower blooms")
-                                        .font(.system(size: 12))
+                                        .font(.system(size: 12, design: .rounded))
                                         .foregroundColor(.flowerTextSecondary)
                                 }
                             }
@@ -206,9 +206,9 @@ struct SettingsSheet: View {
                                 Button(action: openSettings) {
                                     HStack {
                                         Image(systemName: "gear")
-                                            .font(.system(size: 14))
+                                            .font(.system(size: 14, design: .rounded))
                                         Text("Open Settings to Enable Notifications")
-                                            .font(.system(size: 14))
+                                            .font(.system(size: 14, design: .rounded))
                                         Spacer()
                                     }
                                     .foregroundColor(.flowerPrimary)
@@ -227,7 +227,7 @@ struct SettingsSheet: View {
                             
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("App Icon")
-                                    .font(.system(size: 16, weight: .medium))
+                                    .font(.system(size: 16, weight: .medium, design: .rounded))
                                     .foregroundColor(.flowerTextPrimary)
                                 
                                 HStack(spacing: 16) {
@@ -297,7 +297,7 @@ struct SettingsSheet: View {
                                 }
                                 
                                 Text("Choose your preferred app icon. Changes take effect immediately.")
-                                    .font(.system(size: 12))
+                                    .font(.system(size: 12, design: .rounded))
                                     .foregroundColor(.flowerTextSecondary)
                                     .padding(.top, 4)
                             }
@@ -316,12 +316,12 @@ struct SettingsSheet: View {
                             // Debug Notification Scheduler
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("Test Notification")
-                                    .font(.system(size: 16, weight: .medium))
+                                    .font(.system(size: 16, weight: .medium, design: .rounded))
                                     .foregroundColor(.flowerTextPrimary)
                                 
                                 HStack {
                                     Text("Schedule in \(debugNotificationSeconds) seconds")
-                                        .font(.system(size: 14))
+                                        .font(.system(size: 14, design: .rounded))
                                         .foregroundColor(.flowerTextSecondary)
                                     
                                     Spacer()
@@ -343,10 +343,10 @@ struct SettingsSheet: View {
                                 Toggle(isOn: $flowerStore.showTestFlowerOnNextLaunch) {
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text("Test Flower on Next Launch")
-                                            .font(.system(size: 16, weight: .medium))
+                                            .font(.system(size: 16, weight: .medium, design: .rounded))
                                             .foregroundColor(.flowerTextPrimary)
                                         Text("Show the flower reveal screen when you next open the app")
-                                            .font(.system(size: 12))
+                                            .font(.system(size: 12, design: .rounded))
                                             .foregroundColor(.flowerTextSecondary)
                                     }
                                 }
@@ -357,11 +357,11 @@ struct SettingsSheet: View {
                                 // Restart Onboarding
                                 VStack(alignment: .leading, spacing: 12) {
                                     Text("Restart Onboarding")
-                                        .font(.system(size: 16, weight: .medium))
+                                        .font(.system(size: 16, weight: .medium, design: .rounded))
                                         .foregroundColor(.flowerTextPrimary)
                                     
                                     Text("Reset onboarding state and start from the beginning")
-                                        .font(.system(size: 12))
+                                        .font(.system(size: 12, design: .rounded))
                                         .foregroundColor(.flowerTextSecondary)
                                     
                                     Button(action: restartOnboarding) {
@@ -375,11 +375,11 @@ struct SettingsSheet: View {
                                 // Custom Flower Generation
                                 VStack(alignment: .leading, spacing: 12) {
                                     Text("Custom Flower Generation")
-                                        .font(.system(size: 16, weight: .medium))
+                                        .font(.system(size: 16, weight: .medium, design: .rounded))
                                         .foregroundColor(.flowerTextPrimary)
                                     
                                     Text("Generate a custom flower with a specific prompt")
-                                        .font(.system(size: 12))
+                                        .font(.system(size: 12, design: .rounded))
                                         .foregroundColor(.flowerTextSecondary)
                                     
                                     Button(action: { showingCustomFlowerSheet = true }) {
@@ -393,11 +393,11 @@ struct SettingsSheet: View {
                                 // Regenerate Onboarding Assets
                                 VStack(alignment: .leading, spacing: 12) {
                                     Text("Regenerate Onboarding Assets")
-                                        .font(.system(size: 16, weight: .medium))
+                                        .font(.system(size: 16, weight: .medium, design: .rounded))
                                         .foregroundColor(.flowerTextPrimary)
                                     
                                     Text("Force regenerate the static flower images used in onboarding")
-                                        .font(.system(size: 12))
+                                        .font(.system(size: 12, design: .rounded))
                                         .foregroundColor(.flowerTextSecondary)
                                     
                                     Button(action: regenerateOnboardingAssets) {
@@ -427,7 +427,7 @@ struct SettingsSheet: View {
                                 if !userName.isEmpty {
                                     HStack {
                                         Text(userName)
-                                            .font(.system(size: 16))
+                                            .font(.system(size: 16, design: .rounded))
                                             .foregroundColor(.flowerTextPrimary)
                                         
                                         Spacer()
@@ -437,7 +437,7 @@ struct SettingsSheet: View {
                                             flowerStore.shouldShowOnboarding = true
                                             dismiss()
                                         }
-                                        .font(.system(size: 14))
+                                        .font(.system(size: 14, design: .rounded))
                                         .foregroundColor(.flowerPrimary)
                                     }
                                 } else {
@@ -446,7 +446,7 @@ struct SettingsSheet: View {
                                         flowerStore.shouldShowOnboarding = true
                                         dismiss()
                                     }
-                                    .font(.system(size: 16))
+                                    .font(.system(size: 16, design: .rounded))
                                     .foregroundColor(.flowerPrimary)
                                 }
                             }
@@ -464,10 +464,10 @@ struct SettingsSheet: View {
                                         .foregroundColor(.flowerError)
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text("Reset Profile")
-                                            .font(.system(size: 16, weight: .medium))
+                                            .font(.system(size: 16, weight: .medium, design: .rounded))
                                             .foregroundColor(.flowerError)
                                         Text("Start fresh with onboarding and lose all flowers")
-                                            .font(.system(size: 12))
+                                            .font(.system(size: 12, design: .rounded))
                                             .foregroundColor(.flowerTextSecondary)
                                     }
                                     Spacer()
@@ -492,7 +492,7 @@ struct SettingsSheet: View {
                                 Text("1.0.0")
                                     .foregroundColor(.flowerTextPrimary)
                             }
-                            .font(.system(size: 14))
+                            .font(.system(size: 14, design: .rounded))
                             
                             HStack {
                                 Text("Flowers Discovered")
@@ -501,14 +501,14 @@ struct SettingsSheet: View {
                                 Text("\(flowerStore.totalDiscoveredCount)")
                                     .foregroundColor(.flowerTextPrimary)
                             }
-                            .font(.system(size: 14))
+                            .font(.system(size: 14, design: .rounded))
                             
                             Divider()
                                 .background(Color.flowerTextTertiary)
                             
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Built by James Frewin with the help of AI")
-                                    .font(.system(size: 14))
+                                    .font(.system(size: 14, design: .rounded))
                                     .foregroundColor(.flowerTextSecondary)
                                 
                                 Button(action: {
@@ -518,9 +518,9 @@ struct SettingsSheet: View {
                                 }) {
                                     HStack(spacing: 6) {
                                         Image(systemName: "link")
-                                            .font(.system(size: 12))
+                                            .font(.system(size: 12, design: .rounded))
                                         Text("@jamesfrewin1")
-                                            .font(.system(size: 14))
+                                            .font(.system(size: 14, design: .rounded))
                                     }
                                     .foregroundColor(.flowerPrimary)
                                 }
@@ -775,11 +775,11 @@ struct SettingsSheet: View {
                     
                     if let lastSync = iCloudSync.lastSyncDate {
                         Text("Last synced \(formattedSyncTime(lastSync))")
-                            .font(.system(size: 12))
+                            .font(.system(size: 12, design: .rounded))
                             .foregroundColor(.flowerTextSecondary)
                     } else {
                         Text("Not synced yet")
-                            .font(.system(size: 12))
+                            .font(.system(size: 12, design: .rounded))
                             .foregroundColor(.flowerTextSecondary)
                     }
                     
@@ -791,12 +791,12 @@ struct SettingsSheet: View {
                                     .font(.system(size: 11))
                                     .foregroundColor(.flowerPrimary)
                                 Text("\(iCloudSync.syncedFlowersCount) flowers")
-                                    .font(.system(size: 12))
+                                    .font(.system(size: 12, design: .rounded))
                                     .foregroundColor(.flowerTextSecondary)
                             }
                             
                             Text("•")
-                                .font(.system(size: 12))
+                                .font(.system(size: 12, design: .rounded))
                                 .foregroundColor(.flowerTextTertiary)
                             
                             HStack(spacing: 4) {
@@ -804,7 +804,7 @@ struct SettingsSheet: View {
                                     .font(.system(size: 11))
                                     .foregroundColor(.flowerPrimary)
                                 Text(iCloudSync.formattedDataSize)
-                                    .font(.system(size: 12))
+                                    .font(.system(size: 12, design: .rounded))
                                     .foregroundColor(.flowerTextSecondary)
                             }
                         }
@@ -819,7 +819,7 @@ struct SettingsSheet: View {
                         .scaleEffect(0.8)
                 } else if case .error(let error) = iCloudSync.syncStatus {
                     Image(systemName: "exclamationmark.circle")
-                        .font(.system(size: 16))
+                        .font(.system(size: 16, design: .rounded))
                         .foregroundColor(.flowerError)
                 }
             }
@@ -878,7 +878,7 @@ struct SettingsSheet: View {
                         ProgressView()
                             .scaleEffect(0.8)
                         Text("Restoring...")
-                            .font(.system(size: 14))
+                            .font(.system(size: 14, design: .rounded))
                             .foregroundColor(.flowerTextSecondary)
                     }
                     .padding(.top, 8)
@@ -900,7 +900,7 @@ struct SettingsSheet: View {
                 .fixedSize(horizontal: false, vertical: true)
             } else {
                 Text("Sign in to iCloud in Settings to back up your flowers")
-                    .font(.system(size: 12))
+                    .font(.system(size: 12, design: .rounded))
                     .foregroundColor(.flowerTextTertiary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -950,7 +950,7 @@ struct FlowerTextFieldStyle: TextFieldStyle {
             .padding(12)
             .background(Color.flowerInputBackground)
             .cornerRadius(8)
-            .font(.system(size: 16))
+            .font(.system(size: 16, design: .rounded))
     }
 }
 
@@ -996,7 +996,7 @@ struct CustomFlowerGenerationSheet: View {
                                     .foregroundColor(.flowerTextPrimary)
                                 
                                 Text("Describe the flower you'd like to generate. Be as detailed as possible - include colors, textures, style, and any special characteristics.")
-                                    .font(.system(size: 14))
+                                    .font(.system(size: 14, design: .rounded))
                                     .foregroundColor(.flowerTextSecondary)
                                 
                                 // Text Editor
@@ -1016,7 +1016,7 @@ struct CustomFlowerGenerationSheet: View {
                                                         .progressViewStyle(CircularProgressViewStyle(tint: Color.flowerPrimary))
                                                 } else {
                                                     Image(systemName: "sparkles")
-                                                        .font(.system(size: 12))
+                                                        .font(.system(size: 12, design: .rounded))
                                                 }
                                                 Text("Generate")
                                                     .font(.system(size: 12, weight: .medium))
@@ -1042,7 +1042,7 @@ struct CustomFlowerGenerationSheet: View {
                                             .padding(12)
                                             .scrollContentBackground(.hidden)
                                             .background(Color.clear)
-                                            .font(.system(size: 16))
+                                            .font(.system(size: 16, design: .rounded))
                                             .foregroundColor(.flowerTextPrimary)
                                     }
                                     .frame(minHeight: 120)
@@ -1060,7 +1060,7 @@ struct CustomFlowerGenerationSheet: View {
                                 
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text("Give your flower a unique name")
-                                        .font(.system(size: 14))
+                                        .font(.system(size: 14, design: .rounded))
                                         .foregroundColor(.flowerTextSecondary)
                                     
                                     TextField("Enter flower name", text: $customName)
@@ -1088,14 +1088,14 @@ struct CustomFlowerGenerationSheet: View {
                                 .background(isGenerating ? Color.flowerPrimary.opacity(0.6) : Color.flowerPrimary)
                                 .foregroundColor(.white)
                                 .cornerRadius(12)
-                                .font(.system(size: 16, weight: .medium))
+                                .font(.system(size: 16, weight: .medium, design: .rounded))
                             }
                             .disabled(isGenerating || customPrompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                             
                             // Error Message
                             if let error = errorMessage {
                                 Text(error)
-                                    .font(.system(size: 14))
+                                    .font(.system(size: 14, design: .rounded))
                                     .foregroundColor(.flowerError)
                                     .padding(.top, 8)
                             }
@@ -1210,7 +1210,7 @@ struct TipRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon)
-                .font(.system(size: 16))
+                .font(.system(size: 16, design: .rounded))
                 .foregroundColor(.flowerPrimary)
                 .frame(width: 20)
             
@@ -1220,7 +1220,7 @@ struct TipRow: View {
                     .foregroundColor(.flowerTextPrimary)
                 
                 Text(description)
-                    .font(.system(size: 12))
+                    .font(.system(size: 12, design: .rounded))
                     .foregroundColor(.flowerTextSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }

@@ -63,7 +63,18 @@ class FALService {
                 prompt = basePrompt
             }
         } else {
-            let basePrompt = "ISOLATED on PLAIN WHITE BACKGROUND, a single \(descriptor) flower, NOTHING ELSE IN FRAME, pure white empty background, NO SHADOWS on background, botanical illustration style, soft watercolor texture, delicate petals, elegant stem with leaves, dreamy and ethereal, pastel colors with subtle gradients, professional botanical art, COMPLETELY WHITE BACKGROUND, isolated subject, minimalist presentation, highly detailed, 4K"
+            // Check if this is a botanical species prompt (contains scientific name or botanical terms)
+            let isBotanicalSpecies = descriptor.contains(" with ") || descriptor.lowercased().contains("botanical") || descriptor.contains("rosa ") || descriptor.contains("orchid") || descriptor.contains("lily")
+            
+            let basePrompt: String
+            if isBotanicalSpecies {
+                // More botanically accurate prompt for real species
+                basePrompt = "ISOLATED on PLAIN WHITE BACKGROUND, \(descriptor), NOTHING ELSE IN FRAME, pure white empty background, NO SHADOWS on background, scientific botanical illustration style, anatomically correct flower structure, accurate botanical details, realistic petal arrangement, authentic natural colors, educational botanical accuracy, professional scientific illustration, COMPLETELY WHITE BACKGROUND, isolated subject, highly detailed botanical features, 4K resolution"
+            } else {
+                // Original artistic prompt for custom flowers
+                basePrompt = "ISOLATED on PLAIN WHITE BACKGROUND, a single \(descriptor) flower, NOTHING ELSE IN FRAME, pure white empty background, NO SHADOWS on background, botanical illustration style, soft watercolor texture, delicate petals, elegant stem with leaves, dreamy and ethereal, pastel colors with subtle gradients, professional botanical art, COMPLETELY WHITE BACKGROUND, isolated subject, minimalist presentation, highly detailed, 4K"
+            }
+            
             if let message = personalMessage {
                 prompt = basePrompt + ". " + message
             } else {
