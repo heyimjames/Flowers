@@ -21,6 +21,7 @@ struct SettingsSheet: View {
     @State private var showingImportConfirmation = false
     @State private var currentAppIcon: String = ""
     @State private var showingCustomFlowerSheet = false
+    @State private var showingWeatherTestSheet = false
     @AppStorage("userName") private var userName = ""
     
     // Developer detection
@@ -393,6 +394,24 @@ struct SettingsSheet: View {
                                 
                                 Divider()
                                 
+                                // Weather Component Test
+                                VStack(alignment: .leading, spacing: 12) {
+                                    Text("Weather Component Test")
+                                        .font(.system(size: 16, weight: .medium, design: .rounded))
+                                        .foregroundColor(.flowerTextPrimary)
+                                    
+                                    Text("Test different weather component variations for the flower detail view")
+                                        .font(.system(size: 12, design: .rounded))
+                                        .foregroundColor(.flowerTextSecondary)
+                                    
+                                    Button(action: { showingWeatherTestSheet = true }) {
+                                        Text("Test Weather Components")
+                                    }
+                                    .flowerButtonStyle()
+                                }
+                                
+                                Divider()
+                                
                                 // Regenerate Onboarding Assets
                                 VStack(alignment: .leading, spacing: 12) {
                                     Text("Regenerate Onboarding Assets")
@@ -631,6 +650,12 @@ struct SettingsSheet: View {
             CustomFlowerGenerationSheet()
                 .environmentObject(flowerStore)
                 .presentationCornerRadius(32)
+        }
+        .sheet(isPresented: $showingWeatherTestSheet) {
+            WeatherComponentTestSheet()
+                .presentationDetents([.large])
+                .presentationCornerRadius(32)
+                .presentationDragIndicator(.visible)
         }
     }
     

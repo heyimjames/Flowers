@@ -56,7 +56,7 @@ class FALService {
         // Build the prompt based on whether it's a bouquet or single flower
         let prompt: String
         if isBouquet {
-            let basePrompt = "ISOLATED on PLAIN WHITE BACKGROUND, a beautiful bouquet of \(descriptor), NOTHING ELSE IN FRAME, pure white empty background, NO SHADOWS on background, elegant botanical illustration style, soft watercolor texture, multiple flower types harmoniously arranged, wrapped with delicate ribbon, dreamy and ethereal, pastel colors with subtle gradients, professional botanical art, COMPLETELY WHITE BACKGROUND, isolated subject, minimalist presentation, highly detailed flowers, 4K"
+            let basePrompt = "ISOLATED on PLAIN WHITE BACKGROUND, a beautiful bouquet of \(descriptor), NOTHING ELSE IN FRAME, pure white empty background, NO SHADOWS on background, elegant botanical illustration style, soft watercolor texture, multiple flower types harmoniously arranged, wrapped with delicate ribbon, dreamy and ethereal, SOFT PASTEL COLORS ONLY, light and airy colors, muted tones, subtle gradients, NO BRIGHT OR SATURATED COLORS, gentle pale hues, professional botanical art, COMPLETELY WHITE BACKGROUND, isolated subject, minimalist presentation, highly detailed flowers, 4K"
             if let message = personalMessage {
                 prompt = basePrompt + ". " + message
             } else {
@@ -69,10 +69,10 @@ class FALService {
             let basePrompt: String
             if isBotanicalSpecies {
                 // More botanically accurate prompt for real species
-                basePrompt = "ISOLATED on PLAIN WHITE BACKGROUND, \(descriptor), NOTHING ELSE IN FRAME, pure white empty background, NO SHADOWS on background, scientific botanical illustration style, anatomically correct flower structure, accurate botanical details, realistic petal arrangement, authentic natural colors, educational botanical accuracy, professional scientific illustration, COMPLETELY WHITE BACKGROUND, isolated subject, highly detailed botanical features, 4K resolution"
+                basePrompt = "ISOLATED on PLAIN WHITE BACKGROUND, \(descriptor), NOTHING ELSE IN FRAME, pure white empty background, NO SHADOWS on background, scientific botanical illustration style, anatomically correct flower structure, accurate botanical details, realistic petal arrangement, SOFT NATURAL COLORS, light and delicate tones, NO OVERSATURATED COLORS, gentle pastel hues where appropriate, educational botanical accuracy, professional scientific illustration, COMPLETELY WHITE BACKGROUND, isolated subject, highly detailed botanical features, 4K resolution"
             } else {
                 // Original artistic prompt for custom flowers
-                basePrompt = "ISOLATED on PLAIN WHITE BACKGROUND, a single \(descriptor) flower, NOTHING ELSE IN FRAME, pure white empty background, NO SHADOWS on background, botanical illustration style, soft watercolor texture, delicate petals, elegant stem with leaves, dreamy and ethereal, pastel colors with subtle gradients, professional botanical art, COMPLETELY WHITE BACKGROUND, isolated subject, minimalist presentation, highly detailed, 4K"
+                basePrompt = "ISOLATED on PLAIN WHITE BACKGROUND, a single \(descriptor) flower, NOTHING ELSE IN FRAME, pure white empty background, NO SHADOWS on background, botanical illustration style, soft watercolor texture, delicate petals, elegant stem with leaves, dreamy and ethereal, VERY SOFT PASTEL COLORS, light and airy palette, muted gentle tones, subtle gradients, NO BRIGHT OR VIVID COLORS, pale delicate hues only, desaturated colors, professional botanical art, COMPLETELY WHITE BACKGROUND, isolated subject, minimalist presentation, highly detailed, 4K"
             }
             
             if let message = personalMessage {

@@ -50,6 +50,11 @@ class FlowerStore: ObservableObject {
         discoveredFlowers.count
     }
     
+    var uniqueSpeciesDiscoveredCount: Int {
+        let uniqueScientificNames = Set(discoveredFlowers.compactMap { $0.scientificName })
+        return uniqueScientificNames.count
+    }
+    
     var generatedFlowersCount: Int {
         discoveredFlowers.filter { flower in
             // Generated flowers have no ownership history (only original owner is current user)

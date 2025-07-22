@@ -350,7 +350,7 @@ struct FlowerNameGenerator {
 struct FlowerDescriptors {
     static let descriptors = [
         "delicate alpine rose with morning dew",
-        "tropical orchid with vibrant petals",
+        "tropical orchid with soft pastel petals",
         "wildflower lily from mountain meadows",
         "sunset dahlia with gradient colors",
         "deep purple iris with velvety texture",

@@ -87,7 +87,7 @@ class OpenAIService {
         }
         
         // Build botanically accurate prompt using real species data
-        let prompt = "ISOLATED on PLAIN WHITE BACKGROUND, \(species.imagePrompt), NOTHING ELSE IN FRAME, pure white empty background, NO SHADOWS on background, scientific botanical illustration style, accurate botanical details, realistic flower structure, proper petal arrangement, authentic colors, botanical accuracy, professional scientific illustration, COMPLETELY WHITE BACKGROUND, isolated subject, educational botanical art, highly detailed, 4K"
+        let prompt = "ISOLATED on PLAIN WHITE BACKGROUND, \(species.imagePrompt), NOTHING ELSE IN FRAME, pure white empty background, NO SHADOWS on background, scientific botanical illustration style, accurate botanical details, realistic flower structure, proper petal arrangement, SOFT NATURAL COLORS, light and delicate tones, NO OVERSATURATED COLORS, gentle pastel hues where appropriate, botanical accuracy, professional scientific illustration, COMPLETELY WHITE BACKGROUND, isolated subject, educational botanical art, highly detailed, 4K"
         
         return try await generateFlowerImageWithPrompt(prompt)
     }
@@ -100,7 +100,7 @@ class OpenAIService {
         }
         
         // Build the prompt using the original structure
-        let prompt = "ISOLATED on PLAIN WHITE BACKGROUND, a single \(descriptor) flower, NOTHING ELSE IN FRAME, pure white empty background, NO SHADOWS on background, botanical illustration style, soft watercolor texture, delicate petals, elegant stem with leaves, dreamy and ethereal, pastel colors with subtle gradients, professional botanical art, COMPLETELY WHITE BACKGROUND, isolated subject, minimalist presentation, highly detailed, 4K"
+        let prompt = "ISOLATED on PLAIN WHITE BACKGROUND, a single \(descriptor) flower, NOTHING ELSE IN FRAME, pure white empty background, NO SHADOWS on background, botanical illustration style, soft watercolor texture, delicate petals, elegant stem with leaves, dreamy and ethereal, VERY SOFT PASTEL COLORS, light and airy palette, muted gentle tones, subtle gradients, NO BRIGHT OR VIVID COLORS, pale delicate hues only, desaturated colors, professional botanical art, COMPLETELY WHITE BACKGROUND, isolated subject, minimalist presentation, highly detailed, 4K"
         
         return try await generateFlowerImageWithPrompt(prompt)
     }

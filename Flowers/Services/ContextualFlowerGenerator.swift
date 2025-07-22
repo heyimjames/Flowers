@@ -254,7 +254,7 @@ class ContextualFlowerGenerator: NSObject, ObservableObject, CLLocationManagerDe
                 name: "Ita's Memorial", 
                 descriptor: "remembrance and love", 
                 isBouquetWorthy: true, 
-                bouquetTheme: "beautiful Brazilian-themed flowers in vibrant green, blue and yellow, honoring a beloved grandmother",
+                bouquetTheme: "beautiful Brazilian-themed flowers in soft green, blue and yellow, honoring a beloved grandmother",
                 customLocation: (-23.5505, -46.6333, "São Paulo, Brazil"),
                 personalMessage: "A special Brazilian bouquet to celebrate and remember Ita, Jenny's amazing grandmother, on her birthday. Her spirit lives on in the love she shared and the memories she created. These flowers in Brazil's colors honor a truly remarkable woman who touched so many lives with her kindness and warmth.",
                 customFlowerName: "Ita's Birthday Remembrance"
@@ -264,7 +264,7 @@ class ContextualFlowerGenerator: NSObject, ObservableObject, CLLocationManagerDe
                 name: "James' Birthday", 
                 descriptor: "birthday celebration", 
                 isBouquetWorthy: true, 
-                bouquetTheme: "majestic Bird of Paradise flower with vibrant orange and blue petals",
+                bouquetTheme: "majestic Bird of Paradise flower with soft orange and blue petals",
                 customLocation: (51.5074, -0.1278, "London, United Kingdom"),
                 personalMessage: "A stunning Bird of Paradise flower to celebrate James, the creator of this app, on his birthday. May this exotic bloom represent the colorful journey ahead and all the beauty life has to offer.",
                 customFlowerName: "James' Bird of Paradise"

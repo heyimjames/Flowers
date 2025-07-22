@@ -16,6 +16,7 @@ struct ContentView: View {
     @State private var showDiscoveryCount = true
     @State private var showingFlowerDetail = false
     @State private var showingOnboarding = false
+    @State private var showingShareSheet = false
     @Environment(\.scenePhase) var scenePhase
     @Environment(\.colorScheme) var colorScheme
     @State private var wasInBackground = false
@@ -25,120 +26,122 @@ struct ContentView: View {
     let pillAnimationTimer = Timer.publish(every: 5, on: .main, in: .common).autoconnect()
     
     var body: some View {
-        ScrollView {
-                VStack(spacing: 20) {
-                    // Main flower display
-                    flowerDisplay
-                        .padding(.horizontal, 20)
-                        .padding(.top, 16)
-                    
-                    // Error message if any
-                    if let errorMessage = flowerStore.errorMessage {
-                        Text(errorMessage)
-                            .font(.system(size: 14, design: .rounded))
-                            .foregroundColor(.flowerError)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 40)
+        ZStack {
+            ScrollView {
+                    VStack(spacing: 20) {
+                        // Main flower display
+                        flowerDisplay
+                            .padding(.horizontal, 20)
+                            .padding(.top, 16)
+                        
+                        // Error message if any
+                        if let errorMessage = flowerStore.errorMessage {
+                            Text(errorMessage)
+                                .font(.system(size: 14, design: .rounded))
+                                .foregroundColor(.flowerError)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 40)
+                        }
+                        
+                        // Extra padding for action buttons
+                        Color.clear
+                            .frame(height: 100)
                     }
-                    
-                    // Extra padding for action buttons
-                    Color.clear
-                        .frame(height: 100)
                 }
-            }
-            .scrollIndicators(.hidden)
-            .safeAreaInset(edge: .top, spacing: 0) {
-                // Navigation bar
-                ZStack {
-                    // Centered app title (absolutely centered)
-                    Image(colorScheme == .dark ? "flowerssvggreen" : "FlowersSVG")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: 28)
-                        .frame(maxWidth: .infinity)
-                    
-                    // HStack for pill and settings button
-                    HStack {
-                        // Animated discovery/countdown pill
-                        ZStack {
-                            // Discovery count view
-                            HStack(spacing: 4) {
-                                Image(systemName: "sparkles")
-                                    .font(.system(size: 12, design: .rounded))
-                                    .foregroundColor(.flowerPrimary)
-                                Text("\(flowerStore.totalDiscoveredCount)")
-                                    .font(.system(size: 14, weight: .semibold, design: .rounded))
-                                    .foregroundColor(.flowerTextPrimary)
-                                Text("found")
-                                    .font(.system(size: 11, design: .rounded))
-                                    .foregroundColor(.flowerTextSecondary)
-                            }
-                            .opacity(showDiscoveryCount ? 1 : 0)
-                            .scaleEffect(showDiscoveryCount ? 1 : 0.8)
-                            
-                            // Countdown view
-                            HStack(spacing: 4) {
-                                Image(systemName: "clock")
-                                    .font(.system(size: 12, design: .rounded))
-                                    .foregroundColor(.flowerPrimary)
-                                if let nextTime = flowerStore.nextFlowerTime {
-                                    CountdownText(targetDate: nextTime)
-                                        .font(.system(size: 11, design: .rounded))
-                                        .foregroundColor(.flowerTextSecondary)
-                                } else {
-                                    Text("Soon")
+                .scrollIndicators(.hidden)
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    // Navigation bar
+                    ZStack {
+                        // Centered app title (absolutely centered)
+                        Image(colorScheme == .dark ? "flowerssvggreen" : "FlowersSVG")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 28)
+                            .frame(maxWidth: .infinity)
+                        
+                        // HStack for pill and settings button
+                        HStack {
+                            // Animated discovery/countdown pill
+                            ZStack {
+                                // Discovery count view
+                                HStack(spacing: 4) {
+                                    Image(systemName: "sparkles")
+                                        .font(.system(size: 12, design: .rounded))
+                                        .foregroundColor(.flowerPrimary)
+                                    Text("\(flowerStore.totalDiscoveredCount)")
+                                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                        .foregroundColor(.flowerTextPrimary)
+                                    Text("found")
                                         .font(.system(size: 11, design: .rounded))
                                         .foregroundColor(.flowerTextSecondary)
                                 }
+                                .opacity(showDiscoveryCount ? 1 : 0)
+                                .scaleEffect(showDiscoveryCount ? 1 : 0.8)
+                                
+                                // Countdown view
+                                HStack(spacing: 4) {
+                                    Image(systemName: "clock")
+                                        .font(.system(size: 12, design: .rounded))
+                                        .foregroundColor(.flowerPrimary)
+                                    if let nextTime = flowerStore.nextFlowerTime {
+                                        CountdownText(targetDate: nextTime)
+                                            .font(.system(size: 11, design: .rounded))
+                                            .foregroundColor(.flowerTextSecondary)
+                                    } else {
+                                        Text("Soon")
+                                            .font(.system(size: 11, design: .rounded))
+                                            .foregroundColor(.flowerTextSecondary)
+                                    }
+                                }
+                                .opacity(showDiscoveryCount ? 0 : 1)
+                                .scaleEffect(showDiscoveryCount ? 0.8 : 1)
                             }
-                            .opacity(showDiscoveryCount ? 0 : 1)
-                            .scaleEffect(showDiscoveryCount ? 0.8 : 1)
-                        }
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(Color.flowerPrimary.opacity(0.1))
-                        .cornerRadius(25)
-                        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: showDiscoveryCount)
-                        
-                        Spacer()
-                        
-                        // Settings button
-                        Button {
-                            showingSettings = true
-                        } label: {
-                            SettingsIcon(size: 22, color: .flowerTextSecondary)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(Color.flowerPrimary.opacity(0.1))
+                            .cornerRadius(25)
+                            .animation(.spring(response: 0.4, dampingFraction: 0.8), value: showDiscoveryCount)
+                            
+                            Spacer()
+                            
+                            // Settings button
+                            Button {
+                                showingSettings = true
+                            } label: {
+                                SettingsIcon(size: 22, color: .flowerTextSecondary)
+                            }
                         }
                     }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 16)
+                    .background(Color.flowerBackground)
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 16)
-                .background(Color.flowerBackground)
-            }
-            
-            // Action buttons pinned to bottom
-            VStack {
-                Spacer()
                 
-                VStack(spacing: 0) {
-                    // Subtle fade to blend content with gradient
-                    LinearGradient(
-                        colors: [
-                            Color.flowerBackground.opacity(0),
-                            Color.flowerBackground.opacity(0.2),
-                            Color.flowerBackground.opacity(0.4),
-                            Color.clear
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    .frame(height: 60)
+                // Action buttons pinned to bottom
+                VStack {
+                    Spacer()
                     
-                    actionButtons
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 40)
+                    VStack(spacing: 0) {
+                        // Subtle fade to blend content with gradient
+                        LinearGradient(
+                            colors: [
+                                Color.flowerBackground.opacity(0),
+                                Color.flowerBackground.opacity(0.2),
+                                Color.flowerBackground.opacity(0.4),
+                                Color.clear
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .frame(height: 60)
+                        
+                        actionButtons
+                            .padding(.horizontal, 20)
+                            .padding(.bottom, 40)
+                    }
                 }
-            }
-            .ignoresSafeArea(edges: .bottom)
+                .ignoresSafeArea(edges: .bottom)
+        }
         .sheet(isPresented: $showingFavorites) {
             FavoritesSheet(flowerStore: flowerStore)
                 .presentationDetents([.large])
@@ -165,6 +168,11 @@ struct ContentView: View {
                     .presentationDetents([.large])
                     .presentationCornerRadius(32)
                     .presentationDragIndicator(.visible)
+            }
+        }
+        .sheet(isPresented: $showingShareSheet) {
+            if let flower = flowerStore.currentFlower {
+                ShareSheet(flower: flower)
             }
         }
         .onReceive(pillAnimationTimer) { _ in
@@ -445,8 +453,7 @@ struct ContentView: View {
                         
                         // Share button
                         Button(action: {
-                            // Share functionality would go here
-                            showingFlowerDetail = true
+                            showingShareSheet = true
                         }) {
                             HStack(spacing: 8) {
                                 Image(systemName: "square.and.arrow.up")
@@ -721,7 +728,6 @@ struct PulsingFlowerRevealView: View {
             }
     }
 }
-
 
 #Preview {
     ContentView()

@@ -217,9 +217,9 @@ struct OnboardingView: View {
             // Generate contextual starter themes
             let currentMonth = Calendar.current.monthSymbols[Calendar.current.component(.month, from: Date()) - 1]
             let seasonalColors = currentSeason == .spring ? "soft pastels and fresh greens" : 
-                               currentSeason == .summer ? "warm golds and vibrant blues" : 
-                               currentSeason == .autumn ? "rich burgundy and copper tones" : 
-                               "crisp whites and deep emerald"
+                               currentSeason == .summer ? "gentle yellows and soft sky blues" : 
+                               currentSeason == .autumn ? "muted dusty rose and pale copper tones" : 
+                               "crisp whites and soft sage green"
             
             let starterThemes = [
                 (
@@ -663,7 +663,7 @@ struct WelcomePageView: View {
             } else {
                 // Fallback animated flower icon while loading
                 Image(systemName: "flower")
-                    .font(.system(size: 80))
+                    .font(.system(size: 80, design: .rounded))
                     .foregroundColor(.flowerPrimary)
                     .scaleEffect(animateFlower ? 1.1 : 1.0)
                     .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true), value: animateFlower)
@@ -680,7 +680,7 @@ struct WelcomePageView: View {
                     .multilineTextAlignment(.center)
                 
                 Text("Collect beautiful AI-generated flowers and share them with the people closest to you")
-                    .font(.system(size: 18))
+                    .font(.system(size: 18, design: .rounded))
                     .foregroundColor(.flowerTextSecondary)
                     .multilineTextAlignment(.center)
                     .lineSpacing(7.2) // 1.4em at 18pt font size
@@ -762,9 +762,9 @@ struct HowItWorksPageView: View {
                 )
                 
                 FeatureRow(
-                    icon: "location.fill",
-                    title: "Uniquely Yours",
-                    description: "Flowers adapt to your location, season & time",
+                    icon: "leaf.fill",
+                    title: "Real Botanical Species",
+                    description: "Choose from 400+ scientifically accurate flowers",
                     delay: 0.2,
                     appeared: featuresAppeared
                 )
@@ -772,31 +772,31 @@ struct HowItWorksPageView: View {
                 FeatureRow(
                     icon: "sparkle",
                     title: "Contextual Magic",
-                    description: "Each flower reflects your city, weather & calendar",
+                    description: "Find flowers specific to your location, weather & time",
                     delay: 0.3,
+                    appeared: featuresAppeared
+                )
+                
+                FeatureRow(
+                    icon: "star.fill",
+                    title: "Rarity Progression",
+                    description: "Discover rare species as your garden grows",
+                    delay: 0.4,
                     appeared: featuresAppeared
                 )
                 
                 FeatureRow(
                     icon: "heart.fill",
                     title: "Build Your Garden",
-                    description: "Save favorites and grow your collection",
-                    delay: 0.4,
-                    appeared: featuresAppeared
-                )
-                
-                FeatureRow(
-                    icon: "bell.fill",
-                    title: "Gentle Reminders",
-                    description: "Notifications when new flowers bloom",
+                    description: "Save favorites and track your collection",
                     delay: 0.5,
                     appeared: featuresAppeared
                 )
                 
                 FeatureRow(
                     icon: "square.and.arrow.up",
-                    title: "Share with Loved Ones",
-                    description: "Send flowers to friends and family via AirDrop or messages",
+                    title: "Share with Love",
+                    description: "Send flowers to friends via AirDrop or messages",
                     delay: 0.6,
                     appeared: featuresAppeared
                 )
@@ -823,13 +823,13 @@ struct FeatureRow: View {
     var body: some View {
         HStack(spacing: 20) {
             Image(systemName: icon)
-                .font(.system(size: 28))
+                .font(.system(size: 28, design: .rounded))
                 .foregroundColor(.flowerPrimary)
                 .frame(width: 50)
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.system(size: 18, weight: .semibold, design: .rounded))
                     .foregroundColor(.flowerTextPrimary)
                 
                 Text(description)
@@ -872,7 +872,7 @@ struct LocationPermissionPageView: View {
                     .foregroundColor(.flowerTextPrimary)
                     .multilineTextAlignment(.center)
                 
-                Text("We use your location to generate flowers that are personalized to your city and surroundings")
+                Text("Your location unlocks personalized flower discoveries")
                     .font(.system(size: 16, design: .rounded))
                     .foregroundColor(.flowerTextSecondary)
                     .multilineTextAlignment(.center)
@@ -899,6 +899,7 @@ struct LocationPermissionPageView: View {
                 .rotationEffect(.degrees(-2)) // Random rotation: -2 degrees
                 .animation(.spring(response: 0.8, dampingFraction: 0.8), value: animateMap)
                 .onAppear { animateMap = true }
+                
             }
             
             Spacer()
@@ -922,7 +923,7 @@ struct StarterFlowerSelectionView: View {
                     .font(.system(size: 32, weight: .light, design: .serif))
                     .foregroundColor(.flowerTextPrimary)
                 
-                Text("Select your first flower\nfrom these three options")
+                Text("Three flowers created just for you")
                     .font(.system(size: 16, design: .rounded))
                     .foregroundColor(.flowerTextSecondary)
                     .multilineTextAlignment(.center)
@@ -996,6 +997,16 @@ struct StarterFlowerSelectionView: View {
                     }
                 }
                 
+                // Contextual description
+                Text("These starter flowers were specially generated based on your current location, season, and time. Each one is unique to this moment in your journey.")
+                    .font(.system(size: 14, design: .rounded))
+                    .foregroundColor(.flowerTextSecondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+                    .padding(.top, -10)
+                    .opacity(cardsAppeared ? 1 : 0)
+                    .animation(.easeIn(duration: 0.5).delay(0.5), value: cardsAppeared)
+                
                 // Select button with page dots
                 VStack(spacing: 20) {
                     // Page dots for flower cards
@@ -1026,6 +1037,16 @@ struct StarterFlowerSelectionView: View {
                     )
                     .disabled(selectedIndex == nil)
                     .padding(.horizontal, 32)
+                    
+                    // Privacy and accuracy note
+                    Text("Based on real botanical species • Your data stays private • Only discovery locations are saved")
+                        .font(.system(size: 11, design: .rounded))
+                        .foregroundColor(.flowerTextTertiary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 32)
+                        .padding(.top, 8)
+                        .opacity(cardsAppeared ? 0.8 : 0)
+                        .animation(.easeIn(duration: 0.5).delay(0.7), value: cardsAppeared)
                 }
                 .padding(.bottom, 50)
             }
@@ -1049,7 +1070,7 @@ struct CameraRollPermissionPageView: View {
                     .foregroundColor(.flowerTextPrimary)
                     .multilineTextAlignment(.center)
                 
-                Text("We use camera roll access to save your personalized flowers to your photo library")
+                Text("Build a beautiful gallery of your personalized discoveries")
                     .font(.system(size: 16, design: .rounded))
                     .foregroundColor(.flowerTextSecondary)
                     .multilineTextAlignment(.center)
@@ -1064,10 +1085,10 @@ struct CameraRollPermissionPageView: View {
                 // Album title
                 HStack {
                     Image(systemName: "photo.on.rectangle.angled")
-                        .font(.system(size: 20))
+                        .font(.system(size: 20, design: .rounded))
                         .foregroundColor(.flowerPrimary)
                     Text("Flowers")
-                        .font(.system(size: 20, weight: .semibold))
+                        .font(.system(size: 20, weight: .semibold, design: .rounded))
                         .foregroundColor(.flowerTextPrimary)
                     Spacer()
                 }
@@ -1089,7 +1110,7 @@ struct CameraRollPermissionPageView: View {
                                     .aspectRatio(1, contentMode: .fit)
                                     .overlay(
                                         Image(systemName: "flower.fill")
-                                            .font(.system(size: 24))
+                                            .font(.system(size: 24, design: .rounded))
                                             .foregroundColor(.flowerPrimary.opacity(0.6))
                                     )
                             }
@@ -1099,6 +1120,7 @@ struct CameraRollPermissionPageView: View {
                     }
                 }
                 .padding(.horizontal, 16)
+                
             }
             .padding(.vertical, 20)
             .background(Color.flowerCardBackground)
@@ -1136,7 +1158,7 @@ struct CalendarPermissionPageView: View {
                     .foregroundColor(.flowerTextPrimary)
                     .multilineTextAlignment(.center)
                 
-                Text("We use calendar access to generate special flowers personalized to your holidays and important events")
+                Text("Celebrate special moments with themed flowers")
                     .font(.system(size: 16, design: .rounded))
                     .foregroundColor(.flowerTextSecondary)
                     .multilineTextAlignment(.center)
@@ -1151,7 +1173,7 @@ struct CalendarPermissionPageView: View {
                 // Calendar header
                 HStack {
                     Text("May 2025")
-                        .font(.system(size: 18, weight: .semibold))
+                        .font(.system(size: 18, weight: .semibold, design: .rounded))
                         .foregroundColor(.flowerTextPrimary)
                     Spacer()
                 }
@@ -1162,7 +1184,7 @@ struct CalendarPermissionPageView: View {
                     // Day headers
                     ForEach(["S", "M", "T", "W", "T", "F", "S"], id: \.self) { day in
                         Text(day)
-                            .font(.system(size: 12, weight: .medium))
+                            .font(.system(size: 12, weight: .medium, design: .rounded))
                             .foregroundColor(.flowerTextSecondary)
                             .frame(width: 32, height: 20)
                             .multilineTextAlignment(.center)
@@ -1197,6 +1219,7 @@ struct CalendarPermissionPageView: View {
                     }
                 }
                 .padding(.horizontal, 12)
+                
             }
             .padding(.vertical, 20)
             .background(Color.flowerCardBackground)
@@ -1236,7 +1259,7 @@ struct WeatherPermissionPageView: View {
                     .foregroundColor(.flowerTextPrimary)
                     .multilineTextAlignment(.center)
                 
-                Text("We use weather data to generate flowers that are personalized to your current weather conditions")
+                Text("Every condition creates unique flower meanings")
                     .font(.system(size: 16, design: .rounded))
                     .foregroundColor(.flowerTextSecondary)
                     .multilineTextAlignment(.center)
@@ -1264,11 +1287,11 @@ struct WeatherPermissionPageView: View {
                     VStack(alignment: .trailing, spacing: 4) {
                         HStack(spacing: 8) {
                             Image(systemName: "sun.max.fill")
-                                .font(.system(size: 24))
+                                .font(.system(size: 24, design: .rounded))
                                 .foregroundColor(.yellow)
                             
                             Text("31°C")
-                                .font(.system(size: 24, weight: .semibold))
+                                .font(.system(size: 24, weight: .semibold, design: .rounded))
                                 .foregroundColor(.white)
                         }
                         
@@ -1315,6 +1338,7 @@ struct WeatherPermissionPageView: View {
             .animation(.spring(response: 0.6, dampingFraction: 0.8), value: animateWeather)
             .onAppear { animateWeather = true }
             
+            
             Spacer()
             Spacer()
         }
@@ -1347,7 +1371,7 @@ struct StarterFlowerCard: View {
                     
                     VStack(spacing: 12) {
                         Image(systemName: "flower.fill")
-                            .font(.system(size: 48))
+                            .font(.system(size: 48, design: .rounded))
                             .foregroundColor(.flowerPrimary.opacity(0.6))
                         
                         Text("Loading...")
@@ -1443,9 +1467,9 @@ struct OnboardingMapView: View {
                     if let locationName = flower.discoveryLocationName {
                         HStack(spacing: 4) {
                             Image(systemName: "location.fill")
-                                .font(.system(size: 10))
+                                .font(.system(size: 10, design: .rounded))
                             Text(locationName)
-                                .font(.system(size: 12, weight: .medium))
+                                .font(.system(size: 12, weight: .medium, design: .rounded))
                         }
                         .foregroundColor(.white)
                         .padding(.horizontal, 12)
@@ -1519,7 +1543,7 @@ struct UsernameSetupPageView: View {
             VStack(spacing: 32) {
                 // Icon
                 Image(systemName: "at.circle")
-                    .font(.system(size: 80))
+                    .font(.system(size: 80, design: .rounded))
                     .foregroundColor(.flowerPrimary)
                     .padding(.bottom, 16)
                 
@@ -1542,13 +1566,13 @@ struct UsernameSetupPageView: View {
                     HStack(spacing: 0) {
                         // Fixed @ symbol
                         Text("@")
-                            .font(.system(size: 18, weight: .medium))
+                            .font(.system(size: 18, weight: .medium, design: .rounded))
                             .foregroundColor(.flowerTextPrimary)
                             .padding(.leading, 16)
                         
                         // Username input field
                         TextField("username", text: $tempUserName)
-                            .font(.system(size: 18))
+                            .font(.system(size: 18, design: .rounded))
                             .autocorrectionDisabled()
                             .textInputAutocapitalization(.never)
                             .keyboardType(.asciiCapable)
@@ -1622,7 +1646,7 @@ struct UsernameTextFieldStyle: TextFieldStyle {
             .padding(16)
             .background(Color.flowerInputBackground)
             .cornerRadius(12)
-            .font(.system(size: 18))
+            .font(.system(size: 18, design: .rounded))
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
                     .stroke(Color.flowerPrimary.opacity(0.3), lineWidth: 1)

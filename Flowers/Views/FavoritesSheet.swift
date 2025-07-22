@@ -8,6 +8,7 @@ struct FavoritesSheet: View {
     @State private var showingDetail = false
     @State private var showFavoritesOnly = false
     @State private var sortOption: SortOption = .newestFirst
+    @State private var showingProgressSheet = false
     
     enum SortOption: String, CaseIterable {
         case newestFirst = "Newest First"
@@ -66,25 +67,9 @@ struct FavoritesSheet: View {
                 VStack(spacing: 0) {
                     // Header
                     HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                                                Text("My Collection")
-                        .font(.system(size: 28, weight: .light, design: .serif))
-                        .foregroundColor(.flowerTextPrimary)
-                            
-                            HStack(spacing: 8) {
-                                Text("\(flowerStore.totalDiscoveredCount) flowers discovered")
-                                    .font(.system(size: 14, design: .rounded))
-                                    .foregroundColor(.flowerTextSecondary)
-                                
-                                // Discovery percentage
-                                let totalSpecies = BotanicalDatabase.shared.allSpecies.count
-                                let percentage = Int((Double(flowerStore.totalDiscoveredCount) / Double(totalSpecies)) * 100)
-                                
-                                Text("(\(percentage)%)")
-                                    .font(.system(size: 14, weight: .medium, design: .rounded))
-                                    .foregroundColor(.flowerPrimary)
-                            }
-                        }
+                        Text("My Collection")
+                            .font(.system(size: 28, weight: .light, design: .serif))
+                            .foregroundColor(.flowerTextPrimary)
                         
                         Spacer()
                         
@@ -174,45 +159,6 @@ struct FavoritesSheet: View {
                     }
                     .padding(.bottom, 16)
                     
-                    // Discovery location stats
-                    if !showFavoritesOnly && !flowerStore.discoveryLocationStats.isEmpty {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Found in")
-                                .font(.system(size: 12, weight: .medium, design: .rounded))
-                                .foregroundColor(.flowerTextSecondary)
-                                .padding(.horizontal, 24)
-                            
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 12) {
-                                    ForEach(flowerStore.discoveryLocationStats.sorted(by: { $0.value > $1.value }).prefix(10), id: \.key) { location, count in
-                                        VStack(spacing: 4) {
-                                            Text("\(count)")
-                                                .font(.system(size: 16, weight: .semibold, design: .rounded))
-                                                .foregroundColor(.flowerPrimary)
-                                            Text(location)
-                                                .font(.system(size: 11, design: .rounded))
-                                                .foregroundColor(.flowerTextSecondary)
-                                                .lineLimit(1)
-                                                .minimumScaleFactor(0.8)
-                                        }
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 8)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 12)
-                                                .fill(Color.flowerPrimary.opacity(0.1))
-                                                .overlay(
-                                                    RoundedRectangle(cornerRadius: 12)
-                                                        .strokeBorder(Color.flowerPrimary.opacity(0.2), lineWidth: 1)
-                                                )
-                                        )
-                                    }
-                                }
-                                .padding(.horizontal, 24)
-                            }
-                        }
-                        .padding(.bottom, 16)
-                    }
-                    
                     if displayedFlowers.isEmpty {
                         // Empty state
                         VStack(spacing: 20) {
@@ -241,16 +187,25 @@ struct FavoritesSheet: View {
                     } else {
                         // Flowers grid
                         ScrollView {
-                            LazyVGrid(columns: columns, spacing: 16) {
+                            LazyVStack(spacing: 20) {
+                                // Collection Stats Card
+                                CollectionStatsCard(flowerStore: flowerStore) {
+                                    showingProgressSheet = true
+                                }
+                                .padding(.horizontal, 24)
+                                .padding(.top, 8)
+                                
+                                LazyVGrid(columns: columns, spacing: 16) {
                                 ForEach(displayedFlowers) { flower in
                                     FlowerGridItem(flower: flower, isFavorite: flower.isFavorite) {
                                         selectedFlower = flower
                                         showingDetail = true
                                     }
                                 }
+                                }
+                                .padding(.horizontal, 24)
+                                .padding(.bottom, 24)
                             }
-                            .padding(.horizontal, 24)
-                            .padding(.bottom, 24)
                         }
                         .refreshable {
                             // Reload the discovered flowers and favorites
@@ -273,6 +228,12 @@ struct FavoritesSheet: View {
                 .presentationDragIndicator(.visible)
                 .presentationBackground(Color.flowerSheetBackground)
             }
+        }
+        .sheet(isPresented: $showingProgressSheet) {
+            DiscoveryProgressSheet(flowerStore: flowerStore)
+                .presentationDetents([.fraction(0.6), .large])
+                .presentationCornerRadius(32)
+                .presentationDragIndicator(.visible)
         }
     }
     
@@ -854,6 +815,62 @@ struct DetailSection: View {
     }
 }
 
+struct CollectionStatsCard: View {
+    @ObservedObject var flowerStore: FlowerStore
+    let onTapProgress: () -> Void
+    
+    var body: some View {
+        HStack(spacing: 20) {
+            // Total Flowers
+            VStack(spacing: 8) {
+                Text("\(flowerStore.totalDiscoveredCount)")
+                    .font(.system(size: 32, weight: .bold, design: .rounded))
+                    .foregroundColor(.flowerPrimary)
+                
+                Text("flowers discovered")
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .foregroundColor(.flowerTextSecondary)
+                    .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity)
+            
+            // Vertical divider
+            Rectangle()
+                .fill(Color.flowerTextTertiary.opacity(0.3))
+                .frame(width: 1, height: 50)
+            
+            // Progress percentage (tappable)
+            Button(action: onTapProgress) {
+                VStack(spacing: 8) {
+                    let totalSpecies = BotanicalDatabase.shared.allSpecies.count
+                    let percentage = Int((Double(flowerStore.uniqueSpeciesDiscoveredCount) / Double(totalSpecies)) * 100)
+                    
+                    Text("\(percentage)%")
+                        .font(.system(size: 32, weight: .bold, design: .rounded))
+                        .foregroundColor(.flowerPrimary)
+                    
+                    Text("of all species")
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                        .foregroundColor(.flowerTextSecondary)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+            }
+        }
+        .padding(.horizontal, 24)
+        .padding(.vertical, 20)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.flowerCardBackground)
+                .shadow(color: .black.opacity(0.05), radius: 8, y: 4)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.flowerPrimary.opacity(0.1), lineWidth: 1)
+        )
+    }
+}
+
 struct WeatherSection: View {
     let flower: AIFlower
     
@@ -898,39 +915,63 @@ struct WeatherSection: View {
                     Spacer()
                     
                     VStack(alignment: .trailing, spacing: 4) {
+                        // Always show something - weather data if available, or fallback
                         HStack(spacing: 8) {
                             if let condition = flower.discoveryWeatherCondition {
                                 Image(systemName: weatherIcon(for: condition))
                                     .font(.system(size: 24))
                                     .foregroundColor(weatherIconColor(for: condition))
-                            }
-                            
-                            if let temperature = flower.discoveryTemperature {
-                                Text("\(Int(temperature))°\(flower.discoveryTemperatureUnit?.replacingOccurrences(of: "°", with: "") ?? "C")")
+                                
+                                if let temperature = flower.discoveryTemperature {
+                                    Text("\(Int(temperature))°\(flower.discoveryTemperatureUnit?.replacingOccurrences(of: "°", with: "") ?? "C")")
+                                        .font(.system(size: 24, weight: .semibold))
+                                        .foregroundColor(.white)
+                                }
+                            } else {
+                                // Fallback when no weather data
+                                Image(systemName: "calendar")
+                                    .font(.system(size: 24))
+                                    .foregroundColor(.white.opacity(0.7))
+                                
+                                Text("Discovered")
                                     .font(.system(size: 24, weight: .semibold))
                                     .foregroundColor(.white)
                             }
                         }
                         
-                        if let condition = flower.discoveryWeatherCondition {
-                            Text(condition)
-                                .font(.system(size: 14, design: .rounded))
-                                .foregroundColor(.white.opacity(0.8))
-                        }
+                        Text(flower.discoveryWeatherCondition ?? "No weather data")
+                            .font(.system(size: 14, design: .rounded))
+                            .foregroundColor(.white.opacity(0.8))
                     }
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 16)
+                
+                HStack {
+                    Image(systemName: "flower.fill")
+                        .font(.system(size: 16, design: .rounded))
+                        .foregroundColor(.white)
+                    
+                    Text(getWeatherMessage(for: flower.discoveryWeatherCondition, temperature: flower.discoveryTemperature))
+                        .font(.system(size: 14, design: .rounded))
+                        .foregroundColor(.white.opacity(0.9))
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 16)
             }
             .background(
                 LinearGradient(
-                    colors: weatherGradientColors(for: flower.discoveryWeatherCondition),
+                    colors: getContextualWeatherGradient(condition: flower.discoveryWeatherCondition, temperature: flower.discoveryTemperature, timeOfDay: getTimeOfDay(for: flower.generatedDate)),
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
             )
             .cornerRadius(16)
-            .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color(red: 1/255, green: 1/255, blue: 1/255).opacity(0.12), lineWidth: 1)
+            )
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -987,6 +1028,121 @@ struct WeatherSection: View {
         default:
             return .white.opacity(0.9)
         }
+    }
+    
+    private func getTimeOfDay(for date: Date) -> String {
+        let hour = Calendar.current.component(.hour, from: date)
+        if hour >= 5 && hour < 9 { return "dawn" }
+        else if hour >= 9 && hour < 17 { return "day" }
+        else if hour >= 17 && hour < 21 { return "sunset" }
+        else { return "night" }
+    }
+    
+    private func getWeatherMessage(for condition: String?, temperature: Double?) -> String {
+        if let condition = condition {
+            switch condition.lowercased() {
+            case "sunny", "clear":
+                if let temp = temperature, temp > 30 {
+                    return "Perfect hot weather for vibrant blooms"
+                } else {
+                    return "Perfect sunny weather for picking flowers"
+                }
+            case "rainy", "rain":
+                return "Refreshing rain nourishing the earth"
+            case "cloudy":
+                return "Gentle cloudy skies for delicate petals"
+            case "snowy", "snow":
+                return "Winter wonder creating crystalline beauty"
+            default:
+                return "Beautiful weather for discovering flowers"
+            }
+        }
+        return "Perfect day for flower discovery"
+    }
+    
+    private func getContextualWeatherGradient(condition: String?, temperature: Double?, timeOfDay: String) -> [Color] {
+        // Time of day overrides for dramatic gradients
+        switch timeOfDay {
+        case "dawn":
+            return [
+                Color(red: 255/255, green: 183/255, blue: 107/255), // Warm orange
+                Color(red: 255/255, green: 204/255, blue: 128/255), // Light peach
+                Color(red: 135/255, green: 206/255, blue: 250/255)  // Light sky blue
+            ]
+        case "sunset":
+            return [
+                Color(red: 255/255, green: 94/255, blue: 77/255),   // Coral red
+                Color(red: 255/255, green: 154/255, blue: 0/255),   // Orange
+                Color(red: 255/255, green: 206/255, blue: 84/255)   // Golden yellow
+            ]
+        case "night":
+            return [
+                Color(red: 25/255, green: 25/255, blue: 112/255),   // Midnight blue
+                Color(red: 72/255, green: 61/255, blue: 139/255),   // Dark slate blue
+                Color(red: 106/255, green: 90/255, blue: 205/255)   // Slate blue
+            ]
+        default:
+            break
+        }
+        
+        // Weather condition based gradients
+        if let condition = condition {
+            switch condition.lowercased() {
+            case "sunny", "clear":
+                if let temp = temperature {
+                    if temp > 35 { // Heat wave
+                        return [
+                            Color(red: 255/255, green: 69/255, blue: 0/255),    // Red orange
+                            Color(red: 255/255, green: 140/255, blue: 0/255),   // Dark orange
+                            Color(red: 255/255, green: 165/255, blue: 0/255)    // Orange
+                        ]
+                    } else if temp > 25 { // Hot sunny
+                        return [
+                            Color(red: 255/255, green: 215/255, blue: 0/255),   // Gold
+                            Color(red: 255/255, green: 165/255, blue: 0/255),   // Orange
+                            Color(red: 135/255, green: 206/255, blue: 250/255)  // Sky blue
+                        ]
+                    }
+                }
+                // Regular sunny blue sky
+                return [
+                    Color(red: 135/255, green: 206/255, blue: 250/255), // Light sky blue
+                    Color(red: 30/255, green: 144/255, blue: 255/255)   // Dodger blue
+                ]
+            case "rainy", "rain", "drizzle":
+                return [
+                    Color(red: 105/255, green: 105/255, blue: 105/255), // Dim gray
+                    Color(red: 119/255, green: 136/255, blue: 153/255), // Light slate gray
+                    Color(red: 176/255, green: 196/255, blue: 222/255)  // Light steel blue
+                ]
+            case "cloudy", "mostly cloudy":
+                return [
+                    Color(red: 169/255, green: 169/255, blue: 169/255), // Dark gray
+                    Color(red: 192/255, green: 192/255, blue: 192/255), // Silver
+                    Color(red: 211/255, green: 211/255, blue: 211/255)  // Light gray
+                ]
+            case "snowy", "snow", "icy":
+                return [
+                    Color(red: 240/255, green: 248/255, blue: 255/255), // Alice blue
+                    Color(red: 176/255, green: 224/255, blue: 230/255), // Powder blue
+                    Color(red: 230/255, green: 230/255, blue: 250/255)  // Lavender
+                ]
+            case "thunderstorms":
+                return [
+                    Color(red: 75/255, green: 0/255, blue: 130/255),    // Indigo
+                    Color(red: 72/255, green: 61/255, blue: 139/255),   // Dark slate blue
+                    Color(red: 128/255, green: 128/255, blue: 128/255)  // Gray
+                ]
+            default:
+                break
+            }
+        }
+        
+        // Default gradient
+        return [
+            Color(red: 135/255, green: 206/255, blue: 250/255), // Light sky blue
+            Color(red: 30/255, green: 144/255, blue: 255/255)   // Dodger blue
+        ]
     }
     
     private func weatherGradientColors(for condition: String?) -> [Color] {
