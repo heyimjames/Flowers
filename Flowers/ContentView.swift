@@ -12,7 +12,6 @@ import UserNotifications
 struct ContentView: View {
     @EnvironmentObject var flowerStore: FlowerStore
     @State private var showingFavorites = false
-    @State private var showingHerbarium = false
     @State private var showingSettings = false
     @State private var showDiscoveryCount = true
     @State private var showingFlowerDetail = false
@@ -26,10 +25,7 @@ struct ContentView: View {
     let pillAnimationTimer = Timer.publish(every: 5, on: .main, in: .common).autoconnect()
     
     var body: some View {
-        ZStack {
-            Color.flowerBackground.ignoresSafeArea()
-            
-            ScrollView {
+        ScrollView {
                 VStack(spacing: 20) {
                     // Main flower display
                     flowerDisplay
@@ -124,52 +120,27 @@ struct ContentView: View {
                 Spacer()
                 
                 VStack(spacing: 0) {
-                    // Enhanced gradient fade with blur effect simulation
-                    ZStack {
-                        // Multi-layer gradient for smoother transition
-                        LinearGradient(
-                            colors: [
-                                Color.flowerBackground.opacity(0),
-                                Color.flowerBackground.opacity(0.3),
-                                Color.flowerBackground.opacity(0.6),
-                                Color.flowerBackground.opacity(0.85),
-                                Color.flowerBackground.opacity(0.95),
-                                Color.flowerBackground
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                        .frame(height: 100)
-                        
-                        // Additional subtle gradient layer
-                        LinearGradient(
-                            colors: [
-                                Color.clear,
-                                Color.flowerBackground.opacity(0.2)
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                        .frame(height: 100)
-                    }
+                    // Subtle fade to blend content with gradient
+                    LinearGradient(
+                        colors: [
+                            Color.flowerBackground.opacity(0),
+                            Color.flowerBackground.opacity(0.2),
+                            Color.flowerBackground.opacity(0.4),
+                            Color.clear
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .frame(height: 60)
                     
                     actionButtons
                         .padding(.horizontal, 20)
                         .padding(.bottom, 40)
-                        .background(Color.flowerBackground)
                 }
             }
             .ignoresSafeArea(edges: .bottom)
-        }
         .sheet(isPresented: $showingFavorites) {
             FavoritesSheet(flowerStore: flowerStore)
-                .presentationDetents([.large])
-                .presentationCornerRadius(32)
-                .presentationDragIndicator(.hidden)
-                .interactiveDismissDisabled()
-        }
-        .sheet(isPresented: $showingHerbarium) {
-            HerbariumSheet(flowerStore: flowerStore)
                 .presentationDetents([.large])
                 .presentationCornerRadius(32)
                 .presentationDragIndicator(.hidden)
@@ -432,8 +403,83 @@ struct ContentView: View {
                     }
                     .padding(.horizontal, 20)
                     .padding(.vertical, 16)
-                    .background(Color.flowerCardBackground)
+                    .background(
+                        ZStack {
+                            // Blur background for better contrast
+                            Color.flowerCardBackground
+                                .opacity(0.8)
+                                .blur(radius: 8)
+                            
+                            // Subtle overlay
+                            Color.flowerBackground
+                                .opacity(0.4)
+                        }
+                    )
                     .cornerRadius(25)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 25)
+                            .strokeBorder(Color.flowerPrimary.opacity(0.1), lineWidth: 1)
+                    )
+                    .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    
+                    // Flower action buttons (Share and Favorite)
+                    HStack(spacing: 16) {
+                        // Favorite button
+                        Button(action: {
+                            flowerStore.toggleFavorite()
+                        }) {
+                            HStack(spacing: 8) {
+                                Image(systemName: flower.isFavorite ? "heart.fill" : "heart")
+                                    .font(.system(size: 16, design: .rounded))
+                                    .foregroundColor(flower.isFavorite ? .red : .flowerTextSecondary)
+                                Text(flower.isFavorite ? "Favorited" : "Favorite")
+                                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                                    .foregroundColor(.flowerTextPrimary)
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
+                            .background(Color.flowerCardBackground)
+                            .cornerRadius(20)
+                        }
+                        
+                        // Share button
+                        Button(action: {
+                            // Share functionality would go here
+                            showingFlowerDetail = true
+                        }) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "square.and.arrow.up")
+                                    .font(.system(size: 16, design: .rounded))
+                                    .foregroundColor(.flowerTextSecondary)
+                                Text("Share")
+                                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                                    .foregroundColor(.flowerTextPrimary)
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
+                            .background(Color.flowerCardBackground)
+                            .cornerRadius(20)
+                        }
+                        
+                        // Info button
+                        Button(action: {
+                            showingFlowerDetail = true
+                        }) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "info.circle")
+                                    .font(.system(size: 16, design: .rounded))
+                                    .foregroundColor(.flowerPrimary)
+                                Text("Details")
+                                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                                    .foregroundColor(.flowerTextPrimary)
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
+                            .background(Color.flowerCardBackground)
+                            .cornerRadius(20)
+                        }
+                    }
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 } else if flowerStore.isGenerating {
                     // Show loading state while details are being generated
@@ -447,8 +493,24 @@ struct ContentView: View {
                     }
                     .padding(.horizontal, 20)
                     .padding(.vertical, 16)
-                    .background(Color.flowerCardBackground)
+                    .background(
+                        ZStack {
+                            // Blur background for better contrast
+                            Color.flowerCardBackground
+                                .opacity(0.8)
+                                .blur(radius: 8)
+                            
+                            // Subtle overlay
+                            Color.flowerBackground
+                                .opacity(0.4)
+                        }
+                    )
                     .cornerRadius(25)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 25)
+                            .strokeBorder(Color.flowerPrimary.opacity(0.1), lineWidth: 1)
+                    )
+                    .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 } else if flower.imageData != nil {
                     // Show tap to learn more if details aren't available
@@ -466,8 +528,22 @@ struct ContentView: View {
                     }
                     .padding(.horizontal, 20)
                     .padding(.vertical, 12)
-                    .background(Color.flowerCardBackground)
+                    .background(
+                        ZStack {
+                            Color.flowerCardBackground
+                                .opacity(0.8)
+                                .blur(radius: 8)
+                            
+                            Color.flowerBackground
+                                .opacity(0.4)
+                        }
+                    )
                     .cornerRadius(25)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 25)
+                            .strokeBorder(Color.flowerPrimary.opacity(0.1), lineWidth: 1)
+                    )
+                    .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             } else if flowerStore.hasUnrevealedFlower {
@@ -510,67 +586,59 @@ struct ContentView: View {
                 HStack(spacing: 6) {
                     Image(systemName: "clock")
                         .font(.system(size: 12, design: .rounded))
-                        .foregroundColor(.flowerPrimary)
+                        .foregroundColor(.white)
                     Text("Next flower arrives")
                         .font(.system(size: 13, design: .rounded))
-                        .foregroundColor(.flowerTextSecondary)
+                        .foregroundColor(.white.opacity(0.9))
                     if let nextTime = flowerStore.nextFlowerTime {
                         Text("in \(nextTime, style: .relative)")
                             .font(.system(size: 13, weight: .medium, design: .rounded))
-                            .foregroundColor(.flowerTextPrimary)
+                            .foregroundColor(.white)
                     } else {
                         Text("soon")
                             .font(.system(size: 13, weight: .medium, design: .rounded))
-                            .foregroundColor(.flowerTextPrimary)
+                            .foregroundColor(.white)
                     }
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
-                .background(Color.flowerPrimary.opacity(0.1))
-                .cornerRadius(20)
+                .background(
+                    ZStack {
+                        // Blur effect background
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(.ultraThinMaterial)
+                        
+                        // Brand green overlay
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(Color.flowerPrimary)
+                    }
+                )
             }
             
-            // Collection and Herbarium buttons
-            HStack(spacing: 16) {
-                // Collection button with label
+            // Collection button (centered)
+            HStack {
                 Button(action: { showingFavorites = true }) {
                     HStack(spacing: 12) {
                         Image(systemName: "rectangle.grid.2x2.fill")
                             .font(.system(size: 20, design: .rounded))
-                            .foregroundColor(.flowerPrimary)
-                        Text("Collection")
+                            .foregroundColor(.white)
+                        Text("See My Collection")
                             .font(.system(size: 16, weight: .medium, design: .rounded))
-                            .foregroundColor(.flowerTextPrimary)
+                            .foregroundColor(.white)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.horizontal, 20)
                     .padding(.vertical, 14)
-                    .background(Color.flowerPrimary.opacity(0.1))
-                    .cornerRadius(25)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 25)
-                            .strokeBorder(Color.flowerPrimary.opacity(0.3), lineWidth: 1)
-                    )
-                }
-                
-                // Herbarium button with label
-                Button(action: { showingHerbarium = true }) {
-                    HStack(spacing: 12) {
-                        Image(systemName: "book.closed")
-                            .font(.system(size: 20, design: .rounded))
-                            .foregroundColor(.flowerPrimary)
-                        Text("Herbarium")
-                            .font(.system(size: 16, weight: .medium, design: .rounded))
-                            .foregroundColor(.flowerTextPrimary)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 14)
-                    .background(Color.flowerPrimary.opacity(0.1))
-                    .cornerRadius(25)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 25)
-                            .strokeBorder(Color.flowerPrimary.opacity(0.3), lineWidth: 1)
+                    .background(
+                        ZStack {
+                            // Blur effect background
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(.ultraThinMaterial)
+                            
+                            // Brand green overlay
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.flowerPrimary)
+                        }
                     )
                 }
             }
@@ -653,6 +721,7 @@ struct PulsingFlowerRevealView: View {
             }
     }
 }
+
 
 #Preview {
     ContentView()

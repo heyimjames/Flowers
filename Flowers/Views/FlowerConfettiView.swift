@@ -10,6 +10,8 @@ class FlowerConfettiUIView: UIView {
         UIColor(red: 144/255, green: 238/255, blue: 144/255, alpha: 1), // Light Green
         UIColor(red: 60/255, green: 179/255, blue: 113/255, alpha: 1),  // Medium Sea Green
         UIColor(red: 34/255, green: 139/255, blue: 34/255, alpha: 1),   // Forest Green
+        UIColor(red: 0/255, green: 100/255, blue: 50/255, alpha: 1),    // Dark Green
+        UIColor(red: 0/255, green: 80/255, blue: 25/255, alpha: 1),     // Very Dark Green
         UIColor(red: 189/255, green: 252/255, blue: 201/255, alpha: 1), // Mint Green
         UIColor(red: 143/255, green: 188/255, blue: 143/255, alpha: 1), // Dark Sea Green
         UIColor(red: 245/255, green: 245/255, blue: 245/255, alpha: 1)  // White Smoke
@@ -239,10 +241,14 @@ class FlowerConfettiUIView: UIView {
         var cells: [CAEmitterCell] = []
         
         for (index, color) in colors.enumerated() {
-            if let flowerImage = createFlowerImage(color: color, size: 30) {
-                let cell = CAEmitterCell()
-                cell.contents = flowerImage.cgImage
-                cell.birthRate = 3
+            // Create 5 different sizes for each color to get 5x more variety
+            let sizes: [CGFloat] = [20, 30, 40, 50, 60]
+            
+            for size in sizes {
+                if let flowerImage = createFlowerImage(color: color, size: size) {
+                    let cell = CAEmitterCell()
+                    cell.contents = flowerImage.cgImage
+                    cell.birthRate = 3 // This will create 5x more particles since we have 5 sizes per color
                 cell.lifetime = 10
                 cell.lifetimeRange = 2
                 
@@ -258,20 +264,22 @@ class FlowerConfettiUIView: UIView {
                 // Wind effect
                 cell.xAcceleration = CGFloat([-20, -10, 0, 10, 20].randomElement()!)
                 
-                // Spin
-                cell.spin = CGFloat.random(in: -4...4)
-                cell.spinRange = 2
+                // Enhanced spinning with much more variety
+                cell.spin = CGFloat.random(in: -8...8)
+                cell.spinRange = 4
                 
-                // Scale
-                cell.scale = CGFloat.random(in: 0.8...1.2)
-                cell.scaleRange = 0.3
+                // Enhanced scale variation based on base size
+                let baseScale = size < 35 ? CGFloat.random(in: 0.6...1.0) : CGFloat.random(in: 1.0...1.4)
+                cell.scale = baseScale
+                cell.scaleRange = 0.5
                 cell.scaleSpeed = -0.05
                 
                 // Fade out
                 cell.alphaSpeed = -0.1
                 cell.alphaRange = 0.2
                 
-                cells.append(cell)
+                    cells.append(cell)
+                }
             }
         }
         

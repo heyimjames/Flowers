@@ -340,17 +340,20 @@ struct SettingsSheet: View {
                             
                             // Test Flower Reveal
                             VStack(alignment: .leading, spacing: 12) {
-                                Toggle(isOn: $flowerStore.showTestFlowerOnNextLaunch) {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text("Test Flower on Next Launch")
-                                            .font(.system(size: 16, weight: .medium, design: .rounded))
-                                            .foregroundColor(.flowerTextPrimary)
-                                        Text("Show the flower reveal screen when you next open the app")
-                                            .font(.system(size: 12, design: .rounded))
-                                            .foregroundColor(.flowerTextSecondary)
-                                    }
+                                Text("Test Flower Reveal")
+                                    .font(.system(size: 16, weight: .medium, design: .rounded))
+                                    .foregroundColor(.flowerTextPrimary)
+                                
+                                Text("Instantly show the Hold to Reveal flower screen for testing")
+                                    .font(.system(size: 12, design: .rounded))
+                                    .foregroundColor(.flowerTextSecondary)
+                                
+                                Button(action: {
+                                    flowerStore.triggerTestFlowerReveal()
+                                }) {
+                                    Text("Show Test Flower")
                                 }
-                                .tint(.flowerPrimary)
+                                .flowerButtonStyle()
                                 
                                 Divider()
                                 

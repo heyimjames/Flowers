@@ -71,9 +71,19 @@ struct FavoritesSheet: View {
                         .font(.system(size: 28, weight: .light, design: .serif))
                         .foregroundColor(.flowerTextPrimary)
                             
-                            Text("\(flowerStore.totalDiscoveredCount) flowers discovered")
-                                .font(.system(size: 14, design: .rounded))
-                                .foregroundColor(.flowerTextSecondary)
+                            HStack(spacing: 8) {
+                                Text("\(flowerStore.totalDiscoveredCount) flowers discovered")
+                                    .font(.system(size: 14, design: .rounded))
+                                    .foregroundColor(.flowerTextSecondary)
+                                
+                                // Discovery percentage
+                                let totalSpecies = BotanicalDatabase.shared.allSpecies.count
+                                let percentage = Int((Double(flowerStore.totalDiscoveredCount) / Double(totalSpecies)) * 100)
+                                
+                                Text("(\(percentage)%)")
+                                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                                    .foregroundColor(.flowerPrimary)
+                            }
                         }
                         
                         Spacer()
@@ -872,48 +882,55 @@ struct WeatherSection: View {
                     .foregroundColor(.flowerTextPrimary)
             }
             
-            // Weather content
-            VStack(alignment: .leading, spacing: 8) {
-                // Date and location
-                Text(dateString)
-                    .font(.system(size: 15, weight: .medium, design: .rounded))
-                    .foregroundColor(.flowerTextPrimary)
-                
-                Text(flower.discoveryLocationName ?? "Beautiful location")
-                    .font(.system(size: 14, design: .rounded))
-                    .foregroundColor(.flowerTextSecondary)
-                
-                // Weather conditions
-                if let condition = flower.discoveryWeatherCondition,
-                   let temperature = flower.discoveryTemperature {
-                    HStack(spacing: 12) {
-                        Image(systemName: weatherIcon(for: condition))
-                            .font(.system(size: 20))
-                            .foregroundColor(weatherIconColor(for: condition))
+            // Weather card exactly matching onboarding style
+            VStack(spacing: 16) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(dateString)
+                            .font(.system(size: 16, weight: .medium, design: .rounded))
+                            .foregroundColor(.white)
                         
-                        Text("\(Int(temperature))\(flower.discoveryTemperatureUnit ?? "°C")")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.flowerTextPrimary)
-                        
-                        Text(condition)
-                            .font(.system(size: 15, design: .rounded))
-                            .foregroundColor(.flowerTextSecondary)
+                        Text(flower.discoveryLocationName ?? "Beautiful location")
+                            .font(.system(size: 14, design: .rounded))
+                            .foregroundColor(.white.opacity(0.8))
                     }
-                    .padding(.top, 4)
-                } else {
-                    HStack(spacing: 8) {
-                        Image(systemName: "flower.fill")
-                            .font(.system(size: 16, design: .rounded))
-                            .foregroundColor(.flowerPrimary)
+                    
+                    Spacer()
+                    
+                    VStack(alignment: .trailing, spacing: 4) {
+                        HStack(spacing: 8) {
+                            if let condition = flower.discoveryWeatherCondition {
+                                Image(systemName: weatherIcon(for: condition))
+                                    .font(.system(size: 24))
+                                    .foregroundColor(weatherIconColor(for: condition))
+                            }
+                            
+                            if let temperature = flower.discoveryTemperature {
+                                Text("\(Int(temperature))°\(flower.discoveryTemperatureUnit?.replacingOccurrences(of: "°", with: "") ?? "C")")
+                                    .font(.system(size: 24, weight: .semibold))
+                                    .foregroundColor(.white)
+                            }
+                        }
                         
-                        Text("Perfect day for flower discovery")
-                            .font(.system(size: 15, design: .rounded))
-                            .foregroundColor(.flowerTextSecondary)
+                        if let condition = flower.discoveryWeatherCondition {
+                            Text(condition)
+                                .font(.system(size: 14, design: .rounded))
+                                .foregroundColor(.white.opacity(0.8))
+                        }
                     }
-                    .padding(.top, 4)
                 }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 16)
             }
-            .padding(.leading, 4)
+            .background(
+                LinearGradient(
+                    colors: weatherGradientColors(for: flower.discoveryWeatherCondition),
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .cornerRadius(16)
+            .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

@@ -1615,6 +1615,267 @@ class FlowerStore: ObservableObject {
         }
     }
     
+    func triggerTestFlowerReveal() {
+        // Generate a real flower from botanical database for testing
+        Task {
+            // Get a random species from the botanical database
+            let existingSpecies = discoveredFlowers.compactMap { $0.scientificName }
+            let randomSpecies = BotanicalDatabase.shared.getRandomSpecies(excluding: existingSpecies)
+            
+            if let species = randomSpecies {
+                // Create flower with real botanical data
+                let flower = AIFlower(
+                    id: UUID(),
+                    name: species.primaryCommonName,
+                    descriptor: species.imagePrompt,
+                    imageData: nil, // Will be generated if API is available
+                    generatedDate: Date(),
+                    isFavorite: false,
+                    scientificName: species.scientificName,
+                    commonNames: species.commonNames,
+                    family: species.family,
+                    nativeRegions: species.nativeRegions,
+                    bloomingSeason: species.bloomingSeason,
+                    conservationStatus: species.conservationStatus,
+                    uses: species.uses,
+                    interestingFacts: species.interestingFacts,
+                    careInstructions: species.careInstructions,
+                    rarityLevel: species.rarityLevel,
+                    meaning: "This \(species.primaryCommonName) represents the natural beauty and botanical diversity of \(species.nativeRegions.first ?? "the world").",
+                    properties: species.description,
+                    origins: "Native to \(species.nativeRegions.joined(separator: ", ")). \(species.habitat).",
+                    detailedDescription: "\(species.description) This species blooms \(species.bloomingSeason.lowercased()) and has a conservation status of \(species.conservationStatus).",
+                    shortDescription: nil,
+                    continent: species.primaryContinent,
+                    discoveryDate: nil,
+                    contextualGeneration: false,
+                    generationContext: nil,
+                    isBouquet: false,
+                    bouquetFlowers: nil,
+                    holidayName: nil,
+                    discoveryLatitude: 51.5074,
+                    discoveryLongitude: -0.1278,
+                    discoveryLocationName: "London, United Kingdom",
+                    isInHerbarium: false,
+                    discoveryWeatherCondition: "Sunny",
+                    discoveryTemperature: 22.0,
+                    discoveryTemperatureUnit: "°C",
+                    discoveryDayOfWeek: "Tuesday",
+                    discoveryFormattedDate: "22nd July 2025",
+                    originalOwner: nil,
+                    ownershipHistory: []
+                )
+                
+                // Set as pending flower to trigger reveal view
+                pendingFlower = flower
+                hasUnrevealedFlower = true
+                
+                // Save pending flower so it persists
+                if let encoded = try? JSONEncoder().encode(flower) {
+                    userDefaults.set(encoded, forKey: pendingFlowerKey)
+                }
+                
+                // Generate image if API is available, otherwise use placeholder
+                if apiConfig.hasValidFalKey || apiConfig.hasValidOpenAIKey {
+                    Task {
+                        await generateFlowerImage(for: flower)
+                    }
+                } else {
+                    // Add placeholder image data for testing without API
+                    if let placeholderImage = createPlaceholderFlowerImage() {
+                        var updatedFlower = flower
+                        // Create new flower with image data
+                        updatedFlower = AIFlower(
+                            id: flower.id,
+                            name: flower.name,
+                            descriptor: flower.descriptor,
+                            imageData: placeholderImage.pngData(),
+                            generatedDate: flower.generatedDate,
+                            isFavorite: flower.isFavorite,
+                            scientificName: flower.scientificName,
+                            commonNames: flower.commonNames,
+                            family: flower.family,
+                            nativeRegions: flower.nativeRegions,
+                            bloomingSeason: flower.bloomingSeason,
+                            conservationStatus: flower.conservationStatus,
+                            uses: flower.uses,
+                            interestingFacts: flower.interestingFacts,
+                            careInstructions: flower.careInstructions,
+                            rarityLevel: flower.rarityLevel,
+                            meaning: flower.meaning,
+                            properties: flower.properties,
+                            origins: flower.origins,
+                            detailedDescription: flower.detailedDescription,
+                            shortDescription: flower.shortDescription,
+                            continent: flower.continent,
+                            discoveryDate: flower.discoveryDate,
+                            contextualGeneration: flower.contextualGeneration,
+                            generationContext: flower.generationContext,
+                            isBouquet: flower.isBouquet,
+                            bouquetFlowers: flower.bouquetFlowers,
+                            holidayName: flower.holidayName,
+                            discoveryLatitude: flower.discoveryLatitude,
+                            discoveryLongitude: flower.discoveryLongitude,
+                            discoveryLocationName: flower.discoveryLocationName,
+                            isInHerbarium: flower.isInHerbarium,
+                            discoveryWeatherCondition: flower.discoveryWeatherCondition,
+                            discoveryTemperature: flower.discoveryTemperature,
+                            discoveryTemperatureUnit: flower.discoveryTemperatureUnit,
+                            discoveryDayOfWeek: flower.discoveryDayOfWeek,
+                            discoveryFormattedDate: flower.discoveryFormattedDate,
+                            originalOwner: flower.originalOwner,
+                            ownershipHistory: flower.ownershipHistory
+                        )
+                        
+                        pendingFlower = updatedFlower
+                        
+                        // Save updated flower
+                        if let encoded = try? JSONEncoder().encode(updatedFlower) {
+                            userDefaults.set(encoded, forKey: pendingFlowerKey)
+                        }
+                    }
+                }
+            } else {
+                // Fallback to mock if no species available
+                let testFlower = createMockFlower(descriptor: "beautiful test flower for development")
+                pendingFlower = testFlower
+                hasUnrevealedFlower = true
+                
+                if let encoded = try? JSONEncoder().encode(testFlower) {
+                    userDefaults.set(encoded, forKey: pendingFlowerKey)
+                }
+            }
+        }
+    }
+    
+    private func createPlaceholderFlowerImage() -> UIImage? {
+        let size = CGSize(width: 512, height: 512)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        
+        return renderer.image { context in
+            // Create a simple flower-like shape as placeholder
+            let rect = CGRect(origin: .zero, size: size)
+            
+            // Background gradient
+            let gradient = CAGradientLayer()
+            gradient.frame = rect
+            gradient.colors = [
+                UIColor(red: 0.9, green: 0.95, blue: 1.0, alpha: 1.0).cgColor,
+                UIColor(red: 0.8, green: 0.9, blue: 0.95, alpha: 1.0).cgColor
+            ]
+            gradient.render(in: context.cgContext)
+            
+            // Simple flower icon
+            let center = CGPoint(x: size.width/2, y: size.height/2)
+            let radius: CGFloat = 100
+            
+            // Petals
+            for i in 0..<8 {
+                let angle = CGFloat(i) * (2 * .pi / 8)
+                let petalCenter = CGPoint(
+                    x: center.x + cos(angle) * radius * 0.6,
+                    y: center.y + sin(angle) * radius * 0.6
+                )
+                
+                let petalPath = UIBezierPath(
+                    ovalIn: CGRect(
+                        x: petalCenter.x - radius/3,
+                        y: petalCenter.y - radius/6,
+                        width: radius * 2/3,
+                        height: radius/3
+                    )
+                )
+                
+                UIColor(red: 1.0, green: 0.8, blue: 0.9, alpha: 0.8).setFill()
+                petalPath.fill()
+            }
+            
+            // Center
+            let centerPath = UIBezierPath(
+                ovalIn: CGRect(
+                    x: center.x - radius/4,
+                    y: center.y - radius/4,
+                    width: radius/2,
+                    height: radius/2
+                )
+            )
+            
+            UIColor(red: 1.0, green: 0.9, blue: 0.4, alpha: 1.0).setFill()
+            centerPath.fill()
+        }
+    }
+    
+    private func generateFlowerImage(for flower: AIFlower) async {
+        do {
+            let imageData: Data?
+            
+            if apiConfig.hasValidFalKey {
+                let (image, _) = try await FALService.shared.generateFlowerImage(descriptor: flower.descriptor)
+                imageData = image.pngData()
+            } else if apiConfig.hasValidOpenAIKey {
+                let (image, _) = try await OpenAIService.shared.generateFlowerImage(descriptor: flower.descriptor)
+                imageData = image.pngData()
+            } else {
+                return
+            }
+            
+            // Update the pending flower with the generated image
+            if let imageData = imageData {
+                var updatedFlower = flower
+                updatedFlower = AIFlower(
+                    id: flower.id,
+                    name: flower.name,
+                    descriptor: flower.descriptor,
+                    imageData: imageData,
+                    generatedDate: flower.generatedDate,
+                    isFavorite: flower.isFavorite,
+                    scientificName: flower.scientificName,
+                    commonNames: flower.commonNames,
+                    family: flower.family,
+                    nativeRegions: flower.nativeRegions,
+                    bloomingSeason: flower.bloomingSeason,
+                    conservationStatus: flower.conservationStatus,
+                    uses: flower.uses,
+                    interestingFacts: flower.interestingFacts,
+                    careInstructions: flower.careInstructions,
+                    rarityLevel: flower.rarityLevel,
+                    meaning: flower.meaning,
+                    properties: flower.properties,
+                    origins: flower.origins,
+                    detailedDescription: flower.detailedDescription,
+                    shortDescription: flower.shortDescription,
+                    continent: flower.continent,
+                    discoveryDate: flower.discoveryDate,
+                    contextualGeneration: flower.contextualGeneration,
+                    generationContext: flower.generationContext,
+                    isBouquet: flower.isBouquet,
+                    bouquetFlowers: flower.bouquetFlowers,
+                    holidayName: flower.holidayName,
+                    discoveryLatitude: flower.discoveryLatitude,
+                    discoveryLongitude: flower.discoveryLongitude,
+                    discoveryLocationName: flower.discoveryLocationName,
+                    isInHerbarium: flower.isInHerbarium,
+                    discoveryWeatherCondition: flower.discoveryWeatherCondition,
+                    discoveryTemperature: flower.discoveryTemperature,
+                    discoveryTemperatureUnit: flower.discoveryTemperatureUnit,
+                    discoveryDayOfWeek: flower.discoveryDayOfWeek,
+                    discoveryFormattedDate: flower.discoveryFormattedDate,
+                    originalOwner: flower.originalOwner,
+                    ownershipHistory: flower.ownershipHistory
+                )
+                
+                pendingFlower = updatedFlower
+                
+                // Save updated flower
+                if let encoded = try? JSONEncoder().encode(updatedFlower) {
+                    userDefaults.set(encoded, forKey: pendingFlowerKey)
+                }
+            }
+        } catch {
+            print("Failed to generate test flower image: \(error)")
+        }
+    }
+    
     func resetProfile() {
         // Clear all stored data
         userDefaults.removeObject(forKey: favoritesKey)
