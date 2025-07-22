@@ -1042,22 +1042,22 @@ struct WeatherSection: View {
         if let condition = condition {
             switch condition.lowercased() {
             case "sunny", "clear":
-                if let temp = temperature, temp > 30 {
-                    return "Perfect hot weather for vibrant blooms"
+                if let temp = temperature, temp >= 31 {
+                    return "Hot summer day"
                 } else {
-                    return "Perfect sunny weather for picking flowers"
+                    return "Sunny and clear"
                 }
             case "rainy", "rain":
-                return "Refreshing rain nourishing the earth"
+                return "Refreshing rain"
             case "cloudy":
-                return "Gentle cloudy skies for delicate petals"
+                return "Gentle cloudy skies"
             case "snowy", "snow":
-                return "Winter wonder creating crystalline beauty"
+                return "Winter wonderland"
             default:
-                return "Beautiful weather for discovering flowers"
+                return "Beautiful weather"
             }
         }
-        return "Perfect day for flower discovery"
+        return "Lovely day"
     }
     
     private func getContextualWeatherGradient(condition: String?, temperature: Double?, timeOfDay: String) -> [Color] {
@@ -1090,13 +1090,13 @@ struct WeatherSection: View {
             switch condition.lowercased() {
             case "sunny", "clear":
                 if let temp = temperature {
-                    if temp > 35 { // Heat wave
+                    if temp >= 31 { // Hot summer day
                         return [
                             Color(red: 255/255, green: 69/255, blue: 0/255),    // Red orange
                             Color(red: 255/255, green: 140/255, blue: 0/255),   // Dark orange
                             Color(red: 255/255, green: 165/255, blue: 0/255)    // Orange
                         ]
-                    } else if temp > 25 { // Hot sunny
+                    } else if temp > 25 { // Warm sunny
                         return [
                             Color(red: 255/255, green: 215/255, blue: 0/255),   // Gold
                             Color(red: 255/255, green: 165/255, blue: 0/255),   // Orange

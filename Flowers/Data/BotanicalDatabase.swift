@@ -5260,17 +5260,17 @@ class BotanicalDatabase {
             conservationStatus: "Cultivated",
             uses: ["Ornamental", "Spring bedding", "Container gardens"],
             interestingFacts: [
-                "Complex hybrid of several primula species",
-                "Available in many bright colors",
-                "Perennial often grown as annual",
-                "Cool weather flowering plant"
+                "Complex hybrid developed from crossing multiple primula species including P. vulgaris, P. veris, and P. elatior",
+                "First bred in England during the Victorian era, becoming immensely popular for spring gardens",
+                "Available in a rainbow of colors including red, pink, yellow, white, blue, and bicolors",
+                "Flowers are edible and can be candied for cake decorations or used in salads"
             ],
             careInstructions: "Rich, moist soil. Cool weather. Partial shade to full sun.",
             rarityLevel: .common,
             continents: [.europe, .northAmerica],
-            habitat: "Gardens and containers",
-            description: "Clusters of large flowers in many bright colors above rosettes",
-            imagePrompt: "Primula polyantha polyantha primrose with clusters of bright multicolored flowers, rosette leaves"
+            habitat: "Cultivated gardens, containers, and borders",
+            description: "Clusters of large, fragrant flowers in many soft colors rise above neat rosettes of textured green leaves",
+            imagePrompt: "Primula polyantha polyantha primrose with clusters of soft multicolored flowers, rosette leaves"
         ),
         
         BotanicalSpecies(

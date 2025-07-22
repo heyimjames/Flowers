@@ -994,10 +994,10 @@ class FlowerStore: ObservableObject {
                 }
             } else if let species = selectedSpecies {
                 // Use botanical species data when no API key
-                flower.meaning = "This \(species.primaryCommonName) represents the natural beauty and botanical diversity of \(species.nativeRegions.first ?? "the world")."
-                flower.properties = species.description
-                flower.origins = "Native to \(species.nativeRegions.joined(separator: ", ")). \(species.habitat)."
-                flower.detailedDescription = "\(species.description) This species blooms \(species.bloomingSeason.lowercased()) and has a conservation status of \(species.conservationStatus)."
+                flower.meaning = createMeaningForSpecies(species)
+                flower.properties = species.interestingFacts.first ?? species.description
+                flower.origins = createOriginsForSpecies(species)
+                flower.detailedDescription = createDetailedDescriptionForSpecies(species)
             }
             
             if isDaily {
@@ -1646,10 +1646,10 @@ class FlowerStore: ObservableObject {
                     interestingFacts: species.interestingFacts,
                     careInstructions: species.careInstructions,
                     rarityLevel: species.rarityLevel,
-                    meaning: "This \(species.primaryCommonName) represents the natural beauty and botanical diversity of \(species.nativeRegions.first ?? "the world").",
-                    properties: species.description,
-                    origins: "Native to \(species.nativeRegions.joined(separator: ", ")). \(species.habitat).",
-                    detailedDescription: "\(species.description) This species blooms \(species.bloomingSeason.lowercased()) and has a conservation status of \(species.conservationStatus).",
+                    meaning: createMeaningForSpecies(species),
+                    properties: species.interestingFacts.first ?? species.description,
+                    origins: createOriginsForSpecies(species),
+                    detailedDescription: createDetailedDescriptionForSpecies(species),
                     shortDescription: nil,
                     continent: species.primaryContinent,
                     discoveryDate: nil,
@@ -2078,5 +2078,47 @@ class FlowerStore: ObservableObject {
         // This would ideally come from a comprehensive botanical database
         // For now, return nil to indicate we should generate any real species
         return nil
+    }
+    
+    // MARK: - Helper methods for creating species descriptions
+    
+    private func createMeaningForSpecies(_ species: BotanicalSpecies) -> String {
+        let colorDescription = species.imagePrompt.contains("bright") ? "vibrant" : 
+                             species.imagePrompt.contains("soft") ? "delicate" : 
+                             species.imagePrompt.contains("white") ? "pure" : "colorful"
+        
+        let seasonMeaning = species.bloomingSeason == "Spring" ? "renewal and fresh beginnings" :
+                           species.bloomingSeason == "Summer" ? "warmth and abundance" :
+                           species.bloomingSeason == "Autumn" ? "transition and harvest" :
+                           species.bloomingSeason == "Winter" ? "resilience and hope" : "natural cycles"
+        
+        return "The \(species.primaryCommonName) symbolizes \(seasonMeaning). With its \(colorDescription) blooms, it brings joy and beauty to \(species.bloomingSeason.lowercased()) gardens."
+    }
+    
+    private func createOriginsForSpecies(_ species: BotanicalSpecies) -> String {
+        if species.nativeRegions.first == "Garden hybrid" {
+            return "A cultivated hybrid developed by gardeners. \(species.interestingFacts.first ?? "Popular in ornamental gardens worldwide.")"
+        } else {
+            return "Native to \(species.nativeRegions.joined(separator: " and ")). Thrives in \(species.habitat.lowercased())."
+        }
+    }
+    
+    private func createDetailedDescriptionForSpecies(_ species: BotanicalSpecies) -> String {
+        var detailParts: [String] = []
+        detailParts.append(species.description)
+        
+        if species.bloomingSeason != "Year-round" {
+            detailParts.append("Blooms in \(species.bloomingSeason.lowercased())")
+        }
+        
+        if let fact = species.interestingFacts.dropFirst().first {
+            detailParts.append(fact)
+        }
+        
+        if !species.uses.isEmpty {
+            detailParts.append("Commonly used for \(species.uses.first?.lowercased() ?? "ornamental purposes")")
+        }
+        
+        return detailParts.joined(separator: ". ") + "."
     }
 } 

@@ -261,21 +261,27 @@ struct ProgressCategoryRow: View {
                 Text(title)
                     .font(.system(size: 14, weight: .medium, design: .rounded))
                     .foregroundColor(.flowerTextPrimary)
-                    .frame(width: 80, alignment: .leading)
+                    .lineLimit(1)
+                    .frame(minWidth: 100, alignment: .leading)
             }
             
             // Progress bar
-            ZStack(alignment: .leading) {
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(color.opacity(0.1))
-                    .frame(height: 8)
-                
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(color)
-                    .frame(width: progress * 100, height: 8)
-                    .animation(.easeInOut(duration: 0.8), value: progress)
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    // Background
+                    Capsule()
+                        .fill(color.opacity(0.1))
+                        .frame(height: 8)
+                    
+                    // Progress fill
+                    Capsule()
+                        .fill(color)
+                        .frame(width: progress * geometry.size.width, height: 8)
+                        .animation(.easeInOut(duration: 0.8), value: progress)
+                }
+                .clipShape(Capsule())
             }
-            .frame(width: 100)
+            .frame(height: 8)
             
             // Numbers
             Text("\(discovered)/\(total)")
@@ -283,7 +289,7 @@ struct ProgressCategoryRow: View {
                 .foregroundColor(.flowerTextSecondary)
                 .frame(width: 40, alignment: .trailing)
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .background(color.opacity(0.05))
         .cornerRadius(12)
