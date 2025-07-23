@@ -193,6 +193,7 @@ class FlowerStore: ObservableObject {
         loadFavorites()
         loadDiscoveredFlowers()
         loadHerbariumSpecies()
+        migrateOwnershipHistory()
         
         // Add Jenny flower for first-time users IMMEDIATELY
         if isFirstTimeUser &&
@@ -2120,5 +2121,46 @@ class FlowerStore: ObservableObject {
         }
         
         return detailParts.joined(separator: ". ") + "."
+    }
+    
+    // MARK: - Migration
+    
+    private func migrateOwnershipHistory() {
+        // Check if migration has already been run
+        let migrationKey = "ownershipHistoryMigrated_v1"
+        if UserDefaults.standard.bool(forKey: migrationKey) {
+            return
+        }
+        
+        var needsUpdate = false
+        
+        // Migrate discovered flowers
+        for i in 0..<discoveredFlowers.count {
+            if !discoveredFlowers[i].hasOwnershipHistory {
+                // Use actual location if available, otherwise use a default
+                let location = discoveredFlowers[i].discoveryLocationName ?? "Unknown Location"
+                
+                // Use stored username if available, otherwise use a default
+                let userName = UserDefaults.standard.string(forKey: "userName") ?? "Original Owner"
+                
+                // Add default ownership history
+                let defaultOwner = FlowerOwner(
+                    name: userName,
+                    transferDate: discoveredFlowers[i].generatedDate,
+                    location: location
+                )
+                discoveredFlowers[i].originalOwner = defaultOwner
+                needsUpdate = true
+            }
+        }
+        
+        // Save if any flowers were updated
+        if needsUpdate {
+            saveDiscoveredFlowers()
+        }
+        
+        // Mark migration as complete
+        UserDefaults.standard.set(true, forKey: migrationKey)
+        print("Ownership history migration completed for \(discoveredFlowers.filter { !$0.hasOwnershipHistory }.count) flowers")
     }
 } 

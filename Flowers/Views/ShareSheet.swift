@@ -25,13 +25,6 @@ struct ShareSheet: UIViewControllerRepresentable {
         shareText += "\n\nDiscovered with Flowers app"
         activityItems.append(shareText)
         
-        // Add .flower file for sharing
-        do {
-            let flowerFileURL = try FlowerTransferService.shared.exportFlower(flower)
-            activityItems.append(flowerFileURL)
-        } catch {
-            print("ShareSheet: Failed to export flower file: \(error)")
-        }
         
         let activityVC = UIActivityViewController(
             activityItems: activityItems,

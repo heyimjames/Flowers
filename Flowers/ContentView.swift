@@ -21,8 +21,12 @@ struct ContentView: View {
     @Environment(\.colorScheme) var colorScheme
     @State private var wasInBackground = false
     @AppStorage("userName") private var userName = ""
-    @State private var inspirationalQuote = "Your garden awaits..."
+    @State private var inspirationalQuote = ""
     @State private var isLoadingQuote = false
+    @State private var quoteOpacity: Double = 0.0
+    @State private var heartScale: CGFloat = 1.0
+    @State private var heartBounce: Bool = false
+    @State private var showingAppInfo = false
     
     // Timer for pill animation
     let pillAnimationTimer = Timer.publish(every: 5, on: .main, in: .common).autoconnect()
@@ -57,11 +61,16 @@ struct ContentView: View {
                     // Navigation bar
                     ZStack {
                         // Centered app title (absolutely centered)
-                        Image(colorScheme == .dark ? "flowerssvggreen" : "FlowersSVG")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(height: 28)
-                            .frame(maxWidth: .infinity)
+                        Button(action: {
+                            showingAppInfo = true
+                        }) {
+                            Image(colorScheme == .dark ? "flowerssvggreen" : "FlowersSVG")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(height: 28)
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(PlainButtonStyle())
                         
                         // HStack for pill and settings button
                         HStack {
@@ -127,22 +136,28 @@ struct ContentView: View {
                     Spacer()
                     
                     VStack(spacing: 0) {
-                        // Subtle fade to blend content with gradient
+                        // Enhanced gradient to fade content behind buttons
                         LinearGradient(
                             colors: [
                                 Color.flowerBackground.opacity(0),
-                                Color.flowerBackground.opacity(0.2),
-                                Color.flowerBackground.opacity(0.4),
-                                Color.clear
+                                Color.flowerBackground.opacity(0.3),
+                                Color.flowerBackground.opacity(0.6),
+                                Color.flowerBackground.opacity(0.8),
+                                Color.flowerBackground.opacity(0.95),
+                                Color.flowerBackground
                             ],
                             startPoint: .top,
                             endPoint: .bottom
                         )
-                        .frame(height: 60)
+                        .frame(height: 120)
                         
-                        actionButtons
-                            .padding(.horizontal, 20)
-                            .padding(.bottom, 40)
+                        // Solid background behind buttons
+                        VStack(spacing: 0) {
+                            actionButtons
+                                .padding(.horizontal, 20)
+                                .padding(.bottom, 40)
+                        }
+                        .background(Color.flowerBackground)
                     }
                 }
                 .ignoresSafeArea(edges: .bottom)
@@ -167,8 +182,8 @@ struct ContentView: View {
                 FlowerDetailSheet(
                     flower: flower,
                     flowerStore: flowerStore,
-                    allFlowers: [flower],
-                    currentIndex: 0
+                    allFlowers: flowerStore.discoveredFlowers,
+                    currentIndex: flowerStore.discoveredFlowers.firstIndex(where: { $0.id == flower.id }) ?? 0
                 )
                     .presentationDetents([.large])
                     .presentationCornerRadius(32)
@@ -199,6 +214,14 @@ struct ContentView: View {
             } else {
                 // Check if countdown has expired on app launch
                 checkCountdownExpiration()
+                
+                // Show app info on first visit to homescreen
+                if !UserDefaults.standard.bool(forKey: "hasSeenAppInfo") {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                        showingAppInfo = true
+                        UserDefaults.standard.set(true, forKey: "hasSeenAppInfo")
+                    }
+                }
             }
         }
         .onChange(of: flowerStore.shouldShowOnboarding) { newValue in
@@ -227,6 +250,12 @@ struct ContentView: View {
             default:
                 break
             }
+        }
+        .sheet(isPresented: $showingAppInfo) {
+            AppInfoPopover()
+                .presentationDetents([.medium])
+                .presentationCornerRadius(32)
+                .presentationDragIndicator(.visible)
         }
 
     }
@@ -258,7 +287,7 @@ struct ContentView: View {
                     showingFlowerDetail = true
                 }
                 .contentShape(Rectangle()) // Makes entire area tappable
-                .id(flower.id) // Prevent unnecessary re-renders
+                .id("flower-image-\(flower.id)") // Stable ID to prevent re-renders
                 .transition(
                     .asymmetric(
                         insertion: .scale(scale: 0.3, anchor: .center)
@@ -446,12 +475,29 @@ struct ContentView: View {
                     HStack(spacing: 16) {
                         // Favorite button
                         Button(action: {
+                            // Toggle favorite immediately
                             flowerStore.toggleFavorite()
+                            
+                            // Quick heart animation
+                            withAnimation(.easeInOut(duration: 0.1)) {
+                                heartScale = 1.2
+                                heartBounce = true
+                            }
+                            
+                            // Reset animation quickly
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                withAnimation(.easeInOut(duration: 0.1)) {
+                                    heartScale = 1.0
+                                    heartBounce = false
+                                }
+                            }
                         }) {
                             HStack(spacing: 8) {
                                 Image(systemName: flower.isFavorite ? "heart.fill" : "heart")
                                     .font(.system(size: 16, design: .rounded))
                                     .foregroundColor(flower.isFavorite ? .red : .flowerTextSecondary)
+                                    .scaleEffect(heartScale)
+                                    .rotationEffect(.degrees(heartBounce ? 10 : 0))
                                 Text(flower.isFavorite ? "Favorited" : "Favorite")
                                     .font(.system(size: 14, weight: .medium, design: .rounded))
                                     .foregroundColor(.flowerTextPrimary)
@@ -498,6 +544,7 @@ struct ContentView: View {
                             .cornerRadius(20)
                         }
                     }
+                    .padding(.bottom, 80)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 } else if flowerStore.isGenerating {
                     // Show loading state while details are being generated
@@ -579,24 +626,55 @@ struct ContentView: View {
                         }
                 }
             } else {
-                // Empty state
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(Color.flowerCardBackground)
-                    .aspectRatio(1, contentMode: .fit)
-                    .overlay(
-                        VStack(spacing: 16) {
-                            Image(systemName: "leaf.circle")
-                                .font(.system(size: 48, design: .rounded))
-                                .foregroundColor(.flowerTextTertiary)
-                            Text(inspirationalQuote)
-                                .font(.system(size: 16, design: .rounded))
-                                .foregroundColor(.flowerTextSecondary)
-                                .multilineTextAlignment(.center)
-                                .padding(.horizontal, 16)
-                                .opacity(isLoadingQuote ? 0.6 : 1.0)
-                                .animation(.easeInOut(duration: 0.3), value: isLoadingQuote)
+                // Empty state - quote centered with fixed spacing
+                VStack(spacing: 0) {
+                    // Push content down from top
+                    Color.clear.frame(height: 150)
+                    
+                    VStack(spacing: 12) {
+                        if !inspirationalQuote.isEmpty {
+                            // Parse quote and author
+                            if let quoteRange = inspirationalQuote.range(of: "\""),
+                               let endQuoteRange = inspirationalQuote.range(of: "\"", range: quoteRange.upperBound..<inspirationalQuote.endIndex),
+                               let authorRange = inspirationalQuote.range(of: " — ") {
+                                
+                                let quote = String(inspirationalQuote[quoteRange.upperBound..<endQuoteRange.lowerBound])
+                                let author = String(inspirationalQuote[authorRange.upperBound...])
+                                
+                                // Quote text
+                                Text(quote)
+                                    .font(.system(size: 18, design: .serif))
+                                    .italic()
+                                    .foregroundColor(.flowerTextPrimary)
+                                    .multilineTextAlignment(.center)
+                                    .lineSpacing(4)
+                                    .opacity(0.6 * quoteOpacity)
+                                
+                                // Author
+                                Text("— \(author)")
+                                    .font(.system(size: 14, design: .serif))
+                                    .foregroundColor(.flowerTextSecondary)
+                                    .multilineTextAlignment(.center)
+                                    .opacity(0.5 * quoteOpacity)
+                            } else {
+                                // Fallback - show full text
+                                Text(inspirationalQuote)
+                                    .font(.system(size: 18, design: .serif))
+                                    .italic()
+                                    .foregroundColor(.flowerTextPrimary)
+                                    .multilineTextAlignment(.center)
+                                    .lineSpacing(4)
+                                    .opacity(0.6 * quoteOpacity)
+                            }
                         }
-                    )
+                    }
+                    .padding(.horizontal, 32)
+                    .frame(maxWidth: .infinity)
+                    
+                    // Push content up from bottom buttons
+                    Color.clear.frame(height: 200)
+                }
+                .frame(maxWidth: .infinity)
             }
         }
         .onAppear {
@@ -613,22 +691,28 @@ struct ContentView: View {
         guard !isLoadingQuote else { return }
         
         isLoadingQuote = true
+        quoteOpacity = 0.0
         
         Task {
             do {
                 let quote = try await OpenAIService.shared.generateInspirationalQuote()
                 await MainActor.run {
-                    withAnimation(.easeInOut(duration: 0.5)) {
-                        self.inspirationalQuote = quote
-                        self.isLoadingQuote = false
+                    self.inspirationalQuote = quote
+                    self.isLoadingQuote = false
+                    // Fade in the quote
+                    withAnimation(.easeIn(duration: 0.6)) {
+                        self.quoteOpacity = 1.0
                     }
                 }
             } catch {
-                // Fallback to a default quote if API fails
+                // Use fallback quote if API fails
+                let fallbackQuote = "\"The earth laughs in flowers.\" — Ralph Waldo Emerson"
                 await MainActor.run {
-                    withAnimation(.easeInOut(duration: 0.5)) {
-                        self.inspirationalQuote = "\"The earth laughs in flowers.\" — Ralph Waldo Emerson"
-                        self.isLoadingQuote = false
+                    self.inspirationalQuote = fallbackQuote
+                    self.isLoadingQuote = false
+                    // Fade in the fallback quote
+                    withAnimation(.easeIn(duration: 0.6)) {
+                        self.quoteOpacity = 1.0
                     }
                 }
                 print("Failed to load inspirational quote: \(error)")
@@ -716,6 +800,31 @@ struct ContentView: View {
         }
     }
     
+}
+
+// App info modal
+struct AppInfoPopover: View {
+    var body: some View {
+        VStack(spacing: 20) {
+            // App icon only
+            Image("FlowersSVG")
+                .resizable()
+                .scaledToFit()
+                .frame(height: 32)
+            
+            // Personal message from James
+            Text("Hi! I built Flowers to celebrate special moments and locations with something beautiful.\n\nCollect flowers for your garden, or share them with friends and family to create special moments together.\n\nEnjoy discovering beauty in everyday life!\n\n— James")
+                .font(.system(size: 16, design: .rounded))
+                .foregroundColor(.flowerTextSecondary)
+                .multilineTextAlignment(.center)
+                .lineSpacing(3)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.horizontal, 32)
+        .padding(.vertical, 24)
+        .frame(maxWidth: .infinity)
+        .background(Color.flowerBackground)
+    }
 }
 
 // Countdown text view that updates every minute

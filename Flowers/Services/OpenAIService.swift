@@ -170,32 +170,42 @@ class OpenAIService {
         let systemPrompt: String
         if flower.isBouquet {
             systemPrompt = """
-            You are a knowledgeable florist and botanist who creates detailed information about beautiful flower bouquets for special occasions.
+            You are a passionate florist who loves creating magical bouquets and sharing the beautiful stories behind holiday flower traditions.
             You must respond with a valid JSON object with exactly these fields:
             {
-                "meaning": "Cultural significance and symbolism of this bouquet arrangement for the holiday",
-                "properties": "Description of the flowers included and how they complement each other",
-                "origins": "Traditional and cultural history of giving these flowers for this occasion",
-                "detailedDescription": "Rich description of the bouquet's appearance, arrangement, and emotional impact",
+                "meaning": "What this bouquet means for the holiday - include touching stories about why people give these flowers, emotional connections, and heartwarming traditions (write 3-4 sentences in warm, storytelling style)",
+                "properties": "How these flowers work together beautifully - describe the colors, textures, fragrances, and why they're perfect together (write 3-4 sentences in descriptive, enthusiastic tone)",
+                "origins": "The fascinating history of this holiday flower tradition - include interesting cultural stories and how it spread around the world (write 3-4 sentences like sharing holiday folklore)",
+                "detailedDescription": "Paint a picture of this stunning bouquet - describe its visual impact, the emotions it evokes, and what makes it so special for this celebration (write 4-5 sentences in vivid, emotional language)",
                 "continent": "One of: North America, South America, Europe, Africa, Asia, Oceania, Antarctica"
             }
-            Make the information culturally relevant and emotionally resonant for the holiday.
-            The continent should reflect where this holiday tradition is most celebrated.
+            
+            IMPORTANT:
+            - Write in warm, enthusiastic language that captures the magic of holidays
+            - Make each section longer and more emotionally engaging (3-5 sentences each)
+            - Include heartwarming stories and cultural traditions
+            - Focus on the emotional impact and celebration aspect
+            - Write like you're sharing beloved holiday stories with a friend
             """
         } else {
             systemPrompt = """
-            You are a knowledgeable botanist and naturalist who provides accurate, educational information about real botanical species.
+            You are an enthusiastic botanist who loves sharing fascinating stories about flowers and plants in a casual, engaging way.
             You must respond with a valid JSON object with exactly these fields:
             {
-                "meaning": "Cultural and symbolic significance of this species",
-                "properties": "Accurate botanical characteristics and growth patterns",
-                "origins": "True geographic origins and natural habitat",
-                "detailedDescription": "Rich, accurate description of appearance and botanical features",
+                "meaning": "What this flower means to people and cultures - include interesting stories, folklore, and emotional connections (write 3-4 sentences in casual, storytelling style)",
+                "properties": "Cool characteristics and how it grows - what makes it special, unique traits, interesting behaviors (write 3-4 sentences in conversational tone, avoid scientific jargon)",
+                "origins": "Where it comes from and its journey around the world - include interesting historical stories about how it spread (write 3-4 sentences like you're telling a friend)",
+                "detailedDescription": "Paint a vivid picture of this flower - describe its beauty, colors, textures, and what it's like to encounter it in real life (write 4-5 sentences in descriptive, engaging language)",
                 "continent": "One of: North America, South America, Europe, Africa, Asia, Oceania, Antarctica"
             }
-            IMPORTANT: Provide only factually accurate information about real botanical species.
-            Include scientific details, conservation status, and educational content.
-            Ensure the continent field EXACTLY matches one of the seven options provided.
+            
+            IMPORTANT: 
+            - Write in casual, friendly language like you're talking to a friend
+            - Make each section longer and more engaging (3-5 sentences each)
+            - Include interesting stories, folklore, and fun facts
+            - Avoid technical scientific terminology
+            - Focus on what makes this flower special and fascinating
+            - Be accurate but write in an accessible, storytelling style
             """
         }
         
@@ -261,8 +271,20 @@ class OpenAIService {
             userPrompt += """
             
             
-            This flower was inspired by real-world context: \(context).
-            Please incorporate relevant cultural, geographical, or seasonal elements into the description while maintaining botanical plausibility.
+            CONTEXTUAL DISCOVERY: This flower appeared specifically because of current conditions:
+            - Location context: \(context)
+            - Current date: \(currentDate) 
+            - Season: \(season)
+            - Weather: \(flower.discoveryWeatherCondition ?? "Unknown")
+            - Location: \(flower.discoveryLocationName ?? "Unknown location")
+            
+            IMPORTANT: In each section, explain WHY this flower is appearing right now:
+            - In "meaning": Connect the cultural significance to the current time/season/location and weather
+            - In "properties": Explain why this flower blooms or thrives in these exact current conditions (weather, season, location)
+            - In "origins": Tell the story of how this flower came to be in this specific region and why it's perfect for today's weather
+            - In "detailedDescription": Describe what makes encountering this flower special RIGHT NOW in this place, time, weather, and season
+            
+            Make it feel like a magical, perfectly-timed discovery that could only happen today in these exact conditions!
             """
         }
         
@@ -778,7 +800,8 @@ class OpenAIService {
     func generateInspirationalQuote() async throws -> String {
         let apiKey = APIConfiguration.shared.effectiveOpenAIKey
         guard !apiKey.isEmpty else {
-            throw OpenAIError.invalidAPIKey
+            // Return random quote from curated collection
+            return getRandomCuratedQuote()
         }
         
         guard let url = URL(string: chatCompletionURL) else {
@@ -786,23 +809,21 @@ class OpenAIService {
         }
         
         let prompt = """
-        Generate a beautiful, inspiring quote about flowers, plants, gardens, or nature and how they relate to life, growth, beauty, or human experience. 
+        Generate ONE short inspiring quote about flowers, plants, or nature. 
         
-        The quote should be:
-        - From a famous poet, philosopher, writer, or thinker (real historical figures only)
-        - Positive and uplifting in tone
-        - About 1-2 sentences long
-        - Focused on flowers, plants, gardens, nature, growth, or beauty
-        - Suitable for a flower collection app
+        STRICT FORMAT: "[Quote text]" — [Author Name]
         
-        Format your response as:
-        "[Quote text]" — [Author Name]
+        Requirements:
+        - Real historical figure or well-known author
+        - Positive and uplifting
+        - Maximum 15 words in the quote
+        - About flowers, nature, growth, or beauty
+        - NO additional text, explanations, or commentary
+        - ONLY the quote and author in the exact format shown
         
-        Examples of the style I want:
-        "A flower does not think of competing with the flower next to it. It just blooms." — Zen Proverb
+        Examples: 
         "Where flowers bloom, so does hope." — Lady Bird Johnson
-        
-        Generate one new quote now:
+        "The earth laughs in flowers." — Ralph Waldo Emerson
         """
         
         let request = ChatCompletionRequest(
@@ -810,7 +831,7 @@ class OpenAIService {
             messages: [
                 ChatCompletionRequest.Message(role: "user", content: prompt)
             ],
-            temperature: 0.8,
+            temperature: 0.5,
             response_format: nil
         )
         
@@ -844,7 +865,84 @@ class OpenAIService {
             throw OpenAIError.invalidResponse
         }
         
-        return quote.trimmingCharacters(in: .whitespacesAndNewlines)
+        let cleanedQuote = quote.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Validate the format - should contain quotes and an em dash
+        if cleanedQuote.contains("\"") && cleanedQuote.contains("—") {
+            return cleanedQuote
+        } else {
+            // If format is wrong, return a fallback quote
+            return getRandomCuratedQuote()
+        }
+    }
+    
+    private func getRandomCuratedQuote() -> String {
+        let quotes = [
+            "\"The earth laughs in flowers.\" — Ralph Waldo Emerson",
+            "\"Where flowers bloom, so does hope.\" — Lady Bird Johnson", 
+            "\"A flower does not think of competing with the flower next to it. It just blooms.\" — Zen Proverb",
+            "\"Every flower is a soul blossoming in nature.\" — Gerard De Nerval",
+            "\"Happiness held is the seed; happiness shared is the flower.\" — John Harrigan",
+            "\"The flower that blooms in adversity is the rarest and most beautiful of all.\" — Walt Disney",
+            "\"To plant a garden is to believe in tomorrow.\" — Audrey Hepburn",
+            "\"In every walk with nature, one receives far more than they seek.\" — John Muir",
+            "\"A garden requires patient labor and attention. Plants and flowers teach us that.\" — Liberty Hyde Bailey",
+            "\"The garden suggests there might be a place where we can meet nature halfway.\" — Michael Pollan",
+            "\"Flowers always make people better, happier, and more helpful.\" — Luther Burbank",
+            "\"A flower cannot blossom without sunshine, and man cannot live without love.\" — Max Muller",
+            "\"Nature does not hurry, yet everything is accomplished.\" — Lao Tzu",
+            "\"The poetry of the earth is never dead.\" — John Keats",
+            "\"In nature, nothing exists alone.\" — Rachel Carson",
+            "\"Study nature, love nature, stay close to nature. It will never fail you.\" — Frank Lloyd Wright",
+            "\"The clearest way into the Universe is through a forest wilderness.\" — John Muir",
+            "\"Look deep into nature, and then you will understand everything better.\" — Albert Einstein",
+            "\"Nature is not a place to visit. It is home.\" — Terry Tempest Williams",
+            "\"Heaven is under our feet as well as over our heads.\" — Henry David Thoreau",
+            "\"All flowers in time bend towards the sun.\" — Jeff Buckley",
+            "\"A rose by any other name would smell as sweet.\" — William Shakespeare",
+            "\"Let us dance in the sun, wearing wild flowers in our hair.\" — Susan Polis Schutz",
+            "\"The flower which is single need not envy the thorns that are numerous.\" — Rabindranath Tagore",
+            "\"Like wildflowers, you must allow yourself to grow in all the places people thought you never would.\" — E.V.",
+            "\"Be like a flower and turn your face to the sun.\" — Kahlil Gibran",
+            "\"A beautiful flower does not exist. There's only a moment when a flower looks beautiful.\" — Taigu Ryokan",
+            "\"If you tend to a flower, it will bloom, no matter how many weeds surround it.\" — Matshona Dhliwayo",
+            "\"Flowers are the music of the ground from earth's lips spoken without sound.\" — Edwin Curran",
+            "\"A single flower he sent me, since we met. All tenderly his messenger he chose.\" — Jean Ingelow",
+            "\"What is a weed? A plant whose virtues have not yet been discovered.\" — Ralph Waldo Emerson",
+            "\"The flower doesn't dream of the bee. It blossoms and the bee comes.\" — Mark Nepo",
+            "\"Weeds are flowers too, once you get to know them.\" — A.A. Milne",
+            "\"I must have flowers, always, and always.\" — Claude Monet",
+            "\"Love is the flower you've got to let grow.\" — John Lennon",
+            "\"A flower's fragrance declares to all the world that it is fertile, available, and desirable.\" — James Redfield",
+            "\"Plants give us oxygen for the lungs and for the soul.\" — Terri Guillemets",
+            "\"Gardens require patient labor and attention. Plants teach us about growth and renewal.\" — Unknown",
+            "\"The blossom cannot tell what becomes of its odor, and no person can tell what becomes of their influence.\" — Henry Ward Beecher",
+            "\"A society grows great when old men plant trees whose shade they know they shall never sit in.\" — Greek Proverb",
+            "\"The best time to plant a tree was 20 years ago. The second best time is now.\" — Chinese Proverb",
+            "\"In the garden of memory, in the palace of dreams, that is where you and I shall meet.\" — Alice Through the Looking Glass",
+            "\"The glory of gardening: hands in the dirt, head in the sun, heart with nature.\" — Alfred Austin",
+            "\"A garden is a grand teacher. It teaches patience and careful watchfulness.\" — Gertrude Jekyll",
+            "\"Show me your garden and I shall tell you what you are.\" — Alfred Austin",
+            "\"The love of gardening is a seed once sown that never dies.\" — Gertrude Jekyll",
+            "\"There are no gardening mistakes, only experiments.\" — Janet Kilburn Phillips",
+            "\"Gardening is the art that uses flowers and plants as paint, and the soil and sky as canvas.\" — Elizabeth Murray",
+            "\"A garden is a friend you can visit anytime.\" — Unknown",
+            "\"In the spring, at the end of the day, you should smell like dirt.\" — Margaret Atwood",
+            "\"The best fertilizer is the gardener's footsteps.\" — Unknown",
+            "\"Plant seeds of happiness, hope, success, and love; it will all come back to you in abundance.\" — Steve Maraboli",
+            "\"Like people, plants respond to care.\" — Liberty Hyde Bailey",
+            "\"A flower is an educated weed.\" — Luther Burbank",
+            "\"The garden is growth and change and that means loss as well as constant new treasures.\" — May Sarton",
+            "\"Gardens are not made by singing 'Oh, how beautiful,' and sitting in the shade.\" — Rudyard Kipling",
+            "\"Everything that slows us down and forces patience, everything that sets us back into the slow circles of nature, is a help.\" — May Sarton",
+            "\"Nature is painting for us, day after day, pictures of infinite beauty.\" — John Ruskin",
+            "\"Spring is nature's way of saying, 'Let's party!'\" — Robin Williams",
+            "\"Adopt the pace of nature: her secret is patience.\" — Ralph Waldo Emerson",
+            "\"Nature always wears the colors of the spirit.\" — Ralph Waldo Emerson",
+            "\"Earth and sky, woods and fields, lakes and rivers, the mountain and the sea, are excellent schoolmasters.\" — John Lubbock"
+        ]
+        
+        return quotes.randomElement() ?? "\"The earth laughs in flowers.\" — Ralph Waldo Emerson"
     }
     
     private func getTimeOfDay() -> String {
