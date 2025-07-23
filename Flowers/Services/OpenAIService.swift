@@ -267,7 +267,7 @@ class OpenAIService {
         }
         
         let request = ChatCompletionRequest(
-            model: "gpt-4o-mini",
+            model: "gpt-4.1-nano-2025-04-14",
             messages: [
                 ChatCompletionRequest.Message(role: "system", content: systemPrompt),
                 ChatCompletionRequest.Message(role: "user", content: userPrompt)
@@ -430,7 +430,7 @@ class OpenAIService {
         // Try up to 5 times to get a unique name
         for attempt in 0..<5 {
             let request = ChatCompletionRequest(
-                model: "gpt-4o-mini",
+                model: "gpt-4.1-nano-2025-04-14",
                 messages: [
                     ChatCompletionRequest.Message(role: "system", content: systemPrompt),
                     ChatCompletionRequest.Message(role: "user", content: userPrompt)
@@ -521,7 +521,7 @@ class OpenAIService {
         // Try up to 5 times to get a unique name
         for attempt in 0..<5 {
             let request = ChatCompletionRequest(
-                model: "gpt-4o-mini",
+                model: "gpt-4.1-nano-2025-04-14",
                 messages: [
                     ChatCompletionRequest.Message(role: "system", content: systemPrompt),
                     ChatCompletionRequest.Message(role: "user", content: userPrompt)
@@ -634,7 +634,7 @@ class OpenAIService {
         }
         
         let request = ChatCompletionRequest(
-            model: "gpt-4o-mini",
+            model: "gpt-4.1-nano-2025-04-14",
             messages: [
                 ChatCompletionRequest.Message(role: "system", content: systemPrompt),
                 ChatCompletionRequest.Message(role: "user", content: userPrompt)
@@ -722,7 +722,7 @@ class OpenAIService {
         """
         
         let request = ChatCompletionRequest(
-            model: "gpt-3.5-turbo",
+            model: "gpt-4.1-nano-2025-04-14",
             messages: [
                 ChatCompletionRequest.Message(role: "system", content: systemPrompt),
                 ChatCompletionRequest.Message(role: "user", content: userPrompt)
@@ -773,6 +773,78 @@ class OpenAIService {
         // Return a random species from the botanical database instead of generating fantasy flowers
         let species = BotanicalDatabase.shared.getRandomSpecies()
         return species?.imagePrompt ?? "Rosa damascena damask rose with double pink fragrant flowers, velvety petals, botanical illustration style"
+    }
+    
+    func generateInspirationalQuote() async throws -> String {
+        let apiKey = APIConfiguration.shared.effectiveOpenAIKey
+        guard !apiKey.isEmpty else {
+            throw OpenAIError.invalidAPIKey
+        }
+        
+        guard let url = URL(string: chatCompletionURL) else {
+            throw OpenAIError.invalidURL
+        }
+        
+        let prompt = """
+        Generate a beautiful, inspiring quote about flowers, plants, gardens, or nature and how they relate to life, growth, beauty, or human experience. 
+        
+        The quote should be:
+        - From a famous poet, philosopher, writer, or thinker (real historical figures only)
+        - Positive and uplifting in tone
+        - About 1-2 sentences long
+        - Focused on flowers, plants, gardens, nature, growth, or beauty
+        - Suitable for a flower collection app
+        
+        Format your response as:
+        "[Quote text]" — [Author Name]
+        
+        Examples of the style I want:
+        "A flower does not think of competing with the flower next to it. It just blooms." — Zen Proverb
+        "Where flowers bloom, so does hope." — Lady Bird Johnson
+        
+        Generate one new quote now:
+        """
+        
+        let request = ChatCompletionRequest(
+            model: "gpt-4.1-nano-2025-04-14",
+            messages: [
+                ChatCompletionRequest.Message(role: "user", content: prompt)
+            ],
+            temperature: 0.8,
+            response_format: nil
+        )
+        
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+        urlRequest.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let encoder = JSONEncoder()
+        urlRequest.httpBody = try encoder.encode(request)
+        
+        let (data, response) = try await URLSession.shared.data(for: urlRequest)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw OpenAIError.networkError("Invalid response")
+        }
+        
+        if httpResponse.statusCode != 200 {
+            if let errorData = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let error = errorData["error"] as? [String: Any],
+               let message = error["message"] as? String {
+                throw OpenAIError.networkError(message)
+            }
+            throw OpenAIError.networkError("Status code: \(httpResponse.statusCode)")
+        }
+        
+        let decoder = JSONDecoder()
+        let completionResponse = try decoder.decode(ChatCompletionResponse.self, from: data)
+        
+        guard let quote = completionResponse.choices.first?.message.content else {
+            throw OpenAIError.invalidResponse
+        }
+        
+        return quote.trimmingCharacters(in: .whitespacesAndNewlines)
     }
     
     private func getTimeOfDay() -> String {

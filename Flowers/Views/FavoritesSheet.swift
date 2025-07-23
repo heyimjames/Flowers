@@ -33,9 +33,29 @@ struct FavoritesSheet: View {
         GridItem(.flexible(), spacing: 16)
     ]
     
-    var displayedFlowers: [AIFlower] {
-        let flowers = showFavoritesOnly ? flowerStore.favorites : flowerStore.discoveredFlowers
+    // Memoized computed property for better performance
+    @State private var cachedDisplayedFlowers: [AIFlower] = []
+    @State private var lastSortOption: SortOption = .newestFirst
+    @State private var lastShowFavoritesOnly: Bool = false
+    @State private var lastFlowersCount: Int = 0
+    
+    private func updateDisplayedFlowersIfNeeded() {
+        let currentFlowers = showFavoritesOnly ? flowerStore.favorites : flowerStore.discoveredFlowers
+        let currentCount = currentFlowers.count
         
+        // Only recalculate if something changed
+        if sortOption != lastSortOption || 
+           showFavoritesOnly != lastShowFavoritesOnly || 
+           currentCount != lastFlowersCount {
+            
+            cachedDisplayedFlowers = sortFlowers(currentFlowers)
+            lastSortOption = sortOption
+            lastShowFavoritesOnly = showFavoritesOnly
+            lastFlowersCount = currentCount
+        }
+    }
+    
+    private func sortFlowers(_ flowers: [AIFlower]) -> [AIFlower] {
         switch sortOption {
         case .newestFirst:
             return flowers.sorted { 
@@ -57,6 +77,10 @@ struct FavoritesSheet: View {
                 return flower1.isFavorite && !flower2.isFavorite
             }
         }
+    }
+    
+    var displayedFlowers: [AIFlower] {
+        return cachedDisplayedFlowers
     }
     
     var body: some View {
@@ -215,6 +239,18 @@ struct FavoritesSheet: View {
                 }
             }
         }
+        .onAppear {
+            updateDisplayedFlowersIfNeeded()
+        }
+        .onChange(of: sortOption) { _, _ in
+            updateDisplayedFlowersIfNeeded()
+        }
+        .onChange(of: showFavoritesOnly) { _, _ in
+            updateDisplayedFlowersIfNeeded()
+        }
+        .onChange(of: flowerStore.discoveredFlowers.count) { _, _ in
+            updateDisplayedFlowersIfNeeded()
+        }
         .sheet(isPresented: $showingDetail) {
             if let flower = selectedFlower {
                 FlowerDetailSheet(
@@ -304,10 +340,16 @@ struct FlowerGridItem: View {
                             .frame(maxWidth: .infinity)
                             .aspectRatio(1, contentMode: .fit)
                             .cornerRadius(12)
+                            .clipped() // Optimize rendering by clipping to bounds
                     } else {
                         RoundedRectangle(cornerRadius: 12)
                             .fill(Color.flowerCardBackground)
                             .aspectRatio(1, contentMode: .fit)
+                            .overlay(
+                                Image(systemName: "flower.fill")
+                                    .font(.system(size: 24, design: .rounded))
+                                    .foregroundColor(.flowerPrimary.opacity(0.3))
+                            )
                     }
                     
                     if isFavorite {
@@ -349,6 +391,26 @@ struct FlowerDetailSheet: View {
     @State private var showingGiftSheet = false
     @AppStorage("userName") private var userName = ""
     
+    // Only load current flower and adjacent ones for better performance
+    private var visibleFlowerIndices: [Int] {
+        let totalCount = allFlowers.count
+        guard totalCount > 0 else { return [] }
+        
+        let safeCurrentIndex = max(0, min(currentIndex, totalCount - 1))
+        
+        // Load current, previous, and next (3 total maximum)
+        var indices: [Int] = [safeCurrentIndex]
+        
+        if safeCurrentIndex > 0 {
+            indices.append(safeCurrentIndex - 1)
+        }
+        if safeCurrentIndex < totalCount - 1 {
+            indices.append(safeCurrentIndex + 1)
+        }
+        
+        return indices.sorted()
+    }
+    
     init(flower: AIFlower, flowerStore: FlowerStore, allFlowers: [AIFlower], currentIndex: Int) {
         self._flower = State(initialValue: flower)
         self.flowerStore = flowerStore
@@ -368,7 +430,8 @@ struct FlowerDetailSheet: View {
                 .ignoresSafeArea()
                 
                 TabView(selection: $currentIndex) {
-                    ForEach(Array(allFlowers.enumerated()), id: \.element.id) { index, flowerItem in
+                    ForEach(visibleFlowerIndices, id: \.self) { index in
+                        let flowerItem = allFlowers[index]
                         ScrollView {
                             VStack(spacing: 0) {
                                 // Flower image with soft blend

@@ -21,9 +21,13 @@ struct ContentView: View {
     @Environment(\.colorScheme) var colorScheme
     @State private var wasInBackground = false
     @AppStorage("userName") private var userName = ""
+    @State private var inspirationalQuote = "Your garden awaits..."
+    @State private var isLoadingQuote = false
     
     // Timer for pill animation
     let pillAnimationTimer = Timer.publish(every: 5, on: .main, in: .common).autoconnect()
+    // Timer to check for countdown expiration
+    let countdownCheckTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
     var body: some View {
         ZStack {
@@ -83,11 +87,12 @@ struct ContentView: View {
                                     Image(systemName: "clock")
                                         .font(.system(size: 12, design: .rounded))
                                         .foregroundColor(.flowerPrimary)
-                                    if let nextTime = flowerStore.nextFlowerTime {
-                                        CountdownText(targetDate: nextTime)
-                                            .font(.system(size: 11, design: .rounded))
-                                            .foregroundColor(.flowerTextSecondary)
-                                    } else {
+                                                        if let nextTime = flowerStore.nextFlowerTime {
+                        CountdownText(targetDate: nextTime)
+                            .environmentObject(flowerStore)
+                            .font(.system(size: 11, design: .rounded))
+                            .foregroundColor(.flowerTextSecondary)
+                    } else {
                                         Text("Soon")
                                             .font(.system(size: 11, design: .rounded))
                                             .foregroundColor(.flowerTextSecondary)
@@ -180,6 +185,9 @@ struct ContentView: View {
                 showDiscoveryCount.toggle()
             }
         }
+        .onReceive(countdownCheckTimer) { _ in
+            checkCountdownExpiration()
+        }
         .onAppear {
             // Check if user needs onboarding (starter flower selection)
             if !UserDefaults.standard.bool(forKey: "hasCompletedOnboarding") || flowerStore.shouldShowOnboarding {
@@ -188,6 +196,9 @@ struct ContentView: View {
                     showingOnboarding = true
                     flowerStore.shouldShowOnboarding = false
                 }
+            } else {
+                // Check if countdown has expired on app launch
+                checkCountdownExpiration()
             }
         }
         .onChange(of: flowerStore.shouldShowOnboarding) { newValue in
@@ -577,12 +588,62 @@ struct ContentView: View {
                             Image(systemName: "leaf.circle")
                                 .font(.system(size: 48, design: .rounded))
                                 .foregroundColor(.flowerTextTertiary)
-                            Text("Your garden awaits...")
+                            Text(inspirationalQuote)
                                 .font(.system(size: 16, design: .rounded))
                                 .foregroundColor(.flowerTextSecondary)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 16)
+                                .opacity(isLoadingQuote ? 0.6 : 1.0)
+                                .animation(.easeInOut(duration: 0.3), value: isLoadingQuote)
                         }
                     )
             }
+        }
+        .onAppear {
+            loadInspirationalQuote()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+            // Load a fresh quote when returning to the app
+            loadInspirationalQuote()
+        }
+    }
+    
+    private func loadInspirationalQuote() {
+        // Don't load if already loading
+        guard !isLoadingQuote else { return }
+        
+        isLoadingQuote = true
+        
+        Task {
+            do {
+                let quote = try await OpenAIService.shared.generateInspirationalQuote()
+                await MainActor.run {
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        self.inspirationalQuote = quote
+                        self.isLoadingQuote = false
+                    }
+                }
+            } catch {
+                // Fallback to a default quote if API fails
+                await MainActor.run {
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        self.inspirationalQuote = "\"The earth laughs in flowers.\" — Ralph Waldo Emerson"
+                        self.isLoadingQuote = false
+                    }
+                }
+                print("Failed to load inspirational quote: \(error)")
+            }
+        }
+    }
+    
+    private func checkCountdownExpiration() {
+        // Check if there's a pending flower and the countdown has expired
+        if let nextTime = flowerStore.nextFlowerTime,
+           Date() >= nextTime,
+           flowerStore.pendingFlower != nil,
+           !flowerStore.hasUnrevealedFlower {
+            // Countdown has expired, automatically show the reveal screen
+            flowerStore.showPendingFlowerIfAvailable()
         }
     }
     
@@ -626,9 +687,12 @@ struct ContentView: View {
             HStack {
                 Button(action: { showingFavorites = true }) {
                     HStack(spacing: 12) {
-                        Image(systemName: "rectangle.grid.2x2.fill")
-                            .font(.system(size: 20, design: .rounded))
-                            .foregroundColor(.white)
+                        Image("planticon")
+                            .renderingMode(.template)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .foregroundColor(Color(red: 186/255, green: 214/255, blue: 130/255))
+                            .frame(width: 20, height: 20)
                         Text("See My Collection")
                             .font(.system(size: 16, weight: .medium, design: .rounded))
                             .foregroundColor(.white)
@@ -658,8 +722,9 @@ struct ContentView: View {
 struct CountdownText: View {
     let targetDate: Date
     @State private var timeRemaining = ""
+    @EnvironmentObject var flowerStore: FlowerStore
     
-    let timer = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
+    let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
     var body: some View {
         Text(timeRemaining)
@@ -677,6 +742,12 @@ struct CountdownText: View {
         
         if interval <= 0 {
             timeRemaining = "Ready!"
+            // Automatically trigger reveal when countdown reaches zero
+            if flowerStore.pendingFlower != nil && !flowerStore.hasUnrevealedFlower {
+                DispatchQueue.main.async {
+                    flowerStore.showPendingFlowerIfAvailable()
+                }
+            }
             return
         }
         
@@ -685,8 +756,12 @@ struct CountdownText: View {
         
         if hours > 0 {
             timeRemaining = "\(hours)h \(minutes)m"
-        } else {
+        } else if minutes > 0 {
             timeRemaining = "\(minutes)m"
+        } else {
+            // Less than a minute remaining
+            let seconds = Int(interval) % 60
+            timeRemaining = "\(seconds)s"
         }
     }
 }
@@ -726,6 +801,43 @@ struct PulsingFlowerRevealView: View {
                     isPulsing = true
                 }
             }
+    }
+}
+
+// Simple flower icon shape
+struct SimpleFlowerIcon: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        
+        let center = CGPoint(x: rect.midX, y: rect.midY)
+        let radius = min(rect.width, rect.height) / 2
+        
+        // Draw 5 petals
+        for i in 0..<5 {
+            let angle = CGFloat(i) * (2 * .pi / 5) - .pi / 2  // Start from top
+            let petalCenter = CGPoint(
+                x: center.x + cos(angle) * radius * 0.5,
+                y: center.y + sin(angle) * radius * 0.5
+            )
+            
+            // Create elliptical petal
+            path.addEllipse(in: CGRect(
+                x: petalCenter.x - radius * 0.35,
+                y: petalCenter.y - radius * 0.5,
+                width: radius * 0.7,
+                height: radius * 1.0
+            ))
+        }
+        
+        // Add center circle
+        path.addEllipse(in: CGRect(
+            x: center.x - radius * 0.25,
+            y: center.y - radius * 0.25,
+            width: radius * 0.5,
+            height: radius * 0.5
+        ))
+        
+        return path
     }
 }
 
