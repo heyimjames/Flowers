@@ -60,7 +60,7 @@ struct GiftFlowerSheet: View {
                                 .font(.system(size: 22, weight: .bold))
                                 .foregroundColor(.flowerTextPrimary)
                             
-                            Text("Once you gift this flower, it will be permanently removed from your collection and transferred to the recipient.")
+                            Text("When you share this flower, it will leave your collection and go to your friend. It becomes theirs to keep!")
                                 .font(.system(size: 15))
                                 .foregroundColor(.flowerTextSecondary)
                                 .multilineTextAlignment(.center)
@@ -69,13 +69,63 @@ struct GiftFlowerSheet: View {
                                 .padding(.horizontal, 24)
                             
                             if flower.hasOwnershipHistory {
-                                Text("This flower has \(flower.currentOwnerCount) previous owner\(flower.currentOwnerCount == 1 ? "" : "s"). Its history will be preserved.")
+                                Text("This flower has been shared \(flower.currentOwnerCount) time\(flower.currentOwnerCount == 1 ? "" : "s") before. Your friend will see its complete story.")
                                     .font(.system(size: 13))
                                     .foregroundColor(.flowerTextTertiary)
                                     .multilineTextAlignment(.center)
                                     .padding(.horizontal, 24)
                             }
                         }
+                        
+                        // Instructions for recipient
+                        VStack(spacing: 12) {
+                            HStack {
+                                Image(systemName: "info.circle.fill")
+                                    .foregroundColor(.flowerPrimary)
+                                Text("How Your Friend Gets the Flower")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(.flowerTextPrimary)
+                                Spacer()
+                            }
+                            .padding(.horizontal, 24)
+                            
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack(alignment: .top, spacing: 12) {
+                                    Text("1.")
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundColor(.flowerPrimary)
+                                    Text("They'll get a flower file when you share it")
+                                        .font(.system(size: 13))
+                                        .foregroundColor(.flowerTextSecondary)
+                                    Spacer()
+                                }
+                                
+                                HStack(alignment: .top, spacing: 12) {
+                                    Text("2.")
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundColor(.flowerPrimary)
+                                    Text("They tap the Share button on the file they receive")
+                                        .font(.system(size: 13))
+                                        .foregroundColor(.flowerTextSecondary)
+                                    Spacer()
+                                }
+                                
+                                HStack(alignment: .top, spacing: 12) {
+                                    Text("3.")
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundColor(.flowerPrimary)
+                                    Text("Then they choose the Flowers app to add it to their collection")
+                                        .font(.system(size: 13))
+                                        .foregroundColor(.flowerTextSecondary)
+                                    Spacer()
+                                }
+                            }
+                            .padding(.horizontal, 24)
+                        }
+                        .padding(.vertical, 16)
+                        .background(Color.flowerPrimary.opacity(0.05))
+                        .cornerRadius(16)
+                        .padding(.horizontal, 24)
                         
                         // Your name input (if not set)
                         if userName.isEmpty {
@@ -94,7 +144,7 @@ struct GiftFlowerSheet: View {
                                         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                                     }
                                 
-                                Text("This will be shown in the flower's ownership history")
+                                Text("Your friend will see that this flower came from you")
                                     .font(.system(size: 12))
                                     .foregroundColor(.flowerTextTertiary)
                             }
@@ -116,7 +166,7 @@ struct GiftFlowerSheet: View {
                             }) {
                                 HStack {
                                     Image(systemName: "gift")
-                                    Text("Gift via AirDrop")
+                                    Text("Share This Flower")
                                 }
                             }
                             .flowerButtonStyle()
@@ -146,7 +196,7 @@ struct GiftFlowerSheet: View {
         .alert("Name Required", isPresented: $showingNamePrompt) {
             Button("OK") { }
         } message: {
-            Text("Please enter your name to include in the flower's ownership history.")
+            Text("Please enter your name so your friend knows who shared this flower with them.")
         }
         .onDisappear {
             // Only trigger the callback if transfer actually completed

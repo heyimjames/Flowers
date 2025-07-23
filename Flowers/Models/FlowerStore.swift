@@ -1466,6 +1466,11 @@ class FlowerStore: ObservableObject {
     func saveFlowers() {
         saveFavorites()
         saveDiscoveredFlowers()
+        
+        // Trigger auto-backup if enough flowers have been added
+        Task {
+            await FlowerBackupService.shared.performAutoBackup(flowerStore: self)
+        }
     }
     
     // Update a flower's details (used after fetching details from AI)

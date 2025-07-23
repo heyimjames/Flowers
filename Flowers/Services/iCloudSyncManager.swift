@@ -298,21 +298,42 @@ class iCloudSyncManager: ObservableObject {
     
     func restoreFromICloud() async -> [AIFlower]? {
         guard iCloudAvailable, let containerURL = iCloudContainerURL else {
-            print("iCloud not available for restore")
+            print("iCloud not available for restore - iCloudAvailable: \(iCloudAvailable), containerURL: \(iCloudContainerURL?.path ?? "nil")")
             return nil
         }
         
+        print("Starting iCloud restore - container available at: \(containerURL.path)")
+        
         do {
             let flowersURL = containerURL.appendingPathComponent(flowersFileName)
+            print("Looking for iCloud file at: \(flowersURL.path)")
+            
+            // Check iCloud status first
+            var resourceValues: URLResourceValues?
+            do {
+                resourceValues = try flowersURL.resourceValues(forKeys: [
+                    .ubiquitousItemDownloadingStatusKey,
+                    .ubiquitousItemHasUnresolvedConflictsKey
+                ])
+                
+                if let downloadStatus = resourceValues?.ubiquitousItemDownloadingStatus {
+                    print("iCloud download status: \(downloadStatus.rawValue)")
+                }
+                // Use ubiquitousItemDownloadingStatus instead of deprecated ubiquitousItemIsDownloaded
+                let isDownloaded = (resourceValues?.ubiquitousItemDownloadingStatus == .current)
+                print("iCloud file is downloaded: \(isDownloaded)")
+            } catch {
+                print("Error checking iCloud resource values: \(error)")
+            }
             
             // Try to download the file first if it's not local
             do {
                 print("Attempting to download iCloud file if needed...")
                 try FileManager.default.startDownloadingUbiquitousItem(at: flowersURL)
                 
-                // Wait a bit for download to start
-                try await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
-                print("Download request completed")
+                // Wait longer for download to complete
+                try await Task.sleep(nanoseconds: 3_000_000_000) // 3 seconds
+                print("Download request completed, waiting for file availability")
             } catch {
                 print("Error requesting iCloud file download: \(error)")
             }
@@ -336,6 +357,24 @@ class iCloudSyncManager: ObservableObject {
             
             if !isDownloaded {
                 print("No iCloud backup found after download attempt")
+                
+                // Debug: List all files in the iCloud directory
+                do {
+                    let contents = try FileManager.default.contentsOfDirectory(at: containerURL, includingPropertiesForKeys: [.ubiquitousItemDownloadingStatusKey], options: [])
+                    print("Contents of iCloud directory (\(contents.count) items):")
+                    for url in contents {
+                        let fileName = url.lastPathComponent
+                        var status = "unknown"
+                        if let resourceValues = try? url.resourceValues(forKeys: [.ubiquitousItemDownloadingStatusKey]),
+                           let downloadStatus = resourceValues.ubiquitousItemDownloadingStatus {
+                            status = downloadStatus.rawValue
+                        }
+                        print("  - \(fileName) (status: \(status))")
+                    }
+                } catch {
+                    print("Error listing iCloud directory contents: \(error)")
+                }
+                
                 return nil
             }
             

@@ -494,6 +494,10 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Flowers/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Flowers;
+				INFOPLIST_KEY_NSCalendarsUsageDescription = "Calendar access allows us to create special holiday flowers and seasonal collections that celebrate important dates and events in your life.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location helps create unique flowers that reflect your city's character, local weather patterns, seasonal changes, and special calendar events - making each discovery truly personal to you.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Add flower images to your photo library collection";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Save beautiful flower images to your photo library";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -526,6 +530,10 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Flowers/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Flowers;
+				INFOPLIST_KEY_NSCalendarsUsageDescription = "Calendar access allows us to create special holiday flowers and seasonal collections that celebrate important dates and events in your life.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location helps create unique flowers that reflect your city's character, local weather patterns, seasonal changes, and special calendar events - making each discovery truly personal to you.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Add flower images to your photo library collection";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Save beautiful flower images to your photo library";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

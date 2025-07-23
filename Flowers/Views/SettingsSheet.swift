@@ -18,10 +18,17 @@ struct SettingsSheet: View {
     @State private var showingFileImporter = false
     @State private var importedFlower: AIFlower?
     @State private var importedSenderInfo: FlowerOwner?
+    @State private var showingBouquetImporter = false
+    @State private var backupResult: BackupResult?
+    @State private var bouquetRestoreResult: BouquetRestoreResult?
+    @State private var isCreatingBackup = false
+    @State private var isRestoringBouquet = false
     @State private var showingImportConfirmation = false
     @State private var currentAppIcon: String = ""
     @State private var showingCustomFlowerSheet = false
     @State private var showingWeatherTestSheet = false
+    @State private var syncSuccessMessage: String?
+    @State private var showingSyncSuccess = false
     @AppStorage("userName") private var userName = ""
     
     // Developer detection
@@ -50,6 +57,30 @@ struct SettingsSheet: View {
             switch self {
             case .success: return "success"
             case .failure: return "failure"
+            }
+        }
+    }
+    
+    enum BackupResult: Identifiable {
+        case success(flowersCount: Int, fileSize: String, filePath: String)
+        case failure(error: String)
+        
+        var id: String {
+            switch self {
+            case .success: return "backup_success"
+            case .failure: return "backup_failure"
+            }
+        }
+    }
+    
+    enum BouquetRestoreResult: Identifiable {
+        case success(flowersCount: Int, newFlowers: Int, updatedFlowers: Int)
+        case failure(error: String)
+        
+        var id: String {
+            switch self {
+            case .success: return "bouquet_success"
+            case .failure: return "bouquet_failure"
             }
         }
     }
@@ -580,20 +611,75 @@ struct SettingsSheet: View {
                 }
             }
         } message: {
-            Text("This will merge your iCloud backup with your current collection. Any flowers in your iCloud backup that aren't in your current collection will be added. No flowers will be lost.")
+            Text("This will bring back any flowers you have stored in iCloud and add them to your collection. You won't lose any of your current flowers.")
         }
         .alert(item: $restoreResult) { result in
             switch result {
             case .success(let count):
                 return Alert(
-                    title: Text("Restore Complete"),
-                    message: Text("Successfully restored \(count) flowers from iCloud."),
-                    dismissButton: .default(Text("OK"))
+                    title: Text("Flowers Retrieved!"),
+                    message: Text("Found \(count) flowers stored in your iCloud and added them to your collection. All your flowers are now up to date!"),
+                    dismissButton: .default(Text("OK")) {
+                        // Show success in the UI
+                        syncSuccessMessage = "Successfully restored \(count) flowers from iCloud!"
+                        showingSyncSuccess = true
+                        // Clear the message after 3 seconds
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                            syncSuccessMessage = nil
+                        }
+                    }
                 )
             case .failure(let error):
                 return Alert(
-                    title: Text("Restore Failed"),
-                    message: Text("Could not restore from iCloud: \(error)"),
+                    title: Text("Couldn't Get Flowers"),
+                    message: Text("We couldn't get your flowers from iCloud: \(error)"),
+                    dismissButton: .default(Text("OK"))
+                )
+            }
+        }
+        .alert(item: $backupResult) { result in
+            switch result {
+            case .success(let flowersCount, let fileSize, _):
+                return Alert(
+                    title: Text("Flowers Saved!"),
+                    message: Text("Successfully saved all \(flowersCount) of your flowers (\(fileSize)). The file has been saved where you can share it or keep it extra safe."),
+                    dismissButton: .default(Text("OK")) {
+                        // Show success in the UI
+                        syncSuccessMessage = "Backup created with \(flowersCount) flowers!"
+                        // Clear the message after 3 seconds
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                            syncSuccessMessage = nil
+                        }
+                    }
+                )
+            case .failure(let error):
+                return Alert(
+                    title: Text("Couldn't Save Flowers"),
+                    message: Text("We couldn't save your flowers: \(error)"),
+                    dismissButton: .default(Text("OK"))
+                )
+            }
+        }
+        .alert(item: $bouquetRestoreResult) { result in
+            switch result {
+            case .success(let flowersCount, let newFlowers, let updatedFlowers):
+                return Alert(
+                    title: Text("Flowers Restored!"),
+                    message: Text("Successfully brought back \(flowersCount) flowers! Added \(newFlowers) new flowers and updated \(updatedFlowers) existing ones."),
+                    dismissButton: .default(Text("OK")) {
+                        // Show success in the UI
+                        let message = newFlowers > 0 ? "Restored \(flowersCount) flowers (\(newFlowers) new)!" : "Collection restored successfully!"
+                        syncSuccessMessage = message
+                        // Clear the message after 3 seconds
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                            syncSuccessMessage = nil
+                        }
+                    }
+                )
+            case .failure(let error):
+                return Alert(
+                    title: Text("Couldn't Get Flowers Back"),
+                    message: Text("We couldn't restore your flowers: \(error)"),
                     dismissButton: .default(Text("OK"))
                 )
             }
@@ -624,6 +710,20 @@ struct SettingsSheet: View {
                 }
             case .failure(let error):
                 print("File import failed: \(error)")
+            }
+        }
+        .fileImporter(
+            isPresented: $showingBouquetImporter,
+            allowedContentTypes: [UTType(filenameExtension: "bouquet") ?? UTType.data],
+            allowsMultipleSelection: false
+        ) { result in
+            switch result {
+            case .success(let urls):
+                if let url = urls.first {
+                    importBouquetFile(from: url)
+                }
+            case .failure(let error):
+                print("Bouquet import failed: \(error)")
             }
         }
         .sheet(isPresented: $showingImportConfirmation) {
@@ -724,6 +824,21 @@ struct SettingsSheet: View {
         dismiss()
     }
     
+    private func performSyncWithFeedback() async {
+        await iCloudSync.performFullSync(flowerStore: flowerStore)
+        
+        // Show success feedback when sync completes successfully
+        await MainActor.run {
+            if case .success = iCloudSync.syncStatus {
+                syncSuccessMessage = "Flowers saved to iCloud successfully!"
+                // Clear the message after 3 seconds
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                    syncSuccessMessage = nil
+                }
+            }
+        }
+    }
+    
     private func performICloudRestore() async {
         // Set loading state
         await MainActor.run {
@@ -731,21 +846,36 @@ struct SettingsSheet: View {
             restoreResult = nil
         }
         
-        // Get the count of flowers before restore
-        let flowersBeforeRestore = await MainActor.run { flowerStore.discoveredFlowers.count }
-        
-        // Perform the restore
-        await iCloudSync.mergeWithICloudData(flowerStore: flowerStore)
-        
-        // Get the count after restore
-        let flowersAfterRestore = await MainActor.run { flowerStore.discoveredFlowers.count }
-        
-        // Calculate how many were restored
-        let restoredCount = flowersAfterRestore - flowersBeforeRestore
-        
-        await MainActor.run {
-            isRestoringFromICloud = false
-            restoreResult = .success(flowersCount: max(0, restoredCount))
+        // Get iCloud flowers directly to report accurate count
+        if let iCloudFlowers = await iCloudSync.restoreFromICloud() {
+            print("Found \(iCloudFlowers.count) flowers in iCloud during restore")
+            
+            // Get the count of flowers before restore
+            let flowersBeforeRestore = await MainActor.run { flowerStore.discoveredFlowers.count }
+            
+            // Perform the merge
+            await iCloudSync.mergeWithICloudData(flowerStore: flowerStore)
+            
+            // Get the count after restore
+            let flowersAfterRestore = await MainActor.run { flowerStore.discoveredFlowers.count }
+            
+            // Calculate how many were actually added
+            let newFlowersAdded = flowersAfterRestore - flowersBeforeRestore
+            
+            await MainActor.run {
+                isRestoringFromICloud = false
+                // Report the number of flowers found in iCloud, not just new ones added
+                restoreResult = .success(flowersCount: iCloudFlowers.count)
+            }
+            
+            print("iCloud restore complete: \(iCloudFlowers.count) flowers found in iCloud, \(newFlowersAdded) new flowers added locally")
+        } else {
+            // No iCloud data found
+            await MainActor.run {
+                isRestoringFromICloud = false
+                restoreResult = .failure(error: "No flowers found in your iCloud. Try using 'Save Now' first to store your current flowers, or check that you're signed into the same iCloud account where your flowers were saved.")
+            }
+            print("No iCloud data found during restore attempt")
         }
     }
     
@@ -759,6 +889,58 @@ struct SettingsSheet: View {
             print("Failed to import flower: \(error)")
             // TODO: Show error alert to user
         }
+    }
+    
+    private func createCompleteBackup() {
+        isCreatingBackup = true
+        backupResult = nil
+        
+        Task {
+            let serviceResult = await FlowerBackupService.shared.createQuickBackup(from: flowerStore)
+            
+            await MainActor.run {
+                isCreatingBackup = false
+                
+                // Convert service result to local result type
+                switch serviceResult {
+                case .success(let flowersCount, let fileSize, let filePath):
+                    backupResult = .success(flowersCount: flowersCount, fileSize: fileSize, filePath: filePath)
+                    shareBackupFile(at: filePath)
+                case .failure(let error):
+                    backupResult = .failure(error: error)
+                }
+            }
+        }
+    }
+    
+    private func importBouquetFile(from url: URL) {
+        isRestoringBouquet = true
+        bouquetRestoreResult = nil
+        
+        Task {
+            let serviceResult = await FlowerBackupService.shared.restoreFromBackup(fileURL: url, flowerStore: flowerStore)
+            
+            await MainActor.run {
+                isRestoringBouquet = false
+                
+                // Convert service result to local result type
+                switch serviceResult {
+                case .success(let flowersCount, let newFlowers, let updatedFlowers):
+                    bouquetRestoreResult = .success(flowersCount: flowersCount, newFlowers: newFlowers, updatedFlowers: updatedFlowers)
+                case .failure(let error):
+                    bouquetRestoreResult = .failure(error: error)
+                }
+            }
+        }
+    }
+    
+    private func shareBackupFile(at filePath: String) {
+        let fileURL = URL(fileURLWithPath: filePath)
+        
+        // Use UIDocumentInteractionController to share the backup
+        let documentController = UIDocumentInteractionController(url: fileURL)
+        documentController.delegate = FlowerBackupService.shared
+        documentController.presentOptionsMenu(from: CGRect.zero, in: UIApplication.shared.windows.first?.rootViewController?.view ?? UIView(), animated: true)
     }
     
     // MARK: - Helper Functions
@@ -787,7 +969,7 @@ struct SettingsSheet: View {
     // MARK: - iCloud Sync Section
     private var iCloudSyncSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("iCloud Sync")
+            Text("Your Flower Backup")
                 .font(.system(size: 16, weight: .light, design: .serif))
                 .foregroundColor(.flowerTextPrimary)
             
@@ -797,16 +979,16 @@ struct SettingsSheet: View {
                     .foregroundColor(iCloudSync.iCloudAvailable ? .flowerPrimary : .flowerTextTertiary)
                 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(iCloudSync.iCloudAvailable ? "iCloud Connected" : "iCloud Not Available")
+                    Text(iCloudSync.iCloudAvailable ? "Backup is On" : "Backup is Off")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.flowerTextPrimary)
                     
                     if let lastSync = iCloudSync.lastSyncDate {
-                        Text("Last synced \(formattedSyncTime(lastSync))")
+                        Text("Last saved \(formattedSyncTime(lastSync))")
                             .font(.system(size: 12, design: .rounded))
                             .foregroundColor(.flowerTextSecondary)
                     } else {
-                        Text("Not synced yet")
+                        Text("Not saved yet")
                             .font(.system(size: 12, design: .rounded))
                             .foregroundColor(.flowerTextSecondary)
                     }
@@ -853,81 +1035,172 @@ struct SettingsSheet: View {
             }
             
             if iCloudSync.iCloudAvailable {
-                Button(action: {
-                    Task {
-                        await iCloudSync.performFullSync(flowerStore: flowerStore)
+                VStack(spacing: 16) {
+                    // Save Now button with description
+                    VStack(alignment: .leading, spacing: 8) {
+                        Button(action: {
+                            Task {
+                                await performSyncWithFeedback()
+                            }
+                        }) {
+                            HStack {
+                                Image(systemName: "arrow.clockwise")
+                                    .rotationEffect(iCloudSync.syncStatus == .syncing ? .degrees(360) : .degrees(0))
+                                    .animation(
+                                        iCloudSync.syncStatus == .syncing ?
+                                        Animation.linear(duration: 0.8).repeatForever(autoreverses: false) :
+                                        .default,
+                                        value: iCloudSync.syncStatus
+                                    )
+                                Text("Save Now")
+                            }
+                        }
+                        .flowerButtonStyle()
+                        .disabled(iCloudSync.syncStatus == .syncing || isRestoringFromICloud)
+                        
+                        Text("Safely stores all your flowers to your personal iCloud")
+                            .font(.system(size: 11))
+                            .foregroundColor(.flowerTextTertiary)
+                            .padding(.leading, 8)
                     }
-                }) {
-                    HStack {
-                        Image(systemName: "arrow.clockwise")
-                            .rotationEffect(iCloudSync.syncStatus == .syncing ? .degrees(360) : .degrees(0))
-                            .animation(
-                                iCloudSync.syncStatus == .syncing ?
-                                Animation.linear(duration: 0.8).repeatForever(autoreverses: false) :
-                                .default,
-                                value: iCloudSync.syncStatus
-                            )
-                        Text("Sync Now")
+                    
+                    // Get My Flowers button with description
+                    VStack(alignment: .leading, spacing: 8) {
+                        Button(action: {
+                            showingICloudRestoreConfirmation = true
+                        }) {
+                            HStack {
+                                Image(systemName: "icloud.and.arrow.down")
+                                    .foregroundColor(.flowerPrimary)
+                                Text("Get My Flowers")
+                                    .foregroundColor(.flowerPrimary)
+                            }
+                        }
+                        .flowerSecondaryButtonStyle()
+                        .disabled(iCloudSync.syncStatus == .syncing || isRestoringFromICloud)
+                        
+                        Text("Brings back any flowers you have stored in iCloud")
+                            .font(.system(size: 11))
+                            .foregroundColor(.flowerTextTertiary)
+                            .padding(.leading, 8)
+                    }
+                    
+                    // Save All My Flowers button with description
+                    VStack(alignment: .leading, spacing: 8) {
+                        Button(action: {
+                            createCompleteBackup()
+                        }) {
+                            HStack {
+                                Image(systemName: "archivebox")
+                                    .foregroundColor(.flowerPrimary)
+                                Text("Save All My Flowers")
+                                    .foregroundColor(.flowerPrimary)
+                            }
+                        }
+                        .flowerSecondaryButtonStyle()
+                        .disabled(isCreatingBackup || isRestoringBouquet)
+                        
+                        Text("Creates a file you can keep safe with every flower you've collected")
+                            .font(.system(size: 11))
+                            .foregroundColor(.flowerTextTertiary)
+                            .padding(.leading, 8)
+                    }
+                    
+                    // Get All My Flowers Back button with description
+                    VStack(alignment: .leading, spacing: 8) {
+                        Button(action: {
+                            showingBouquetImporter = true
+                        }) {
+                            HStack {
+                                Image(systemName: "archivebox.fill")
+                                    .foregroundColor(.flowerPrimary)
+                                Text("Get All My Flowers Back")
+                                    .foregroundColor(.flowerPrimary)
+                            }
+                        }
+                        .flowerSecondaryButtonStyle()
+                        .disabled(isCreatingBackup || isRestoringBouquet)
+                        
+                        Text("Brings back your entire collection from a saved file")
+                            .font(.system(size: 11))
+                            .foregroundColor(.flowerTextTertiary)
+                            .padding(.leading, 8)
+                    }
+                    
+                    // Add a Friend's Flower button with description
+                    VStack(alignment: .leading, spacing: 8) {
+                        Button(action: {
+                            showingFileImporter = true
+                        }) {
+                            HStack {
+                                Image(systemName: "folder.badge.plus")
+                                    .foregroundColor(.flowerPrimary)
+                                Text("Add a Friend's Flower")
+                                    .foregroundColor(.flowerPrimary)
+                            }
+                        }
+                        .flowerSecondaryButtonStyle()
+                        .disabled(iCloudSync.syncStatus == .syncing || isRestoringFromICloud)
+                        
+                        Text("Add flowers that friends have shared with you")
+                            .font(.system(size: 11))
+                            .foregroundColor(.flowerTextTertiary)
+                            .padding(.leading, 8)
                     }
                 }
-                .flowerButtonStyle()
-                .disabled(iCloudSync.syncStatus == .syncing || isRestoringFromICloud)
-                
-                // Restore from iCloud button
-                Button(action: {
-                    showingICloudRestoreConfirmation = true
-                }) {
-                    HStack {
-                        Image(systemName: "icloud.and.arrow.down")
-                            .foregroundColor(.flowerPrimary)
-                        Text("Merge from iCloud")
-                            .foregroundColor(.flowerPrimary)
-                    }
-                }
-                .flowerSecondaryButtonStyle()
-                .disabled(iCloudSync.syncStatus == .syncing || isRestoringFromICloud)
-                
-                // Import from Files button
-                Button(action: {
-                    showingFileImporter = true
-                }) {
-                    HStack {
-                        Image(systemName: "folder.badge.plus")
-                            .foregroundColor(.flowerPrimary)
-                        Text("Import from Files")
-                            .foregroundColor(.flowerPrimary)
-                    }
-                }
-                .flowerSecondaryButtonStyle()
-                .disabled(iCloudSync.syncStatus == .syncing || isRestoringFromICloud)
                 
                 if isRestoringFromICloud {
                     HStack {
                         ProgressView()
                             .scaleEffect(0.8)
-                        Text("Restoring...")
+                        Text("Getting your flowers...")
                             .font(.system(size: 14, design: .rounded))
                             .foregroundColor(.flowerTextSecondary)
                     }
                     .padding(.top, 8)
                 }
                 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("• Sync Now: Merges your local flowers with iCloud and uploads the combined collection")
-                        .font(.system(size: 11))
-                        .foregroundColor(.flowerTextTertiary)
-                    
-                    Text("• Merge from iCloud: Downloads flowers from iCloud and merges with your local collection")
-                        .font(.system(size: 11))
-                        .foregroundColor(.flowerTextTertiary)
-                    
-                    Text("• Your flowers are automatically backed up to iCloud")
-                        .font(.system(size: 11))
-                        .foregroundColor(.flowerTextTertiary)
+                if isCreatingBackup {
+                    HStack {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                        Text("Saving your flowers...")
+                            .font(.system(size: 14, design: .rounded))
+                            .foregroundColor(.flowerTextSecondary)
+                    }
+                    .padding(.top, 8)
                 }
-                .fixedSize(horizontal: false, vertical: true)
+                
+                if isRestoringBouquet {
+                    HStack {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                        Text("Getting your flowers back...")
+                            .font(.system(size: 14, design: .rounded))
+                            .foregroundColor(.flowerTextSecondary)
+                    }
+                    .padding(.top, 8)
+                }
+                
+                // Show success message if there is one
+                if let successMessage = syncSuccessMessage {
+                    HStack {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                        Text(successMessage)
+                            .font(.system(size: 14, design: .rounded))
+                            .foregroundColor(.green)
+                    }
+                    .padding(.top, 8)
+                }
+                
+                Text("💡 Your flowers are safely saved to iCloud every day automatically")
+                    .font(.system(size: 11))
+                    .foregroundColor(.flowerTextTertiary)
+                    .padding(.top, 16)
+                    .fixedSize(horizontal: false, vertical: true)
             } else {
-                Text("Sign in to iCloud in Settings to back up your flowers")
+                Text("Sign in to iCloud in your device Settings to keep your flowers safe")
                     .font(.system(size: 12, design: .rounded))
                     .foregroundColor(.flowerTextTertiary)
                     .fixedSize(horizontal: false, vertical: true)

@@ -391,24 +391,29 @@ struct FlowerDetailSheet: View {
     @State private var showingGiftSheet = false
     @AppStorage("userName") private var userName = ""
     
-    // Only load current flower and adjacent ones for better performance
-    private var visibleFlowerIndices: [Int] {
+    // Preload a reasonable window of flowers around current position
+    private var preloadedFlowers: [AIFlower] {
+        let windowSize = 5 // Load 2 before + current + 2 after
         let totalCount = allFlowers.count
         guard totalCount > 0 else { return [] }
         
         let safeCurrentIndex = max(0, min(currentIndex, totalCount - 1))
+        let startIndex = max(0, safeCurrentIndex - 2)
+        let endIndex = min(totalCount - 1, safeCurrentIndex + 2)
         
-        // Load current, previous, and next (3 total maximum)
-        var indices: [Int] = [safeCurrentIndex]
+        return Array(allFlowers[startIndex...endIndex])
+    }
+    
+    private var preloadedIndices: [Int] {
+        let windowSize = 5
+        let totalCount = allFlowers.count
+        guard totalCount > 0 else { return [] }
         
-        if safeCurrentIndex > 0 {
-            indices.append(safeCurrentIndex - 1)
-        }
-        if safeCurrentIndex < totalCount - 1 {
-            indices.append(safeCurrentIndex + 1)
-        }
+        let safeCurrentIndex = max(0, min(currentIndex, totalCount - 1))
+        let startIndex = max(0, safeCurrentIndex - 2)
+        let endIndex = min(totalCount - 1, safeCurrentIndex + 2)
         
-        return indices.sorted()
+        return Array(startIndex...endIndex)
     }
     
     init(flower: AIFlower, flowerStore: FlowerStore, allFlowers: [AIFlower], currentIndex: Int) {
@@ -430,221 +435,18 @@ struct FlowerDetailSheet: View {
                 .ignoresSafeArea()
                 
                 TabView(selection: $currentIndex) {
-                    ForEach(visibleFlowerIndices, id: \.self) { index in
+                    ForEach(preloadedIndices, id: \.self) { index in
                         let flowerItem = allFlowers[index]
-                        ScrollView {
-                            VStack(spacing: 0) {
-                                // Flower image with soft blend
-                                if let imageData = flowerItem.imageData,
-                                   let uiImage = UIImage(data: imageData) {
-                                    ZStack {
-                                        // Soft gradient for edge blending
-                                        RadialGradient(
-                                            colors: [Color.clear, Color.flowerBackground.opacity(0.8)],
-                                            center: .center,
-                                            startRadius: UIScreen.main.bounds.width * 0.4,
-                                            endRadius: UIScreen.main.bounds.width * 0.6
-                                        )
-                                        .frame(height: UIScreen.main.bounds.width)
-                                        
-                                        Image(uiImage: uiImage)
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fit)
-                                            .cornerRadius(20)
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 20)
-                                                    .stroke(
-                                                        LinearGradient(
-                                                            colors: [Color.flowerBackground.opacity(0.6), Color.clear],
-                                                            startPoint: .top,
-                                                            endPoint: .bottom
-                                                        ),
-                                                        lineWidth: 1
-                                                    )
-                                            )
-                                    }
-                                    .padding(.horizontal, 24)
-                                    .padding(.top, 20)
-                                }
-                                
-                                // Navigation indicators
-                                if allFlowers.count > 1 {
-                                    HStack(spacing: 16) {
-                                        Image(systemName: "chevron.left")
-                                            .font(.system(size: 14, weight: .medium, design: .rounded))
-                                            .foregroundColor(index > 0 ? .gray : .gray.opacity(0.3))
-                                        
-                                        Text("\(index + 1) of \(allFlowers.count)")
-                                            .font(.system(size: 14, design: .rounded))
-                                            .foregroundColor(.gray)
-                                        
-                                        Image(systemName: "chevron.right")
-                                            .font(.system(size: 14, weight: .medium, design: .rounded))
-                                            .foregroundColor(index < allFlowers.count - 1 ? .gray : .gray.opacity(0.3))
-                                    }
-                                    .padding(.top, 16)
-                                }
-                                
-                                // Flower name and basic info
-                                VStack(spacing: 8) {
-                                    Text(flowerItem.name)
-                                        .font(.system(size: 32, weight: .regular, design: .serif))
-                                        .foregroundColor(.flowerTextPrimary)
-                                        .multilineTextAlignment(.center)
-                                        .lineLimit(2)
-                                        .fixedSize(horizontal: false, vertical: true)
-                                        .minimumScaleFactor(0.75)
-                                        .padding(.horizontal, 8)
-                                    
-                                    if flowerItem.isBouquet, let holidayName = flowerItem.holidayName {
-                                        HStack(spacing: 6) {
-                                            Image(systemName: "gift.fill")
-                                                .font(.system(size: 16, design: .rounded))
-                                                .foregroundColor(.flowerSecondary)
-                                            Text("Special \(holidayName) Collection")
-                                                .font(.system(size: 16, weight: .medium))
-                                                .foregroundColor(.flowerTextSecondary)
-                                        }
-                                        .padding(.bottom, 4)
-                                    }
-                                    
-                                    HStack(spacing: 16) {
-                                        if let continent = flowerItem.continent {
-                                            Label(flowerItem.isBouquet ? "Tradition from \(continent.rawValue)" : continent.rawValue, systemImage: "globe")
-                                                .font(.system(size: 14, design: .rounded))
-                                                .foregroundColor(.flowerTextSecondary)
-                                        }
-                                        
-                                        Label {
-                                            Text(flowerItem.generatedDate, style: .date)
-                                        } icon: {
-                                            Image(systemName: "calendar")
-                                        }
-                                        .font(.system(size: 14, design: .rounded))
-                                        .foregroundColor(.flowerTextSecondary)
-                                    }
-                                }
-                                .padding(.top, allFlowers.count > 1 ? 12 : 24)
-                                .padding(.horizontal, 24)
-                                
-                                // Detailed information sections
-                                if flowerItem.meaning != nil || flowerItem.properties != nil || flowerItem.origins != nil || flowerItem.bouquetFlowers != nil {
-                                    VStack(alignment: .leading, spacing: 20) {
-                                        if flowerItem.isBouquet, let bouquetFlowers = flowerItem.bouquetFlowers {
-                                            DetailSection(
-                                                title: "Bouquet Contains",
-                                                content: bouquetFlowers.joined(separator: " • "),
-                                                icon: "leaf.circle"
-                                            )
-                                        }
-                                        
-                                        if let meaning = flowerItem.meaning {
-                                            DetailSection(
-                                                title: flowerItem.isBouquet ? "Holiday Significance" : "Meaning",
-                                                content: meaning,
-                                                icon: "book"
-                                            )
-                                        }
-                                        
-                                        if let properties = flowerItem.properties {
-                                            DetailSection(
-                                                title: flowerItem.isBouquet ? "Arrangement Details" : "Characteristics",
-                                                content: properties,
-                                                icon: flowerItem.isBouquet ? "sparkles" : "leaf"
-                                            )
-                                        }
-                                        
-                                        if let origins = flowerItem.origins {
-                                            DetailSection(
-                                                title: flowerItem.isBouquet ? "Holiday Traditions" : "Origins",
-                                                content: origins,
-                                                icon: flowerItem.isBouquet ? "gift" : "map"
-                                            )
-                                        }
-                                        
-                                        if let description = flowerItem.detailedDescription {
-                                            DetailSection(
-                                                title: "Description",
-                                                content: description,
-                                                icon: "text.alignleft"
-                                            )
-                                        }
-                                        
-                                        // Ownership history
-                                        if flowerItem.originalOwner != nil || !flowerItem.ownershipHistory.isEmpty {
-                                            OwnershipHistorySection(flower: flowerItem)
-                                        }
-                                        
-                                        // Weather card - always show (will show date at minimum)
-                                        WeatherSection(flower: flowerItem)
-                                        
-                                        // Discovery location map - always show
-                                        if flowerItem.discoveryLatitude != nil && flowerItem.discoveryLongitude != nil {
-                                            LocationSection(flower: flowerItem)
-                                        }
-                                    }
-                                    .padding(.top, 32)
-                                    .padding(.horizontal, 24)
-                                } else if index == currentIndex && isLoadingDetails {
-                                    // Loading state - only show for current flower
-                                    VStack(spacing: 16) {
-                                        ProgressView()
-                                            .tint(.flowerPrimary)
-                                        Text("Discovering flower details...")
-                                            .font(.system(size: 14, design: .rounded))
-                                            .foregroundColor(.flowerTextSecondary)
-                                    }
-                                    .padding(.vertical, 40)
-                                } else if index == currentIndex && detailsError != nil {
-                                    // Error state - only show for current flower
-                                    VStack(spacing: 16) {
-                                        Image(systemName: "exclamationmark.circle")
-                                            .font(.system(size: 40))
-                                            .foregroundColor(.flowerError)
-                                        Text("Failed to load details")
-                                            .font(.system(size: 16, weight: .medium))
-                                            .foregroundColor(.flowerError)
-                                        if let error = detailsError {
-                                            Text(error)
-                                                .font(.system(size: 14, design: .rounded))
-                                                .foregroundColor(.flowerTextSecondary)
-                                                .multilineTextAlignment(.center)
-                                        }
-                                        
-                                        Button(action: loadFlowerDetails) {
-                                            Text("Retry")
-                                        }
-                                        .flowerButtonStyle()
-                                    }
-                                    .padding(.vertical, 40)
-                                    .padding(.horizontal, 24)
-                                } else if flowerItem.meaning == nil && flowerItem.properties == nil {
-                                    // No details yet - show button to load
-                                    VStack(spacing: 16) {
-                                        Image(systemName: "sparkles")
-                                            .font(.system(size: 40))
-                                            .foregroundColor(.flowerPrimary.opacity(0.5))
-                                        Text("Discover more about this flower")
-                                            .font(.system(size: 16, design: .rounded))
-                                            .foregroundColor(.flowerTextSecondary)
-                                        
-                                        Button(action: {
-                                            flower = flowerItem
-                                            loadFlowerDetails()
-                                        }) {
-                                            Text("Reveal Details")
-                                        }
-                                        .flowerButtonStyle()
-                                    }
-                                    .padding(.vertical, 40)
-                                    .padding(.horizontal, 24)
-                                }
-                                
-                                // Extra bottom padding to prevent clipping
-                                Color.clear.frame(height: 250)
+                        OptimizedFlowerDetailView(
+                            flower: flowerItem,
+                            flowerIndex: index,
+                            totalFlowers: allFlowers.count,
+                            isCurrentlyVisible: index == currentIndex,
+                            onLoadDetails: { flower in
+                                self.flower = flower
+                                self.loadFlowerDetails()
                             }
-                        }
-                        .scrollIndicators(.hidden)
+                        )
                         .tag(index)
                     }
                 }
@@ -656,6 +458,11 @@ struct FlowerDetailSheet: View {
                         // Reset states for new flower
                         isLoadingDetails = false
                         detailsError = nil
+                        
+                        // Auto-load details in background for new flower if needed
+                        if flower.meaning == nil && flower.properties == nil {
+                            loadFlowerDetailsInBackground()
+                        }
                     }
                 }
             }
@@ -763,8 +570,11 @@ struct FlowerDetailSheet: View {
             )
         }
         .onAppear {
-            // Don't auto-load details to prevent slow sheet appearance
-            // User can tap "Reveal Details" button if they want to see more
+            // Auto-load details in background if they don't exist
+            // This won't block the sheet from appearing
+            if flower.meaning == nil && flower.properties == nil && !isLoadingDetails {
+                loadFlowerDetailsInBackground()
+            }
         }
         }
     
@@ -780,6 +590,21 @@ struct FlowerDetailSheet: View {
             } catch {
                 detailsError = error.localizedDescription
                 isLoadingDetails = false
+            }
+        }
+    }
+    
+    private func loadFlowerDetailsInBackground() {
+        // Load details without showing loading state
+        Task {
+            do {
+                let details = try await OpenAIService.shared.generateFlowerDetails(for: flower, context: nil)
+                await MainActor.run {
+                    flowerStore.updateFlowerDetails(flower, with: details)
+                }
+            } catch {
+                // Silently fail - user can still tap "Reveal Details" if needed
+                print("Background detail loading failed: \(error)")
             }
         }
     }
@@ -883,27 +708,27 @@ struct CollectionStatsCard: View {
     let onTapProgress: () -> Void
     
     var body: some View {
-        HStack(spacing: 20) {
-            // Total Flowers
-            VStack(spacing: 8) {
-                Text("\(flowerStore.totalDiscoveredCount)")
-                    .font(.system(size: 32, weight: .bold, design: .rounded))
-                    .foregroundColor(.flowerPrimary)
+        Button(action: onTapProgress) {
+            HStack(spacing: 20) {
+                // Total Flowers
+                VStack(spacing: 8) {
+                    Text("\(flowerStore.totalDiscoveredCount)")
+                        .font(.system(size: 32, weight: .bold, design: .rounded))
+                        .foregroundColor(.flowerPrimary)
+                    
+                    Text("flowers discovered")
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                        .foregroundColor(.flowerTextSecondary)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
                 
-                Text("flowers discovered")
-                    .font(.system(size: 12, weight: .medium, design: .rounded))
-                    .foregroundColor(.flowerTextSecondary)
-                    .multilineTextAlignment(.center)
-            }
-            .frame(maxWidth: .infinity)
-            
-            // Vertical divider
-            Rectangle()
-                .fill(Color.flowerTextTertiary.opacity(0.3))
-                .frame(width: 1, height: 50)
-            
-            // Progress percentage (tappable)
-            Button(action: onTapProgress) {
+                // Vertical divider
+                Rectangle()
+                    .fill(Color.flowerTextTertiary.opacity(0.3))
+                    .frame(width: 1, height: 50)
+                
+                // Progress percentage
                 VStack(spacing: 8) {
                     let totalSpecies = BotanicalDatabase.shared.allSpecies.count
                     let percentage = Int((Double(flowerStore.uniqueSpeciesDiscoveredCount) / Double(totalSpecies)) * 100)
@@ -919,18 +744,19 @@ struct CollectionStatsCard: View {
                 }
                 .frame(maxWidth: .infinity)
             }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 20)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color.white)
+                    .shadow(color: .black.opacity(0.05), radius: 8, y: 4)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.flowerPrimary.opacity(0.1), lineWidth: 1)
+            )
         }
-        .padding(.horizontal, 24)
-        .padding(.vertical, 20)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.flowerCardBackground)
-                .shadow(color: .black.opacity(0.05), radius: 8, y: 4)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Color.flowerPrimary.opacity(0.1), lineWidth: 1)
-        )
+        .buttonStyle(PlainButtonStyle()) // Prevents default button styling
     }
 }
 
@@ -1495,6 +1321,223 @@ struct LocationSection: View {
             FlowerMapView(flower: flower, showCoordinates: false)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+// MARK: - Optimized Flower Detail View
+struct OptimizedFlowerDetailView: View {
+    let flower: AIFlower
+    let flowerIndex: Int
+    let totalFlowers: Int
+    let isCurrentlyVisible: Bool
+    let onLoadDetails: (AIFlower) -> Void
+    
+    // Cache the UIImage to avoid repeated data conversion
+    @State private var cachedImage: UIImage?
+    
+    var body: some View {
+        ScrollView {
+            LazyVStack(spacing: 0) {
+                // Optimized flower image
+                Group {
+                    if let cachedImage = cachedImage {
+                        OptimizedFlowerImageView(image: cachedImage)
+                    } else if let imageData = flower.imageData,
+                              let uiImage = UIImage(data: imageData) {
+                        OptimizedFlowerImageView(image: uiImage)
+                            .onAppear {
+                                cachedImage = uiImage
+                            }
+                    }
+                }
+                
+                // Navigation indicators
+                if totalFlowers > 1 {
+                    HStack(spacing: 16) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 14, weight: .medium, design: .rounded))
+                            .foregroundColor(flowerIndex > 0 ? .gray : .gray.opacity(0.3))
+                        
+                        Text("\(flowerIndex + 1) of \(totalFlowers)")
+                            .font(.system(size: 14, design: .rounded))
+                            .foregroundColor(.gray)
+                        
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 14, weight: .medium, design: .rounded))
+                            .foregroundColor(flowerIndex < totalFlowers - 1 ? .gray : .gray.opacity(0.3))
+                    }
+                    .padding(.top, 16)
+                }
+                
+                // Flower name and basic info
+                VStack(spacing: 8) {
+                    Text(flower.name)
+                        .font(.system(size: 32, weight: .regular, design: .serif))
+                        .foregroundColor(.flowerTextPrimary)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .minimumScaleFactor(0.75)
+                        .padding(.horizontal, 8)
+                    
+                    if flower.isBouquet, let holidayName = flower.holidayName {
+                        HStack(spacing: 6) {
+                            Image(systemName: "gift.fill")
+                                .font(.system(size: 16, design: .rounded))
+                                .foregroundColor(.flowerSecondary)
+                            Text("Special \(holidayName) Collection")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(.flowerTextSecondary)
+                        }
+                        .padding(.bottom, 4)
+                    }
+                    
+                    HStack(spacing: 16) {
+                        if let continent = flower.continent {
+                            Label(flower.isBouquet ? "Tradition from \(continent.rawValue)" : continent.rawValue, systemImage: "globe")
+                                .font(.system(size: 14, design: .rounded))
+                                .foregroundColor(.flowerTextSecondary)
+                        }
+                        
+                        Label {
+                            Text(flower.generatedDate, style: .date)
+                        } icon: {
+                            Image(systemName: "calendar")
+                        }
+                        .font(.system(size: 14, design: .rounded))
+                        .foregroundColor(.flowerTextSecondary)
+                    }
+                }
+                .padding(.top, totalFlowers > 1 ? 12 : 24)
+                .padding(.horizontal, 24)
+                
+                // Lazy load detailed information sections only for visible flowers
+                if isCurrentlyVisible {
+                    LazyVStack(alignment: .leading, spacing: 20) {
+                        FlowerDetailSections(flower: flower, onLoadDetails: onLoadDetails)
+                    }
+                    .padding(.top, 32)
+                    .padding(.horizontal, 24)
+                }
+                
+                // Extra bottom padding to prevent clipping
+                Color.clear.frame(height: 250)
+            }
+        }
+        .scrollIndicators(.hidden)
+    }
+}
+
+// MARK: - Optimized Image View
+struct OptimizedFlowerImageView: View {
+    let image: UIImage
+    
+    var body: some View {
+        ZStack {
+            // Simplified gradient for better performance
+            RadialGradient(
+                colors: [Color.clear, Color.flowerBackground.opacity(0.6)],
+                center: .center,
+                startRadius: 150,
+                endRadius: 200
+            )
+            .frame(height: min(350, UIScreen.main.bounds.width))
+            
+            Image(uiImage: image)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .cornerRadius(20)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(Color.flowerBackground.opacity(0.4), lineWidth: 1)
+                )
+        }
+        .padding(.horizontal, 24)
+        .padding(.top, 20)
+    }
+}
+
+// MARK: - Flower Detail Sections
+struct FlowerDetailSections: View {
+    let flower: AIFlower
+    let onLoadDetails: (AIFlower) -> Void
+    
+    var body: some View {
+        if flower.meaning != nil || flower.properties != nil || flower.origins != nil || flower.bouquetFlowers != nil {
+            VStack(alignment: .leading, spacing: 20) {
+                if flower.isBouquet, let bouquetFlowers = flower.bouquetFlowers {
+                    DetailSection(
+                        title: "Bouquet Contains",
+                        content: bouquetFlowers.joined(separator: " • "),
+                        icon: "leaf.circle"
+                    )
+                }
+                
+                if let meaning = flower.meaning {
+                    DetailSection(
+                        title: flower.isBouquet ? "Holiday Significance" : "Meaning",
+                        content: meaning,
+                        icon: "book"
+                    )
+                }
+                
+                if let properties = flower.properties {
+                    DetailSection(
+                        title: flower.isBouquet ? "Arrangement Details" : "Characteristics",
+                        content: properties,
+                        icon: flower.isBouquet ? "sparkles" : "leaf"
+                    )
+                }
+                
+                if let origins = flower.origins {
+                    DetailSection(
+                        title: flower.isBouquet ? "Holiday Traditions" : "Origins",
+                        content: origins,
+                        icon: flower.isBouquet ? "gift" : "map"
+                    )
+                }
+                
+                if let description = flower.detailedDescription {
+                    DetailSection(
+                        title: "Description",
+                        content: description,
+                        icon: "text.alignleft"
+                    )
+                }
+                
+                // Ownership history
+                if flower.originalOwner != nil || !flower.ownershipHistory.isEmpty {
+                    OwnershipHistorySection(flower: flower)
+                }
+                
+                // Weather card - always show (will show date at minimum)
+                WeatherSection(flower: flower)
+                
+                // Discovery location map - always show
+                if flower.discoveryLatitude != nil && flower.discoveryLongitude != nil {
+                    LocationSection(flower: flower)
+                }
+            }
+        } else if flower.meaning == nil && flower.properties == nil {
+            // No details yet - show button to load
+            VStack(spacing: 16) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 40))
+                    .foregroundColor(.flowerPrimary.opacity(0.5))
+                Text("Discover more about this flower")
+                    .font(.system(size: 16, design: .rounded))
+                    .foregroundColor(.flowerTextSecondary)
+                
+                Button(action: {
+                    onLoadDetails(flower)
+                }) {
+                    Text("Reveal Details")
+                }
+                .flowerButtonStyle()
+            }
+            .padding(.vertical, 40)
+            .padding(.horizontal, 24)
+        }
     }
 }
 

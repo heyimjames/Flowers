@@ -2,18 +2,37 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>UIBackgroundModes</key>
-	<array/>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Save beautiful flower images to your photo library</string>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Add flower images to your photo library collection</string>
-	<key>NSUserNotificationsUsageDescription</key>
-	<string>Get notified when your daily flower blooms</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Your location helps create unique flowers that reflect your city's character, local weather patterns, seasonal changes, and special calendar events - making each discovery truly personal to you.</string>
-	<key>NSCalendarsUsageDescription</key>
-	<string>Calendar access allows us to create special holiday flowers and seasonal collections that celebrate important dates and events in your life.</string>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeIconFiles</key>
+			<array/>
+			<key>CFBundleTypeName</key>
+			<string>Flower Document</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>com.october.flowers.flower</string>
+			</array>
+			<key>LSTypeIsPackage</key>
+			<false/>
+		</dict>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Flower Bouquet Collection</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>com.october.flowers.bouquet</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleIcons</key>
 	<dict>
 		<key>CFBundleAlternateIcons</key>
@@ -38,20 +57,23 @@
 			<string>AppIcon</string>
 		</dict>
 	</dict>
-	<key>CFBundleDocumentTypes</key>
+	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
-			<key>CFBundleTypeName</key>
-			<string>Flower Document</string>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>LSHandlerRank</key>
-			<string>Owner</string>
-			<key>LSItemContentTypes</key>
+			<key>CFBundleURLName</key>
+			<string>com.october.flowers.flower</string>
+			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.october.flowers.flower</string>
+				<string>flowers</string>
 			</array>
 		</dict>
+	</array>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>Get notified when your daily flower blooms</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+		<string>location</string>
 	</array>
 	<key>UTExportedTypeDeclarations</key>
 	<array>
@@ -59,6 +81,7 @@
 			<key>UTTypeConformsTo</key>
 			<array>
 				<string>public.data</string>
+				<string>public.content</string>
 			</array>
 			<key>UTTypeDescription</key>
 			<string>Flower Document</string>
@@ -71,6 +94,34 @@
 				<key>public.filename-extension</key>
 				<array>
 					<string>flower</string>
+				</array>
+				<key>public.mime-type</key>
+				<array>
+					<string>application/vnd.october.flowers.flower</string>
+				</array>
+			</dict>
+		</dict>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+				<string>public.content</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Flower Bouquet Collection</string>
+			<key>UTTypeIcons</key>
+			<dict/>
+			<key>UTTypeIdentifier</key>
+			<string>com.october.flowers.bouquet</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>bouquet</string>
+				</array>
+				<key>public.mime-type</key>
+				<array>
+					<string>application/vnd.october.flowers.bouquet</string>
 				</array>
 			</dict>
 		</dict>

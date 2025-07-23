@@ -15,6 +15,7 @@ struct FlowersApp: App {
     @State private var showingImportConfirmation = false
     @State private var importedFlower: AIFlower?
     @State private var importedSenderInfo: FlowerOwner?
+    @State private var showingBouquetImportConfirmation = false
     let contextualGenerator = ContextualFlowerGenerator.shared
     
     var body: some Scene {
@@ -63,19 +64,42 @@ struct FlowersApp: App {
                         )
                     }
                 }
+                .alert("Bouquet Imported", isPresented: $showingBouquetImportConfirmation) {
+                    Button("OK") { }
+                } message: {
+                    Text("Successfully imported flower collection! Check your collection to see the new flowers.")
+                }
         }
     }
     
     private func handleIncomingFile(_ url: URL) {
-        guard url.pathExtension == "flower" else { return }
+        let fileExtension = url.pathExtension.lowercased()
         
-        do {
-            let (flower, senderInfo) = try FlowerTransferService.shared.importFlower(from: url)
-            importedFlower = flower
-            importedSenderInfo = senderInfo
-            showingImportConfirmation = true
-        } catch {
-            print("Failed to import flower: \(error)")
+        if fileExtension == "flower" {
+            // Handle single flower import
+            do {
+                let (flower, senderInfo) = try FlowerTransferService.shared.importFlower(from: url)
+                importedFlower = flower
+                importedSenderInfo = senderInfo
+                showingImportConfirmation = true
+            } catch {
+                print("Failed to import flower: \(error)")
+            }
+        } else if fileExtension == "bouquet" {
+            // Handle bouquet import
+            Task {
+                let result = await FlowerBackupService.shared.restoreFromBackup(fileURL: url, flowerStore: flowerStore)
+                await MainActor.run {
+                    switch result {
+                    case .success(let flowersCount, let newFlowers, let updatedFlowers):
+                        showingBouquetImportConfirmation = true
+                        print("Successfully imported bouquet with \(flowersCount) flowers (\(newFlowers) new, \(updatedFlowers) updated)")
+                    case .failure(let error):
+                        print("Failed to import bouquet: \(error)")
+                        // TODO: Show error alert to user
+                    }
+                }
+            }
         }
     }
 }
