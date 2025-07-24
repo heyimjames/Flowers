@@ -43,6 +43,62 @@ class ContextualFlowerGenerator: NSObject, ObservableObject, CLLocationManagerDe
         }
     }
     
+    /// Ensures we have fresh location and weather data before proceeding
+    /// Returns true if we successfully got fresh data, false if we should use cached data
+    func ensureFreshLocationAndWeather() async -> Bool {
+        // If we don't have location permission, use cached data
+        guard locationManager.authorizationStatus == .authorizedWhenInUse ||
+              locationManager.authorizationStatus == .authorizedAlways else {
+            print("ContextualFlowerGenerator: No location permission, using cached data")
+            return false
+        }
+        
+        print("ContextualFlowerGenerator: Requesting fresh location and weather...")
+        
+        // Store initial values to compare
+        let initialLocation = currentLocation
+        let initialWeather = currentWeather
+        
+        // Request fresh location
+        locationManager.requestLocation()
+        
+        // Wait up to 5 seconds for location update
+        let startTime = Date()
+        while Date().timeIntervalSince(startTime) < 5.0 {
+            // Check if we got a new location (different from initial)
+            if let newLocation = currentLocation,
+               initialLocation?.coordinate.latitude != newLocation.coordinate.latitude ||
+               initialLocation?.coordinate.longitude != newLocation.coordinate.longitude {
+                
+                // Wait a bit more for weather to update
+                let weatherStartTime = Date()
+                while Date().timeIntervalSince(weatherStartTime) < 3.0 {
+                    if let currentWeather = currentWeather,
+                       initialWeather == nil || currentWeather.currentWeather.date != initialWeather?.currentWeather.date {
+                        print("ContextualFlowerGenerator: Got fresh location and weather")
+                        return true
+                    }
+                    try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+                }
+                
+                // We got location but maybe not weather yet - that's okay
+                print("ContextualFlowerGenerator: Got fresh location, weather might still be updating")
+                return true
+            }
+            
+            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+        }
+        
+        // If we have any cached location/weather, use it
+        if currentLocation != nil || currentWeather != nil {
+            print("ContextualFlowerGenerator: Using cached location/weather data")
+            return false
+        }
+        
+        print("ContextualFlowerGenerator: No location/weather data available")
+        return false
+    }
+    
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         currentLocation = locations.first
         

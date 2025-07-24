@@ -368,10 +368,11 @@ struct FlowerGridItem: View {
                 Text(flower.name)
                     .font(.system(size: 14, weight: .medium, design: .rounded))
                     .foregroundColor(.flowerTextPrimary)
-                    .lineLimit(2)
+                    .lineLimit(3)
                     .multilineTextAlignment(.center)
-                    .minimumScaleFactor(0.9)
-                    .frame(height: 35)
+                    .minimumScaleFactor(0.85)
+                    .frame(minHeight: 35)
+                    .padding(.horizontal, 4)
             }
         }
     }
@@ -1010,17 +1011,65 @@ struct WeatherSection: View {
                     Color(red: 192/255, green: 192/255, blue: 192/255), // Silver
                     Color(red: 211/255, green: 211/255, blue: 211/255)  // Light gray
                 ]
-            case "snowy", "snow", "icy":
+            case "partly cloudy":
+                return [
+                    Color(red: 176/255, green: 196/255, blue: 222/255), // Light steel blue
+                    Color(red: 135/255, green: 206/255, blue: 250/255), // Light sky blue
+                    Color(red: 211/255, green: 211/255, blue: 211/255)  // Light gray
+                ]
+            case "snowy", "snow", "sleet":
                 return [
                     Color(red: 240/255, green: 248/255, blue: 255/255), // Alice blue
                     Color(red: 176/255, green: 224/255, blue: 230/255), // Powder blue
                     Color(red: 230/255, green: 230/255, blue: 250/255)  // Lavender
+                ]
+            case "hail":
+                return [
+                    Color(red: 190/255, green: 190/255, blue: 190/255), // Gray
+                    Color(red: 176/255, green: 224/255, blue: 230/255), // Powder blue
+                    Color(red: 169/255, green: 169/255, blue: 169/255)  // Dark gray
                 ]
             case "thunderstorms":
                 return [
                     Color(red: 75/255, green: 0/255, blue: 130/255),    // Indigo
                     Color(red: 72/255, green: 61/255, blue: 139/255),   // Dark slate blue
                     Color(red: 128/255, green: 128/255, blue: 128/255)  // Gray
+                ]
+            case "hazy", "haze":
+                return [
+                    Color(red: 255/255, green: 248/255, blue: 220/255), // Cornsilk
+                    Color(red: 240/255, green: 230/255, blue: 140/255), // Khaki
+                    Color(red: 189/255, green: 183/255, blue: 107/255)  // Dark khaki
+                ]
+            case "smoky":
+                return [
+                    Color(red: 169/255, green: 169/255, blue: 169/255), // Dark gray
+                    Color(red: 139/255, green: 139/255, blue: 131/255), // Dark gray-brown
+                    Color(red: 119/255, green: 136/255, blue: 153/255)  // Light slate gray
+                ]
+            case "breezy", "windy":
+                return [
+                    Color(red: 176/255, green: 196/255, blue: 222/255), // Light steel blue
+                    Color(red: 135/255, green: 206/255, blue: 250/255), // Light sky blue
+                    Color(red: 30/255, green: 144/255, blue: 255/255)   // Dodger blue
+                ]
+            case "hot":
+                return [
+                    Color(red: 255/255, green: 69/255, blue: 0/255),    // Red orange
+                    Color(red: 255/255, green: 140/255, blue: 0/255),   // Dark orange
+                    Color(red: 255/255, green: 165/255, blue: 0/255)    // Orange
+                ]
+            case "frigid":
+                return [
+                    Color(red: 230/255, green: 240/255, blue: 255/255), // Very light blue
+                    Color(red: 176/255, green: 224/255, blue: 230/255), // Powder blue
+                    Color(red: 175/255, green: 238/255, blue: 238/255)  // Pale turquoise
+                ]
+            case "foggy", "fog", "misty", "mist":
+                return [
+                    Color(red: 220/255, green: 220/255, blue: 220/255), // Gainsboro
+                    Color(red: 192/255, green: 192/255, blue: 192/255), // Silver
+                    Color(red: 176/255, green: 196/255, blue: 222/255)  // Light steel blue
                 ]
             default:
                 break
@@ -1375,10 +1424,10 @@ struct OptimizedFlowerDetailView: View {
                         .font(.system(size: 32, weight: .regular, design: .serif))
                         .foregroundColor(.flowerTextPrimary)
                         .multilineTextAlignment(.center)
-                        .lineLimit(2)
+                        .lineLimit(3)
                         .fixedSize(horizontal: false, vertical: true)
-                        .minimumScaleFactor(0.75)
-                        .padding(.horizontal, 8)
+                        .minimumScaleFactor(0.7)
+                        .padding(.horizontal, 16)
                     
                     if flower.isBouquet, let holidayName = flower.holidayName {
                         HStack(spacing: 6) {

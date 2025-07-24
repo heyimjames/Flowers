@@ -17,139 +17,164 @@ struct GiftFlowerSheet: View {
                 Color.flowerSheetBackground.ignoresSafeArea()
                 
                 VStack(spacing: 0) {
-                    // Centered flower image and name
-                    VStack(spacing: 0) {
-                        Spacer()
-                        
-                        VStack(spacing: 20) {
-                            if let imageData = flower.imageData,
-                               let image = UIImage(data: imageData) {
-                                Image(uiImage: image)
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: 280, height: 280)
-                                    .clipShape(RoundedRectangle(cornerRadius: 20))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 20)
-                                            .strokeBorder(Color.flowerDivider, lineWidth: 1)
-                                    )
-                            }
-                            
-                            Text(flower.name)
-                                .font(.system(size: 28, weight: .light, design: .serif))
-                                .foregroundColor(.flowerTextPrimary)
-                                .multilineTextAlignment(.center)
-                                .lineLimit(2)
-                                .minimumScaleFactor(0.8)
-                                .fixedSize(horizontal: false, vertical: true)
-                                .padding(.horizontal, 24)
-                        }
-                        
-                        Spacer()
-                    }
-                    
-                    // Bottom content
-                    VStack(spacing: 24) {
-                        // Warning message
-                        VStack(spacing: 16) {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .font(.system(size: 32))
-                                .foregroundColor(.flowerWarning)
-                            
-                            Text("Gift This Flower?")
-                                .font(.system(size: 22, weight: .bold))
-                                .foregroundColor(.flowerTextPrimary)
-                            
-                            Text("When you share this flower, it will leave your collection and go to your friend. It becomes theirs to keep!")
-                                .font(.system(size: 15))
-                                .foregroundColor(.flowerTextSecondary)
-                                .multilineTextAlignment(.center)
-                                .lineSpacing(6)
-                                .fixedSize(horizontal: false, vertical: true)
-                                .padding(.horizontal, 24)
-                            
-                            if flower.hasOwnershipHistory {
-                                Text("This flower has been shared \(flower.currentOwnerCount) time\(flower.currentOwnerCount == 1 ? "" : "s") before. Your friend will see its complete story.")
-                                    .font(.system(size: 13))
-                                    .foregroundColor(.flowerTextTertiary)
+                    // Scrollable content
+                    ScrollView {
+                        VStack(spacing: 24) {
+                            // Flower image and name
+                            VStack(spacing: 20) {
+                                if let imageData = flower.imageData,
+                                   let image = UIImage(data: imageData) {
+                                    Image(uiImage: image)
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: 280, height: 280)
+                                        .clipShape(RoundedRectangle(cornerRadius: 20))
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 20)
+                                                .strokeBorder(Color.flowerDivider, lineWidth: 1)
+                                        )
+                                }
+                                
+                                Text(flower.name)
+                                    .font(.system(size: 28, weight: .light, design: .serif))
+                                    .foregroundColor(.flowerTextPrimary)
                                     .multilineTextAlignment(.center)
+                                    .lineLimit(nil)
+                                    .fixedSize(horizontal: false, vertical: true)
                                     .padding(.horizontal, 24)
                             }
-                        }
-                        
-                        // Instructions for recipient
-                        VStack(spacing: 12) {
-                            HStack {
-                                Image(systemName: "info.circle.fill")
-                                    .foregroundColor(.flowerPrimary)
-                                Text("How Your Friend Gets the Flower")
-                                    .font(.system(size: 14, weight: .medium))
+                            .padding(.top, 20)
+                            // Warning message
+                            VStack(spacing: 16) {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .font(.system(size: 32))
+                                    .foregroundColor(.flowerWarning)
+                                
+                                Text("Gift This Flower?")
+                                    .font(.system(size: 22, weight: .bold))
                                     .foregroundColor(.flowerTextPrimary)
-                                Spacer()
-                            }
-                            .padding(.horizontal, 24)
-                            
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack(alignment: .top, spacing: 12) {
-                                    Text("1.")
-                                        .font(.system(size: 13, weight: .medium))
-                                        .foregroundColor(.flowerPrimary)
-                                    Text("They'll get a flower file when you share it")
-                                        .font(.system(size: 13))
-                                        .foregroundColor(.flowerTextSecondary)
-                                    Spacer()
-                                }
                                 
-                                HStack(alignment: .top, spacing: 12) {
-                                    Text("2.")
-                                        .font(.system(size: 13, weight: .medium))
-                                        .foregroundColor(.flowerPrimary)
-                                    Text("They tap the Share button on the file they receive")
-                                        .font(.system(size: 13))
-                                        .foregroundColor(.flowerTextSecondary)
-                                    Spacer()
-                                }
-                                
-                                HStack(alignment: .top, spacing: 12) {
-                                    Text("3.")
-                                        .font(.system(size: 13, weight: .medium))
-                                        .foregroundColor(.flowerPrimary)
-                                    Text("Then they choose the Flowers app to add it to their collection")
-                                        .font(.system(size: 13))
-                                        .foregroundColor(.flowerTextSecondary)
-                                    Spacer()
-                                }
-                            }
-                            .padding(.horizontal, 24)
-                        }
-                        .padding(.vertical, 16)
-                        .background(Color.flowerPrimary.opacity(0.05))
-                        .cornerRadius(16)
-                        .padding(.horizontal, 24)
-                        
-                        // Your name input (if not set)
-                        if userName.isEmpty {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Your Name")
-                                    .font(.system(size: 14, weight: .medium))
+                                Text("When you share this flower, it will leave your collection and go to your friend. It becomes theirs to keep!")
+                                    .font(.system(size: 15))
                                     .foregroundColor(.flowerTextSecondary)
+                                    .multilineTextAlignment(.center)
+                                    .lineSpacing(6)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .padding(.horizontal, 24)
                                 
-                                TextField("Enter your name", text: $userName)
-                                    .textFieldStyle(FlowerTextFieldStyle())
-                                    .submitLabel(.done)
-                                    .autocorrectionDisabled()
-                                    .textInputAutocapitalization(.words)
-                                    .onSubmit {
-                                        // Ensure the name is saved
-                                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-                                    }
-                                
-                                Text("Your friend will see that this flower came from you")
-                                    .font(.system(size: 12))
-                                    .foregroundColor(.flowerTextTertiary)
+                                if flower.hasOwnershipHistory {
+                                    Text("This flower has been shared \(flower.currentOwnerCount) time\(flower.currentOwnerCount == 1 ? "" : "s") before. Your friend will see its complete story.")
+                                        .font(.system(size: 13))
+                                        .foregroundColor(.flowerTextTertiary)
+                                        .multilineTextAlignment(.center)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                        .padding(.horizontal, 24)
+                                }
                             }
+                        
+                            // Instructions for recipient with simplified share sheet preview
+                            VStack(spacing: 16) {
+                                HStack {
+                                    Image(systemName: "info.circle.fill")
+                                        .foregroundColor(.flowerPrimary)
+                                    Text("How Your Friend Gets the Flower")
+                                        .font(.system(size: 14, weight: .medium))
+                                        .foregroundColor(.flowerTextPrimary)
+                                    Spacer()
+                                }
+                                .padding(.horizontal, 24)
+                                
+                                VStack(alignment: .leading, spacing: 12) {
+                                    HStack(alignment: .top, spacing: 12) {
+                                        Text("1.")
+                                            .font(.system(size: 13, weight: .medium))
+                                            .foregroundColor(.flowerPrimary)
+                                        Text("They'll get a flower file when you share it")
+                                            .font(.system(size: 13))
+                                            .foregroundColor(.flowerTextSecondary)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                        Spacer()
+                                    }
+                                    
+                                    HStack(alignment: .top, spacing: 12) {
+                                        Text("2.")
+                                            .font(.system(size: 13, weight: .medium))
+                                            .foregroundColor(.flowerPrimary)
+                                        Text("They tap the Share button on the file they receive")
+                                            .font(.system(size: 13))
+                                            .foregroundColor(.flowerTextSecondary)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                        Spacer()
+                                    }
+                                    
+                                    HStack(alignment: .top, spacing: 12) {
+                                        Text("3.")
+                                            .font(.system(size: 13, weight: .medium))
+                                            .foregroundColor(.flowerPrimary)
+                                        VStack(alignment: .leading, spacing: 8) {
+                                            Text("Then they choose the Flowers app to add it to their collection")
+                                                .font(.system(size: 13))
+                                                .foregroundColor(.flowerTextSecondary)
+                                                .fixedSize(horizontal: false, vertical: true)
+                                            
+                                            // Simplified iOS Share Sheet Preview
+                                            SimplifiedShareSheetPreview()
+                                        }
+                                        Spacer()
+                                    }
+                                }
+                                .padding(.horizontal, 24)
+                            }
+                            .padding(.vertical, 16)
+                            .background(Color.flowerPrimary.opacity(0.05))
+                            .cornerRadius(16)
                             .padding(.horizontal, 24)
+                        
+                            // Your name input (if not set)
+                            if userName.isEmpty {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Your Name")
+                                        .font(.system(size: 14, weight: .medium))
+                                        .foregroundColor(.flowerTextSecondary)
+                                    
+                                    TextField("Enter your name", text: $userName)
+                                        .textFieldStyle(FlowerTextFieldStyle())
+                                        .submitLabel(.done)
+                                        .autocorrectionDisabled()
+                                        .textInputAutocapitalization(.words)
+                                        .onSubmit {
+                                            // Ensure the name is saved
+                                            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                                        }
+                                    
+                                    Text("Your friend will see that this flower came from you")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.flowerTextTertiary)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                                .padding(.horizontal, 24)
+                            }
+                            
+                            // Extra padding at bottom to ensure content doesn't get hidden behind fixed buttons
+                            Color.clear.frame(height: 120)
                         }
+                        .padding(.bottom, 24)
+                    }
+                    
+                    // Fixed buttons at bottom
+                    VStack(spacing: 0) {
+                        // Gradient overlay to blend with content
+                        LinearGradient(
+                            gradient: Gradient(stops: [
+                                .init(color: Color.flowerSheetBackground.opacity(0), location: 0),
+                                .init(color: Color.flowerSheetBackground.opacity(0.8), location: 0.3),
+                                .init(color: Color.flowerSheetBackground, location: 1)
+                            ]),
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .frame(height: 20)
+                        .allowsHitTesting(false)
                         
                         // Action buttons
                         VStack(spacing: 12) {
@@ -181,6 +206,7 @@ struct GiftFlowerSheet: View {
                         }
                         .padding(.horizontal, 24)
                         .padding(.bottom, 40)
+                        .background(Color.flowerSheetBackground)
                     }
                 }
             }
@@ -295,6 +321,105 @@ struct GiftFlowerSheet: View {
             }
         } catch {
             print("Failed to prepare flower for transfer: \(error)")
+        }
+    }
+}
+
+// MARK: - Simplified Share Sheet Preview
+struct SimplifiedShareSheetPreview: View {
+    var body: some View {
+        VStack(spacing: 8) {
+            // Mock iOS share sheet appearance
+            VStack(spacing: 12) {
+                // File preview row
+                HStack(spacing: 12) {
+                    // File icon
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.flowerPrimary.opacity(0.2))
+                            .frame(width: 32, height: 32)
+                        
+                        Image(systemName: "doc.fill")
+                            .font(.system(size: 14))
+                            .foregroundColor(.flowerPrimary)
+                    }
+                    
+                    // File info
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("FlowerName.flower")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(.flowerTextPrimary)
+                        Text("Flower document")
+                            .font(.system(size: 10))
+                            .foregroundColor(.flowerTextSecondary)
+                    }
+                    
+                    Spacer()
+                }
+                
+                // App selection row
+                HStack(spacing: 16) {
+                    // Other apps (grayed out)
+                    VStack(spacing: 4) {
+                        Circle()
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(width: 28, height: 28)
+                        Text("Mail")
+                            .font(.system(size: 9))
+                            .foregroundColor(.gray)
+                    }
+                    
+                    VStack(spacing: 4) {
+                        Circle()
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(width: 28, height: 28)
+                        Text("Messages")
+                            .font(.system(size: 9))
+                            .foregroundColor(.gray)
+                    }
+                    
+                    // Flowers app (highlighted)
+                    VStack(spacing: 4) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.flowerPrimary)
+                                .frame(width: 28, height: 28)
+                            
+                            Image(systemName: "flower.fill")
+                                .font(.system(size: 12))
+                                .foregroundColor(.white)
+                        }
+                        .overlay(
+                            Circle()
+                                .stroke(Color.flowerPrimary, lineWidth: 2)
+                                .frame(width: 32, height: 32)
+                        )
+                        
+                        Text("Flowers")
+                            .font(.system(size: 9, weight: .medium))
+                            .foregroundColor(.flowerPrimary)
+                    }
+                    
+                    VStack(spacing: 4) {
+                        Circle()
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(width: 28, height: 28)
+                        Text("Files")
+                            .font(.system(size: 9))
+                            .foregroundColor(.gray)
+                    }
+                }
+            }
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.white)
+                    .shadow(color: .black.opacity(0.1), radius: 4, y: 2)
+            )
+            
+            Text("Tap the Flowers app icon")
+                .font(.system(size: 10, weight: .medium))
+                .foregroundColor(.flowerPrimary)
         }
     }
 } 

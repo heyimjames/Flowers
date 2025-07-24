@@ -1264,6 +1264,13 @@ struct CustomFlowerGenerationSheet: View {
     @State private var isGeneratingPrompt = false
     @State private var errorMessage: String?
     @State private var showingSuccess = false
+    @State private var customLocation = ""
+    @State private var showingLocationPicker = false
+    @State private var selectedLatitude: Double?
+    @State private var selectedLongitude: Double?
+    @State private var useCurrentLocation = true
+    @State private var fetchingWeather = false
+    @State private var weatherData: (condition: String, temperature: Double)?
     
     var body: some View {
         NavigationView {
@@ -1371,6 +1378,92 @@ struct CustomFlowerGenerationSheet: View {
                                 }
                             }
                             
+                            Divider()
+                                .background(Color.flowerTextTertiary.opacity(0.3))
+                            
+                            // Location Section
+                            VStack(alignment: .leading, spacing: 16) {
+                                Text("Discovery Location")
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .foregroundColor(.flowerTextPrimary)
+                                
+                                VStack(alignment: .leading, spacing: 12) {
+                                    // Use current location toggle
+                                    Toggle(isOn: $useCurrentLocation) {
+                                        HStack(spacing: 8) {
+                                            Image(systemName: "location.fill")
+                                                .font(.system(size: 14))
+                                                .foregroundColor(.flowerPrimary)
+                                            Text("Use my current location")
+                                                .font(.system(size: 14, design: .rounded))
+                                                .foregroundColor(.flowerTextPrimary)
+                                        }
+                                    }
+                                    .tint(.flowerPrimary)
+                                    .onChange(of: useCurrentLocation) { _, newValue in
+                                        if newValue {
+                                            customLocation = ""
+                                            selectedLatitude = nil
+                                            selectedLongitude = nil
+                                            weatherData = nil
+                                        }
+                                    }
+                                    
+                                    if !useCurrentLocation {
+                                        VStack(alignment: .leading, spacing: 8) {
+                                            Text("Custom location")
+                                                .font(.system(size: 14, weight: .medium))
+                                                .foregroundColor(.flowerTextSecondary)
+                                            
+                                            HStack {
+                                                TextField("Enter city or location", text: $customLocation)
+                                                    .textFieldStyle(FlowerTextFieldStyle())
+                                                    .disabled(showingLocationPicker)
+                                                
+                                                Button(action: { showingLocationPicker = true }) {
+                                                    Image(systemName: "map")
+                                                        .font(.system(size: 16))
+                                                        .foregroundColor(.flowerPrimary)
+                                                }
+                                                .padding(12)
+                                                .background(Color.flowerPrimary.opacity(0.1))
+                                                .cornerRadius(8)
+                                            }
+                                            
+                                            if !customLocation.isEmpty || (selectedLatitude != nil && selectedLongitude != nil) {
+                                                Button(action: fetchWeatherForLocation) {
+                                                    HStack(spacing: 6) {
+                                                        if fetchingWeather {
+                                                            ProgressView()
+                                                                .scaleEffect(0.8)
+                                                        } else {
+                                                            Image(systemName: "cloud.sun")
+                                                                .font(.system(size: 14))
+                                                        }
+                                                        Text("Get Current Weather")
+                                                            .font(.system(size: 14, weight: .medium))
+                                                    }
+                                                    .foregroundColor(.flowerPrimary)
+                                                }
+                                                .disabled(fetchingWeather)
+                                            }
+                                            
+                                            if let weather = weatherData {
+                                                HStack(spacing: 12) {
+                                                    Image(systemName: weatherIcon(for: weather.condition))
+                                                        .font(.system(size: 16))
+                                                        .foregroundColor(.flowerPrimary)
+                                                    Text("\(Int(weather.temperature))°C, \(weather.condition)")
+                                                        .font(.system(size: 14, design: .rounded))
+                                                        .foregroundColor(.flowerTextSecondary)
+                                                }
+                                                .padding(.top, 4)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            
                             // Generate Button
                             Button(action: generateCustomFlower) {
                                 HStack {
@@ -1468,7 +1561,41 @@ struct CustomFlowerGenerationSheet: View {
         
         Task {
             do {
-                try await flowerStore.generateCustomFlower(prompt: customPrompt, name: customName)
+                // Prepare location and weather data
+                var locationName: String?
+                var latitude: Double?
+                var longitude: Double?
+                var weatherCondition: String?
+                var temperature: Double?
+                
+                if useCurrentLocation {
+                    // Use current location
+                    locationName = await LocationManager.shared.getCurrentLocationName()
+                    if let location = LocationManager.shared.currentLocation {
+                        latitude = location.coordinate.latitude
+                        longitude = location.coordinate.longitude
+                    }
+                } else if !customLocation.isEmpty {
+                    // Use custom location
+                    locationName = customLocation
+                    latitude = selectedLatitude
+                    longitude = selectedLongitude
+                    if let weather = weatherData {
+                        weatherCondition = weather.condition
+                        temperature = weather.temperature
+                    }
+                }
+                
+                try await flowerStore.generateCustomFlower(
+                    prompt: customPrompt,
+                    name: customName,
+                    location: locationName,
+                    latitude: latitude,
+                    longitude: longitude,
+                    weatherCondition: weatherCondition,
+                    temperature: temperature
+                )
+                
                 await MainActor.run {
                     isGenerating = false
                     showingSuccess = true
@@ -1479,6 +1606,33 @@ struct CustomFlowerGenerationSheet: View {
                     errorMessage = "Failed to generate flower: \(error.localizedDescription)"
                 }
             }
+        }
+    }
+    
+    private func fetchWeatherForLocation() {
+        // This is a placeholder - you would implement actual weather API call here
+        fetchingWeather = true
+        
+        // Simulate weather fetch
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            fetchingWeather = false
+            // Mock weather data - replace with actual API call
+            weatherData = (condition: "Sunny", temperature: 22.0)
+        }
+    }
+    
+    private func weatherIcon(for condition: String) -> String {
+        switch condition.lowercased() {
+        case "sunny", "clear":
+            return "sun.max.fill"
+        case "cloudy":
+            return "cloud.fill"
+        case "rainy", "rain":
+            return "cloud.rain.fill"
+        case "snowy", "snow":
+            return "cloud.snow.fill"
+        default:
+            return "cloud.sun.fill"
         }
     }
     

@@ -27,9 +27,12 @@ struct ContentView: View {
     @State private var heartScale: CGFloat = 1.0
     @State private var heartBounce: Bool = false
     @State private var showingAppInfo = false
+    @State private var lastQuoteTime: Date = Date()
     
     // Timer for pill animation
     let pillAnimationTimer = Timer.publish(every: 5, on: .main, in: .common).autoconnect()
+    // Timer for quote rotation
+    let quoteRotationTimer = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
     // Timer to check for countdown expiration
     let countdownCheckTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
@@ -201,9 +204,50 @@ struct ContentView: View {
             }
         }
         .onReceive(countdownCheckTimer) { _ in
-            checkCountdownExpiration()
+            // Only check for countdown expiration if there's actually a countdown active
+            if flowerStore.nextFlowerTime != nil && !flowerStore.hasUnrevealedFlower {
+                checkCountdownExpiration()
+            }
+        }
+        .onReceive(quoteRotationTimer) { _ in
+            // Rotate quotes every 30 seconds when no current flower is shown
+            if flowerStore.currentFlower == nil && !flowerStore.hasUnrevealedFlower {
+                loadInspirationalQuote()
+            }
+        }
+        .onChange(of: flowerStore.currentFlower) { _, newFlower in
+            // Load quote when transitioning to empty state (no current flower)
+            if newFlower == nil && !flowerStore.hasUnrevealedFlower && inspirationalQuote.isEmpty {
+                loadInspirationalQuote()
+            }
+        }
+        .onChange(of: flowerStore.hasUnrevealedFlower) { _, hasUnrevealed in
+            // Load quote when transitioning from reveal state to empty state
+            if !hasUnrevealed && flowerStore.currentFlower == nil && inspirationalQuote.isEmpty {
+                loadInspirationalQuote()
+            }
         }
         .onAppear {
+            // Validate and fix any state inconsistencies on app launch
+            flowerStore.validateAndFixState()
+            
+            // Check if there's a pending flower that should be revealed immediately
+            // This handles cases where countdown expired while app was closed
+            if flowerStore.pendingFlower != nil && !flowerStore.hasUnrevealedFlower {
+                if let nextTime = flowerStore.nextFlowerTime {
+                    // If countdown has already expired, trigger reveal immediately
+                    if Date() >= nextTime {
+                        print("ContentView: Found expired countdown on app launch, triggering reveal")
+                        flowerStore.showPendingFlowerIfAvailable()
+                    }
+                } else {
+                    // If no nextFlowerTime but we have a pending flower, it should be revealed
+                    // This can happen if app was killed/restarted after countdown expired
+                    print("ContentView: Found pending flower without timer on app launch, triggering reveal")
+                    flowerStore.showPendingFlowerIfAvailable()
+                }
+            }
+            
             // Check if user needs onboarding (starter flower selection)
             if !UserDefaults.standard.bool(forKey: "hasCompletedOnboarding") || flowerStore.shouldShowOnboarding {
                 // Small delay to ensure Jenny flower is loaded
@@ -240,11 +284,21 @@ struct ContentView: View {
             case .active:
                 if wasInBackground {
                     wasInBackground = false
-                    // Check if we have a pending flower and notification badge
-                    let badgeCount = UIApplication.shared.applicationIconBadgeNumber
-                    if badgeCount > 0 && flowerStore.pendingFlower != nil {
-                        // User likely tapped on notification
-                        flowerStore.showPendingFlowerIfAvailable()
+                    // Validate state when returning from background
+                    flowerStore.validateAndFixState()
+                    
+                    // Check if we have a pending flower that should be revealed
+                    if flowerStore.pendingFlower != nil && !flowerStore.hasUnrevealedFlower {
+                        let badgeCount = UIApplication.shared.applicationIconBadgeNumber
+                        let hasExpiredCountdown = flowerStore.nextFlowerTime.map { Date() >= $0 } ?? true
+                        
+                        // Trigger reveal if:
+                        // 1. User tapped notification (badge > 0), OR
+                        // 2. Countdown expired while app was in background
+                        if badgeCount > 0 || hasExpiredCountdown {
+                            print("ContentView: Returning from background, triggering flower reveal (badge: \(badgeCount), expired: \(hasExpiredCountdown))")
+                            flowerStore.showPendingFlowerIfAvailable()
+                        }
                     }
                 }
             default:
@@ -678,20 +732,30 @@ struct ContentView: View {
             }
         }
         .onAppear {
-            loadInspirationalQuote()
+            // Only load quote if we're showing empty state (no current flower, no unrevealed flower)
+            if flowerStore.currentFlower == nil && !flowerStore.hasUnrevealedFlower {
+                loadInspirationalQuote()
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
-            // Load a fresh quote when returning to the app
-            loadInspirationalQuote()
+            // Load a fresh quote when returning to the app (only if showing empty state)
+            if flowerStore.currentFlower == nil && !flowerStore.hasUnrevealedFlower {
+                loadInspirationalQuote()
+            }
         }
     }
     
     private func loadInspirationalQuote() {
-        // Don't load if already loading
+        // Don't load if already loading or if we just loaded a quote recently
         guard !isLoadingQuote else { return }
+        
+        // Prevent too frequent quote updates (minimum 15 seconds between loads)
+        let timeSinceLastQuote = Date().timeIntervalSince(lastQuoteTime)
+        guard timeSinceLastQuote >= 15 else { return }
         
         isLoadingQuote = true
         quoteOpacity = 0.0
+        lastQuoteTime = Date()
         
         Task {
             do {
@@ -727,6 +791,7 @@ struct ContentView: View {
            flowerStore.pendingFlower != nil,
            !flowerStore.hasUnrevealedFlower {
             // Countdown has expired, automatically show the reveal screen
+            print("ContentView: Countdown expired, triggering flower reveal")
             flowerStore.showPendingFlowerIfAvailable()
         }
     }
@@ -851,12 +916,7 @@ struct CountdownText: View {
         
         if interval <= 0 {
             timeRemaining = "Ready!"
-            // Automatically trigger reveal when countdown reaches zero
-            if flowerStore.pendingFlower != nil && !flowerStore.hasUnrevealedFlower {
-                DispatchQueue.main.async {
-                    flowerStore.showPendingFlowerIfAvailable()
-                }
-            }
+            // Note: ContentView timer handles the actual reveal trigger to avoid race conditions
             return
         }
         

@@ -1387,6 +1387,10 @@ struct StarterFlowerCard: View {
                     .font(.system(size: 24, weight: .medium, design: .serif))
                     .foregroundColor(colorScheme == .dark ? .black : .flowerTextPrimary)
                     .multilineTextAlignment(.center)
+                    .lineLimit(3)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .minimumScaleFactor(0.8)
+                    .padding(.horizontal, 16)
                 
                 // Flower meaning/description
                 if let meaning = flower.meaning {

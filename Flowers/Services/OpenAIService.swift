@@ -877,6 +877,12 @@ class OpenAIService {
     }
     
     private func getRandomCuratedQuote() -> String {
+        // Keep track of recently used quotes to avoid immediate repeats
+        let recentQuotesKey = "recentQuotes"
+        let maxRecentQuotes = 10
+        
+        var recentQuotes = UserDefaults.standard.stringArray(forKey: recentQuotesKey) ?? []
+        
         let quotes = [
             "\"The earth laughs in flowers.\" — Ralph Waldo Emerson",
             "\"Where flowers bloom, so does hope.\" — Lady Bird Johnson", 
@@ -942,7 +948,27 @@ class OpenAIService {
             "\"Earth and sky, woods and fields, lakes and rivers, the mountain and the sea, are excellent schoolmasters.\" — John Lubbock"
         ]
         
-        return quotes.randomElement() ?? "\"The earth laughs in flowers.\" — Ralph Waldo Emerson"
+        // Filter out recently used quotes
+        let availableQuotes = quotes.filter { !recentQuotes.contains($0) }
+        
+        // If we've used too many quotes recently, reset the recent list
+        let quotesToChooseFrom = availableQuotes.isEmpty ? quotes : availableQuotes
+        
+        // Select a random quote from available ones
+        let selectedQuote = quotesToChooseFrom.randomElement() ?? "\"The earth laughs in flowers.\" — Ralph Waldo Emerson"
+        
+        // Add to recent quotes list
+        recentQuotes.append(selectedQuote)
+        
+        // Keep only the most recent quotes
+        if recentQuotes.count > maxRecentQuotes {
+            recentQuotes = Array(recentQuotes.suffix(maxRecentQuotes))
+        }
+        
+        // Save back to UserDefaults
+        UserDefaults.standard.set(recentQuotes, forKey: recentQuotesKey)
+        
+        return selectedQuote
     }
     
     private func getTimeOfDay() -> String {

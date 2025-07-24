@@ -123,6 +123,53 @@ struct WeatherComponentTestSheet: View {
             location: "San Francisco, USA",
             date: Calendar.current.date(byAdding: .hour, value: -14, to: Date()) ?? Date(),
             icon: "cloud.fog.fill"
+        ),
+        
+        // Additional weather conditions
+        WeatherTestData(
+            title: "Heat Wave Day",
+            condition: "Hot",
+            temperature: 38.0,
+            unit: "°C",
+            location: "Phoenix, Arizona",
+            date: Calendar.current.date(byAdding: .hour, value: -3, to: Date()) ?? Date(),
+            icon: "sun.max.fill"
+        ),
+        WeatherTestData(
+            title: "Hazy Morning",
+            condition: "Hazy",
+            temperature: 26.0,
+            unit: "°C",
+            location: "Los Angeles, USA",
+            date: Calendar.current.date(byAdding: .hour, value: -8, to: Date()) ?? Date(),
+            icon: "sun.haze.fill"
+        ),
+        WeatherTestData(
+            title: "Windy Afternoon",
+            condition: "Windy",
+            temperature: 18.0,
+            unit: "°C",
+            location: "Chicago, USA",
+            date: Calendar.current.date(byAdding: .hour, value: -2, to: Date()) ?? Date(),
+            icon: "wind"
+        ),
+        WeatherTestData(
+            title: "Freezing Cold",
+            condition: "Frigid",
+            temperature: -15.0,
+            unit: "°C",
+            location: "Anchorage, Alaska",
+            date: Calendar.current.date(byAdding: .hour, value: -6, to: Date()) ?? Date(),
+            icon: "thermometer.snowflake"
+        ),
+        WeatherTestData(
+            title: "Thunderstorm",
+            condition: "Thunderstorms",
+            temperature: 22.0,
+            unit: "°C",
+            location: "Miami, Florida",
+            date: Calendar.current.date(byAdding: .hour, value: -4, to: Date()) ?? Date(),
+            icon: "cloud.bolt.rain.fill"
         )
     ]
     
@@ -286,73 +333,135 @@ struct WeatherTestCard: View {
     private func getContextualWeatherGradient(condition: String, temperature: Double, timeOfDay: String) -> [Color] {
         let conditionLower = condition.lowercased()
         
-        // Night gradients
-        if timeOfDay == "night" {
+        // Time of day overrides for dramatic gradients
+        switch timeOfDay {
+        case "dawn":
             return [
-                Color(red: 25/255, green: 25/255, blue: 45/255),
-                Color(red: 15/255, green: 15/255, blue: 35/255)
+                Color(red: 255/255, green: 183/255, blue: 107/255), // Warm orange
+                Color(red: 255/255, green: 204/255, blue: 128/255), // Light peach
+                Color(red: 135/255, green: 206/255, blue: 250/255)  // Light sky blue
             ]
-        }
-        
-        // Dawn gradients
-        if timeOfDay == "dawn" {
+        case "sunset", "evening":
             return [
-                Color(red: 255/255, green: 183/255, blue: 107/255),
-                Color(red: 255/255, green: 138/255, blue: 101/255)
+                Color(red: 255/255, green: 94/255, blue: 77/255),   // Coral red
+                Color(red: 255/255, green: 154/255, blue: 0/255),   // Orange
+                Color(red: 255/255, green: 206/255, blue: 84/255)   // Golden yellow
             ]
-        }
-        
-        // Sunset gradients
-        if timeOfDay == "sunset" || timeOfDay == "evening" {
+        case "night":
             return [
-                Color(red: 255/255, green: 154/255, blue: 158/255),
-                Color(red: 250/255, green: 208/255, blue: 196/255)
-            ]
-        }
-        
-        // Weather-based gradients for day/morning/afternoon
-        switch conditionLower {
-        case let condition where condition.contains("rain") || condition.contains("storm"):
-            return [
-                Color(red: 107/255, green: 114/255, blue: 128/255),
-                Color(red: 75/255, green: 85/255, blue: 99/255)
-            ]
-        case let condition where condition.contains("cloud"):
-            return [
-                Color(red: 156/255, green: 163/255, blue: 175/255),
-                Color(red: 107/255, green: 114/255, blue: 128/255)
-            ]
-        case let condition where condition.contains("snow") || condition.contains("frost"):
-            return [
-                Color(red: 219/255, green: 234/255, blue: 254/255),
-                Color(red: 147/255, green: 197/255, blue: 253/255)
-            ]
-        case let condition where condition.contains("fog") || condition.contains("mist"):
-            return [
-                Color(red: 229/255, green: 231/255, blue: 235/255),
-                Color(red: 156/255, green: 163/255, blue: 175/255)
+                Color(red: 25/255, green: 25/255, blue: 112/255),   // Midnight blue
+                Color(red: 72/255, green: 61/255, blue: 139/255),   // Dark slate blue
+                Color(red: 106/255, green: 90/255, blue: 205/255)   // Slate blue
             ]
         default:
-            // Clear/sunny conditions - temperature dependent
-            if temperature > 30 {
-                // Hot orange gradient
+            break
+        }
+        
+        // Weather condition based gradients for day/morning/afternoon
+        switch conditionLower {
+        case "sunny", "clear":
+            if temperature >= 31 { // Hot summer day - heat wave orange/red
                 return [
-                    Color(red: 251/255, green: 146/255, blue: 60/255),
-                    Color(red: 234/255, green: 88/255, blue: 12/255)
+                    Color(red: 255/255, green: 69/255, blue: 0/255),    // Red orange
+                    Color(red: 255/255, green: 140/255, blue: 0/255),   // Dark orange
+                    Color(red: 255/255, green: 165/255, blue: 0/255)    // Orange
                 ]
-            } else if temperature < 0 {
-                // Icy gradient
+            } else if temperature > 25 { // Warm sunny - golden
                 return [
-                    Color(red: 219/255, green: 234/255, blue: 254/255),
-                    Color(red: 147/255, green: 197/255, blue: 253/255)
+                    Color(red: 255/255, green: 215/255, blue: 0/255),   // Gold
+                    Color(red: 255/255, green: 165/255, blue: 0/255),   // Orange
+                    Color(red: 135/255, green: 206/255, blue: 250/255)  // Sky blue
                 ]
-            } else {
-                // Normal sunny blue sky
+            } else if temperature < 0 { // Cold but clear - icy blue
                 return [
-                    Color(red: 147/255, green: 197/255, blue: 253/255),
-                    Color(red: 59/255, green: 130/255, blue: 246/255)
+                    Color(red: 240/255, green: 248/255, blue: 255/255), // Alice blue
+                    Color(red: 176/255, green: 224/255, blue: 230/255), // Powder blue
+                    Color(red: 230/255, green: 230/255, blue: 250/255)  // Lavender
+                ]
+            } else { // Regular sunny blue sky
+                return [
+                    Color(red: 135/255, green: 206/255, blue: 250/255), // Light sky blue
+                    Color(red: 30/255, green: 144/255, blue: 255/255)   // Dodger blue
                 ]
             }
+        case "rainy", "rain", "drizzle":
+            return [
+                Color(red: 105/255, green: 105/255, blue: 105/255), // Dim gray
+                Color(red: 119/255, green: 136/255, blue: 153/255), // Light slate gray
+                Color(red: 176/255, green: 196/255, blue: 222/255)  // Light steel blue
+            ]
+        case "cloudy", "mostly cloudy", "overcast":
+            return [
+                Color(red: 169/255, green: 169/255, blue: 169/255), // Dark gray
+                Color(red: 192/255, green: 192/255, blue: 192/255), // Silver
+                Color(red: 211/255, green: 211/255, blue: 211/255)  // Light gray
+            ]
+        case "partly cloudy":
+            return [
+                Color(red: 176/255, green: 196/255, blue: 222/255), // Light steel blue
+                Color(red: 135/255, green: 206/255, blue: 250/255), // Light sky blue
+                Color(red: 211/255, green: 211/255, blue: 211/255)  // Light gray
+            ]
+        case "snowy", "snow", "sleet":
+            return [
+                Color(red: 240/255, green: 248/255, blue: 255/255), // Alice blue
+                Color(red: 176/255, green: 224/255, blue: 230/255), // Powder blue
+                Color(red: 230/255, green: 230/255, blue: 250/255)  // Lavender
+            ]
+        case "hail":
+            return [
+                Color(red: 190/255, green: 190/255, blue: 190/255), // Gray
+                Color(red: 176/255, green: 224/255, blue: 230/255), // Powder blue
+                Color(red: 169/255, green: 169/255, blue: 169/255)  // Dark gray
+            ]
+        case "thunderstorms":
+            return [
+                Color(red: 75/255, green: 0/255, blue: 130/255),    // Indigo
+                Color(red: 72/255, green: 61/255, blue: 139/255),   // Dark slate blue
+                Color(red: 128/255, green: 128/255, blue: 128/255)  // Gray
+            ]
+        case "hazy", "haze":
+            return [
+                Color(red: 255/255, green: 248/255, blue: 220/255), // Cornsilk
+                Color(red: 240/255, green: 230/255, blue: 140/255), // Khaki
+                Color(red: 189/255, green: 183/255, blue: 107/255)  // Dark khaki
+            ]
+        case "smoky":
+            return [
+                Color(red: 169/255, green: 169/255, blue: 169/255), // Dark gray
+                Color(red: 139/255, green: 139/255, blue: 131/255), // Dark gray-brown
+                Color(red: 119/255, green: 136/255, blue: 153/255)  // Light slate gray
+            ]
+        case "foggy", "fog", "misty", "mist":
+            return [
+                Color(red: 220/255, green: 220/255, blue: 220/255), // Gainsboro
+                Color(red: 192/255, green: 192/255, blue: 192/255), // Silver
+                Color(red: 176/255, green: 196/255, blue: 222/255)  // Light steel blue
+            ]
+        case "breezy", "windy":
+            return [
+                Color(red: 176/255, green: 196/255, blue: 222/255), // Light steel blue
+                Color(red: 135/255, green: 206/255, blue: 250/255), // Light sky blue
+                Color(red: 30/255, green: 144/255, blue: 255/255)   // Dodger blue
+            ]
+        case "hot":
+            return [
+                Color(red: 255/255, green: 69/255, blue: 0/255),    // Red orange
+                Color(red: 255/255, green: 140/255, blue: 0/255),   // Dark orange
+                Color(red: 255/255, green: 165/255, blue: 0/255)    // Orange
+            ]
+        case "frigid":
+            return [
+                Color(red: 230/255, green: 240/255, blue: 255/255), // Very light blue
+                Color(red: 176/255, green: 224/255, blue: 230/255), // Powder blue
+                Color(red: 175/255, green: 238/255, blue: 238/255)  // Pale turquoise
+            ]
+        default:
+            // Default gradient - pleasant blue sky
+            return [
+                Color(red: 135/255, green: 206/255, blue: 250/255), // Light sky blue
+                Color(red: 30/255, green: 144/255, blue: 255/255)   // Dodger blue
+            ]
         }
     }
     
@@ -361,16 +470,38 @@ struct WeatherTestCard: View {
         let conditionLower = condition.lowercased()
         
         switch conditionLower {
-        case let c where c.contains("sun") || c.contains("clear"):
+        case "sunny", "clear":
             return "sun.max.fill"
-        case let c where c.contains("rain"):
+        case "hot":
+            return "thermometer.sun.fill"
+        case "rainy", "rain":
             return "cloud.rain.fill"
-        case let c where c.contains("cloud"):
+        case "drizzle":
+            return "cloud.drizzle.fill"
+        case "cloudy", "mostly cloudy":
             return "cloud.fill"
-        case let c where c.contains("snow"):
+        case "partly cloudy":
+            return "cloud.sun.fill"
+        case "snowy", "snow":
             return "snow"
-        case let c where c.contains("fog") || c.contains("mist"):
+        case "sleet":
+            return "cloud.sleet.fill"
+        case "hail":
+            return "cloud.hail.fill"
+        case "thunderstorms":
+            return "cloud.bolt.rain.fill"
+        case "hazy", "haze":
+            return "sun.haze.fill"
+        case "smoky":
+            return "smoke.fill"
+        case "foggy", "fog", "misty", "mist":
             return "cloud.fog.fill"
+        case "breezy":
+            return "wind"
+        case "windy":
+            return "wind"
+        case "frigid":
+            return "thermometer.snowflake"
         default:
             return "sun.max.fill"
         }

@@ -68,6 +68,8 @@
 			</array>
 		</dict>
 	</array>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<false/>
 	<key>NSUserNotificationsUsageDescription</key>
 	<string>Get notified when your daily flower blooms</string>
 	<key>UIBackgroundModes</key>

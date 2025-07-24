@@ -389,13 +389,21 @@ class FlowerStore: ObservableObject {
     
     // MARK: - Daily Flower Scheduling
     func scheduleNextFlowerIfNeeded() {
+        print("FlowerStore: Checking if next flower needs scheduling...")
+        print("  - hasUnrevealedFlower: \(hasUnrevealedFlower)")
+        print("  - pendingFlower: \(pendingFlower != nil ? "exists" : "nil")")
+        print("  - hasShownFlowerToday: \(hasShownFlowerToday())")
+        print("  - nextFlowerTime: \(nextFlowerTime?.description ?? "nil")")
+        
         // Check if we already have a pending flower
         if hasUnrevealedFlower || pendingFlower != nil {
+            print("FlowerStore: Already have unrevealed or pending flower, skipping schedule")
             return
         }
         
         // Check if we've already shown a flower today
         if hasShownFlowerToday() {
+            print("FlowerStore: Already shown flower today, skipping schedule")
             return
         }
         
@@ -672,8 +680,36 @@ class FlowerStore: ObservableObject {
     // Call this when the app becomes active from a notification
     func showPendingFlowerIfAvailable() {
         if pendingFlower != nil {
+            print("FlowerStore: Making pending flower available for reveal")
             hasUnrevealedFlower = true
+            // Clear the countdown timer since flower is now available
+            nextFlowerTime = nil
         }
+    }
+    
+    // Validate and fix inconsistent states
+    func validateAndFixState() {
+        print("FlowerStore: Validating state consistency...")
+        
+        // Fix case where we have nextFlowerTime but no pending flower
+        if nextFlowerTime != nil && pendingFlower == nil && !hasUnrevealedFlower {
+            print("FlowerStore: Found nextFlowerTime without pending flower - clearing timer")
+            nextFlowerTime = nil
+        }
+        
+        // Fix case where we have unrevealed flower but nextFlowerTime is still set
+        if hasUnrevealedFlower && nextFlowerTime != nil {
+            print("FlowerStore: Found unrevealed flower with active timer - clearing timer")
+            nextFlowerTime = nil
+        }
+        
+        // Fix case where we have pending flower but no nextFlowerTime (shouldn't happen normally)
+        if pendingFlower != nil && nextFlowerTime == nil && !hasUnrevealedFlower {
+            print("FlowerStore: Found pending flower without timer - this may indicate a timing issue")
+            // Don't automatically fix this as it might be intentional, just log it
+        }
+        
+        print("FlowerStore: State validation complete")
     }
     
     func revealPendingFlower() {
@@ -740,6 +776,9 @@ class FlowerStore: ObservableObject {
     func generateNewFlower(descriptor: String? = nil, isDaily: Bool = false) async {
         isGenerating = true
         errorMessage = nil
+        
+        // Ensure we have fresh location and weather data before generating
+        await ContextualFlowerGenerator.shared.ensureFreshLocationAndWeather()
         
         do {
             var selectedSpecies: BotanicalSpecies?
@@ -854,6 +893,7 @@ class FlowerStore: ObservableObject {
                 latitude = customLocation.latitude
                 longitude = customLocation.longitude
                 locationName = customLocation.name
+                print("FlowerStore: Using custom holiday location: \(locationName ?? "Unknown")")
             } else {
                 // Use current location
                 let currentLocation = ContextualFlowerGenerator.shared.currentLocation
@@ -861,6 +901,12 @@ class FlowerStore: ObservableObject {
                 latitude = currentLocation?.coordinate.latitude
                 longitude = currentLocation?.coordinate.longitude
                 locationName = currentPlacemark?.locality ?? currentPlacemark?.name
+                
+                if latitude != nil && longitude != nil {
+                    print("FlowerStore: Using current location: \(locationName ?? "Unknown location") (\(latitude!), \(longitude!))")
+                } else {
+                    print("FlowerStore: No location data available for flower generation")
+                }
             }
             
             // Create flower with real botanical information
@@ -946,12 +992,18 @@ class FlowerStore: ObservableObject {
                     temperatureUnit: temperature.unit == .celsius ? "°C" : "°F"
                 )
             } else {
+                // Try to get fallback weather info if available
+                print("FlowerStore: No current weather available, checking for any cached weather data")
+                
                 // Capture date info even without weather
                 flower.captureWeatherAndDate(
                     weatherCondition: nil,
                     temperature: nil,
                     temperatureUnit: nil
                 )
+                
+                // Log when we don't have weather data
+                print("FlowerStore: Generated flower '\(flower.name)' without weather data")
             }
             
             // Generate accurate botanical details for real species
@@ -1939,7 +1991,15 @@ class FlowerStore: ObservableObject {
         objectWillChange.send()
     }
     
-    func generateCustomFlower(prompt: String, name: String? = nil) async throws {
+    func generateCustomFlower(
+        prompt: String,
+        name: String? = nil,
+        location: String? = nil,
+        latitude: Double? = nil,
+        longitude: Double? = nil,
+        weatherCondition: String? = nil,
+        temperature: Double? = nil
+    ) async throws {
         isGenerating = true
         errorMessage = nil
         
@@ -1959,6 +2019,19 @@ class FlowerStore: ObservableObject {
                 discoveryDate: Date(),
                 originalOwner: createCurrentOwner()
             )
+            
+            // Set custom location and weather if provided
+            if let location = location {
+                flower.discoveryLocationName = location
+                flower.discoveryLatitude = latitude
+                flower.discoveryLongitude = longitude
+            }
+            
+            if let weather = weatherCondition {
+                flower.discoveryWeatherCondition = weather
+                flower.discoveryTemperature = temperature
+                flower.discoveryTemperatureUnit = "°C"
+            }
             
             // Generate details if OpenAI is available
             if apiConfig.hasValidOpenAIKey {

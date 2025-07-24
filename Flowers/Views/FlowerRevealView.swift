@@ -127,6 +127,10 @@ struct FlowerRevealView: View {
                                     .font(.system(size: 28, weight: .light, design: .serif))
                                     .foregroundColor(.flowerTextPrimary)
                                     .multilineTextAlignment(.center)
+                                    .lineLimit(3)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .minimumScaleFactor(0.8)
+                                    .padding(.horizontal, 16)
                                 
                                 Text(capitalizeWords(flower.descriptor))
                                     .font(.system(size: 16))
