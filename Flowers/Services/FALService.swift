@@ -96,14 +96,21 @@ class FALService {
         let encoder = JSONEncoder()
         urlRequest.httpBody = try encoder.encode(request)
         
+        print("FALService: Making request to \(urlRequest.url?.absoluteString ?? "unknown URL")")
+        print("FALService: Request headers: \(urlRequest.allHTTPHeaderFields ?? [:])")
+        
         let (data, response) = try await URLSession.shared.data(for: urlRequest)
         
         guard let httpResponse = response as? HTTPURLResponse else {
+            print("FALService: Invalid response type")
             throw FALError.networkError("Invalid response")
         }
         
+        print("FALService: Response status code: \(httpResponse.statusCode)")
+        
         if httpResponse.statusCode != 200 {
             if let errorString = String(data: data, encoding: .utf8) {
+                print("FALService: Error response: \(errorString)")
                 throw FALError.networkError(errorString)
             }
             throw FALError.networkError("Status code: \(httpResponse.statusCode)")

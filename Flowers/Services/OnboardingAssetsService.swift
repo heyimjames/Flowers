@@ -256,7 +256,9 @@ class OnboardingAssetsService {
         
         do {
             // Always use FAL for images (using built-in or user keys)
+            print("OnboardingAssetsService: Calling FAL API to generate onboarding flower")
             let (image, _) = try await FALService.shared.generateFlowerImage(descriptor: descriptor)
+            print("OnboardingAssetsService: Successfully generated flower image")
             
             guard let imageData = image.jpegData(compressionQuality: 0.8) else {
                 print("OnboardingAssetsService: Failed to convert image to data")

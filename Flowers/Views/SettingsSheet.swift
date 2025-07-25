@@ -32,6 +32,7 @@ struct SettingsSheet: View {
     @State private var syncSuccessMessage: String?
     @State private var showingSyncSuccess = false
     @AppStorage("userName") private var userName = ""
+    @State private var isGeneratingBundledFlowers = false
     
     // Developer detection
     private var isDeveloper: Bool {
@@ -110,90 +111,7 @@ struct SettingsSheet: View {
                 
                 ScrollView {
                     VStack(spacing: 24) {
-                        // API Configuration Section (only show if needed)
-                        if !AppConfig.shared.hasBuiltInKeys || isDeveloper {
-                            VStack(alignment: .leading, spacing: 16) {
-                            HStack {
-                                Label("API Configuration", systemImage: "key.fill")
-                                    .font(.system(size: 18, weight: .light, design: .serif))
-                                    .foregroundColor(.flowerTextPrimary)
-                                
-                                Spacer()
-                                
-                                if AppConfig.shared.hasBuiltInKeys {
-                                    HStack(spacing: 4) {
-                                        Image(systemName: "checkmark.circle.fill")
-                                            .font(.system(size: 12, design: .rounded))
-                                            .foregroundColor(.green)
-                                        Text("Built-in")
-                                            .font(.system(size: 12, design: .rounded))
-                                            .foregroundColor(.flowerTextSecondary)
-                                    }
-                                }
-                            }
-                            
-                            // FAL API Key (for images)
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack {
-                                    Text("FAL API Key (Images)")
-                                        .font(.system(size: 14, weight: .medium))
-                                        .foregroundColor(.flowerTextSecondary)
-                                    
-                                    if !apiConfig.falKey.isEmpty {
-                                        Image(systemName: "checkmark.circle.fill")
-                                            .font(.system(size: 12))
-                                            .foregroundColor(.green)
-                                    }
-                                }
-                                
-                                SecureField("Enter FAL API key for image generation", text: $apiConfig.falKey)
-                                    .textFieldStyle(FlowerTextFieldStyle())
-                                    .onChange(of: apiConfig.falKey) { _ in
-                                        apiConfig.saveConfiguration()
-                                    }
-                            }
-                            
-                            // OpenAI API Key (for text)
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack {
-                                    Text("OpenAI API Key (Text)")
-                                        .font(.system(size: 14, weight: .medium))
-                                        .foregroundColor(.flowerTextSecondary)
-                                    
-                                    if !apiConfig.openAIKey.isEmpty {
-                                        Image(systemName: "checkmark.circle.fill")
-                                            .font(.system(size: 12))
-                                            .foregroundColor(.green)
-                                    }
-                                }
-                                
-                                SecureField("Enter OpenAI API key for text generation", text: $apiConfig.openAIKey)
-                                    .textFieldStyle(FlowerTextFieldStyle())
-                                    .onChange(of: apiConfig.openAIKey) { _ in
-                                        apiConfig.saveConfiguration()
-                                    }
-                            }
-                            
-                            if AppConfig.shared.hasBuiltInKeys {
-                                Text("✨ Built-in API keys are provided. Leave fields empty to use them, or enter your own keys to override.")
-                                    .font(.system(size: 12, design: .rounded))
-                                    .foregroundColor(.flowerTextSecondary)
-                                    .padding(.top, 8)
-                            }
-                            
-                            Button(action: { showingAPIKeyInfo = true }) {
-                                HStack {
-                                    Image(systemName: "info.circle")
-                                    Text("How to get API keys")
-                                }
-                                .font(.system(size: 14, design: .rounded))
-                                .foregroundColor(.flowerPrimary)
-                            }
-                        }
-                        .padding(20)
-                        .background(Color.black.opacity(0.05))
-                        .cornerRadius(25)
-                        }
+
                         
                         // iCloud Sync Section
                         iCloudSyncSection
@@ -628,6 +546,50 @@ struct SettingsSheet: View {
                         .padding(20)
                         .background(Color.black.opacity(0.05))
                         .cornerRadius(25)
+                        
+                        #if DEBUG
+                        // Debug Tools Section
+                        VStack(alignment: .leading, spacing: 16) {
+                            Label("Developer Tools", systemImage: "hammer.fill")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundColor(.flowerTextPrimary)
+                            
+                            Button(action: {
+                                isGeneratingBundledFlowers = true
+                                Task {
+                                    await BundledFlowersService.shared.generateAndSaveBundledFlowers()
+                                    isGeneratingBundledFlowers = false
+                                }
+                            }) {
+                                HStack {
+                                    if isGeneratingBundledFlowers {
+                                        ProgressView()
+                                            .scaleEffect(0.8)
+                                            .frame(width: 20, height: 20)
+                                    } else {
+                                        Image(systemName: "photo.on.rectangle.angled")
+                                            .font(.system(size: 20))
+                                    }
+                                    
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Generate Bundled Flowers")
+                                            .font(.system(size: 16, weight: .medium, design: .rounded))
+                                        Text("Creates onboarding flowers and saves to Desktop")
+                                            .font(.system(size: 12, design: .rounded))
+                                            .foregroundColor(.flowerTextSecondary)
+                                    }
+                                    
+                                    Spacer()
+                                }
+                                .foregroundColor(.flowerPrimary)
+                                .padding(.vertical, 12)
+                            }
+                            .disabled(isGeneratingBundledFlowers)
+                        }
+                        .padding(20)
+                        .background(Color.black.opacity(0.05))
+                        .cornerRadius(25)
+                        #endif
                     }
                     .padding(.horizontal, 24)
                     .padding(.bottom, 40)

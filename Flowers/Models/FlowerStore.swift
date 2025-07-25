@@ -4,6 +4,10 @@ import UIKit
 import UserNotifications
 import WeatherKit
 import WidgetKit
+import Combine
+import CoreLocation
+import UniformTypeIdentifiers
+import PhotosUI
 
 @MainActor
 class FlowerStore: ObservableObject {
@@ -205,6 +209,9 @@ class FlowerStore: ObservableObject {
         
         checkForPendingFlower()
         loadNextFlowerTime()
+        
+        // Clean up shared defaults from large data (one-time migration)
+        cleanupSharedDefaults()
         
         // Sync widget data on launch
         syncDataToWidgets()
@@ -816,10 +823,18 @@ class FlowerStore: ObservableObject {
             // Check for holidays first - bouquets take priority
             if let currentHoliday = ContextualFlowerGenerator.shared.getCurrentHoliday(),
                currentHoliday.isBouquetWorthy && descriptor == nil {
-                holiday = currentHoliday
-                isBouquet = true
-                actualDescriptor = currentHoliday.bouquetTheme ?? "festive holiday bouquet"
-                isContextual = true
+                // Check if we already have a bouquet for this holiday
+                let potentialBouquetName = "\(currentHoliday.name) Bouquet"
+                let alreadyHasHolidayBouquet = discoveredFlowers.contains { flower in
+                    flower.name == potentialBouquetName && flower.isBouquet == true
+                }
+                
+                if !alreadyHasHolidayBouquet {
+                    holiday = currentHoliday
+                    isBouquet = true
+                    actualDescriptor = currentHoliday.bouquetTheme ?? "festive holiday bouquet"
+                    isContextual = true
+                }
             }
             // Otherwise select a real botanical species
             else if descriptor == nil {
@@ -1134,35 +1149,179 @@ class FlowerStore: ObservableObject {
         isGenerating = false
     }
     
+    private func generateMilestoneBouquetFlowers(for milestone: Int) -> [String] {
+        // Create unique combinations based on the milestone number
+        let allFlowers = [
+            // Exotic flowers
+            "Bird of Paradise", "Protea", "Anthurium", "Heliconia", "Passion Flower",
+            "Bleeding Heart", "Foxglove", "Delphinium", "Ranunculus", "Anemone",
+            
+            // Classic flowers with unique varieties
+            "Juliet Roses", "Garden Roses", "Cabbage Roses", "Tea Roses", "Wild Roses",
+            "Moth Orchids", "Cymbidium Orchids", "Dancing Lady Orchids", "Vanilla Orchids",
+            "Stargazer Lilies", "Calla Lilies", "Tiger Lilies", "Easter Lilies",
+            
+            // Unusual blooms
+            "Chocolate Cosmos", "Black Dahlia", "Queen of the Night", "Ghost Flower",
+            "Flame Lily", "Jade Vine", "Corpse Flower", "Parrot Tulips",
+            
+            // Celebratory flowers
+            "Golden Chrysanthemums", "Silver Brunia", "Platinum Roses", "Diamond Dust",
+            "Crystal Grass", "Sparkle Berries", "Glitter Branches", "Metallic Leaves"
+        ]
+        
+        // Different combinations for different milestones
+        var selectedFlowers: [String] = []
+        
+        switch milestone {
+        case 10:
+            // First milestone - classic celebration mix
+            selectedFlowers = [
+                "Golden Achievement Roses",
+                "Celebration Orchids", 
+                "Victory Lilies",
+                "Success Peonies",
+                "Milestone Carnations"
+            ]
+            
+        case 25:
+            // Silver celebration - more exotic
+            selectedFlowers = [
+                "Silver Brunia",
+                "White Moth Orchids",
+                "Platinum Roses",
+                "Crystal Grass",
+                "Pearl Stephanotis",
+                "Silver Dollar Eucalyptus"
+            ]
+            
+        case 50:
+            // Golden celebration - luxurious mix
+            selectedFlowers = [
+                "Golden Chrysanthemums",
+                "Juliet Roses",
+                "Cymbidium Orchids",
+                "Stargazer Lilies",
+                "Golden Protea",
+                "Champagne Peonies",
+                "Honey Dijon Roses"
+            ]
+            
+        case 100:
+            // Centennial - very exotic and rare
+            selectedFlowers = [
+                "Bird of Paradise",
+                "Black Dahlia",
+                "Queen of the Night",
+                "Jade Vine",
+                "Chocolate Cosmos",
+                "Dancing Lady Orchids",
+                "Passion Flower",
+                "Ghost Flower"
+            ]
+            
+        case 250:
+            // Quarter millennium - unique global mix
+            selectedFlowers = [
+                "Himalayan Blue Poppy",
+                "African Protea King",
+                "Japanese Cherry Blossoms",
+                "Amazon Water Lily",
+                "Australian Waratah",
+                "Arctic Poppy",
+                "Desert Rose",
+                "Rainforest Heliconia",
+                "Alpine Edelweiss"
+            ]
+            
+        case 500:
+            // Half millennium - legendary flowers
+            selectedFlowers = [
+                "Legendary Dragon Orchid",
+                "Phoenix Fire Lily",
+                "Celestial Roses",
+                "Infinity Lotus",
+                "Eternal Flame Flower",
+                "Mystic Moon Orchid",
+                "Solar Flare Dahlia",
+                "Cosmic Chrysanthemum",
+                "Nebula Narcissus",
+                "Galaxy Garden Rose"
+            ]
+            
+        case 1000:
+            // Millennium - ultimate collection
+            selectedFlowers = [
+                "Millennium Gold Rose",
+                "Thousand Year Orchid",
+                "Eternal Glory Lily",
+                "Infinity Peony",
+                "Celestial Crown Imperial",
+                "Phoenix Reborn Dahlia",
+                "Dragon's Breath Anthurium",
+                "Cosmic Queen Protea",
+                "Universe Unfolds Lotus",
+                "Time Eternal Chrysanthemum",
+                "Legacy Forever Rose"
+            ]
+            
+        default:
+            // For any other milestone, create a random exotic mix
+            selectedFlowers = Array(allFlowers.shuffled().prefix(7))
+        }
+        
+        return selectedFlowers
+    }
+    
     private func generateBouquetFlowerNames(for holiday: Holiday?) -> [String] {
         // Generate appropriate flower names based on the holiday
         if let holiday = holiday {
             switch holiday.name {
             case "Valentine's Day":
-                return ["Red Roses", "Pink Lilies", "White Carnations", "Baby's Breath"]
+                return ["Deep Red Roses", "Pink Lisianthus", "White Orchids", "Baby's Breath", 
+                       "Red Tulips", "Pink Ranunculus", "White Stephanotis"]
             case "Mother's Day":
-                return ["Pink Peonies", "White Gardenias", "Lavender", "Yellow Roses"]
+                return ["Pink Peonies", "White Gardenias", "Lavender", "Yellow Roses", 
+                       "Pink Hydrangeas", "White Magnolias", "Soft Coral Dahlias"]
             case "Christmas":
-                return ["Red Poinsettias", "White Roses", "Holly Berries", "Pine Branches"]
+                return ["Red Poinsettias", "White Amaryllis", "Holly Berries", "Pine Branches",
+                       "Red Winterberries", "White Hellebores", "Gold Pinecones", "Silver Eucalyptus"]
             case "Halloween":
-                return ["Orange Marigolds", "Deep Purple Roses", "Black Dahlias", "Autumn Leaves"]
+                return ["Orange Marigolds", "Deep Purple Roses", "Black Dahlias", "Autumn Leaves",
+                       "Dark Burgundy Mums", "Orange Lilies", "Purple Calla Lilies", "Black Bacarra Roses"]
             case "St. Patrick's Day":
-                return ["Green Carnations", "White Roses", "Shamrocks", "Green Bells of Ireland"]
+                return ["Green Carnations", "White Roses", "Shamrocks", "Green Bells of Ireland",
+                       "Green Hydrangeas", "White Calla Lilies", "Green Chrysanthemums"]
             case "New Year":
-                return ["White Roses", "Gold Chrysanthemums", "Silver Dusty Miller", "Sparkle Baby's Breath"]
+                return ["White Roses", "Gold Chrysanthemums", "Silver Dusty Miller", "Sparkle Baby's Breath",
+                       "White Orchids", "Golden Cymbidiums", "Silver Brunia", "Crystal Grass"]
             case "International Women's Day":
-                return ["Purple Orchids", "Yellow Tulips", "Pink Roses", "White Daisies"]
+                return ["Purple Orchids", "Yellow Tulips", "Pink Roses", "White Daisies",
+                       "Purple Iris", "Yellow Mimosa", "Pink Peonies", "White Freesias"]
             case "Father's Day":
-                return ["Sunflowers", "Blue Delphiniums", "White Roses", "Green Ferns"]
+                return ["Sunflowers", "Blue Delphiniums", "White Roses", "Green Ferns",
+                       "Orange Birds of Paradise", "Blue Hydrangeas", "Yellow Craspedia", "Eucalyptus"]
             case "Thanksgiving":
-                return ["Orange Chrysanthemums", "Burgundy Dahlias", "Wheat Stalks", "Fall Berries"]
+                return ["Orange Chrysanthemums", "Burgundy Dahlias", "Wheat Stalks", "Fall Berries",
+                       "Golden Sunflowers", "Red Hypericum", "Orange Roses", "Autumn Oak Leaves"]
             case "May Day":
-                return ["Mixed Wildflowers", "Daisies", "Lavender", "Sweet Peas"]
+                return ["Mixed Wildflowers", "Daisies", "Lavender", "Sweet Peas",
+                       "Lily of the Valley", "Forget-Me-Nots", "Bluebells", "Spring Tulips"]
+            case "Easter":
+                return ["White Lilies", "Yellow Daffodils", "Pink Tulips", "Purple Hyacinths",
+                       "White Roses", "Pastel Ranunculus", "Spring Branches", "Pussy Willows"]
+            case "Chinese New Year":
+                return ["Red Peonies", "Golden Chrysanthemums", "Lucky Bamboo", "Orange Orchids",
+                       "Red Gladiolus", "Yellow Oncidium", "Pink Plum Blossoms", "Gold Lotus"]
             default:
-                return ["Mixed Roses", "Seasonal Blooms", "Garden Flowers", "Fresh Greens"]
+                // Create a random interesting mix
+                let exoticMix = ["Protea", "Anthurium", "Bird of Paradise", "Heliconia",
+                               "Ginger Flowers", "Lotus Blossoms", "Passionflower", "Bleeding Hearts"]
+                return Array(exoticMix.shuffled().prefix(6))
             }
         }
-        return ["Assorted Flowers", "Mixed Blooms", "Garden Varieties"]
+        return ["Assorted Garden Flowers", "Mixed Seasonal Blooms", "Wildflower Varieties", 
+                "Fresh Eucalyptus", "Decorative Berries"]
     }
     
     private func extractFlowerName(from descriptor: String) -> String {
@@ -1182,6 +1341,22 @@ class FlowerStore: ObservableObject {
             }
         }
         return descriptor.capitalized
+    }
+    
+    // MARK: - Cleanup
+    private func cleanupSharedDefaults() {
+        // Remove large data from shared defaults to prevent UserDefaults size warnings
+        if sharedDefaults?.data(forKey: discoveredFlowersKey) != nil {
+            print("🧹 Cleaning up discoveredFlowers from shared defaults")
+            sharedDefaults?.removeObject(forKey: discoveredFlowersKey)
+        }
+        
+        if sharedDefaults?.data(forKey: favoritesKey) != nil {
+            print("🧹 Cleaning up favorites from shared defaults")
+            sharedDefaults?.removeObject(forKey: favoritesKey)
+        }
+        
+        sharedDefaults?.synchronize()
     }
     
     private func createMockFlower(descriptor: String? = nil) -> AIFlower {
@@ -1353,6 +1528,21 @@ class FlowerStore: ObservableObject {
     }
     
     private func loadFavorites() {
+        // Try to load from Documents directory first
+        do {
+            let loadedFavorites = try FlowerStorageManager.shared.loadFavorites()
+            if !loadedFavorites.isEmpty {
+                favorites = loadedFavorites.sorted { 
+                    ($0.discoveryDate ?? $0.generatedDate) > ($1.discoveryDate ?? $1.generatedDate) 
+                }
+                print("✅ Loaded \(favorites.count) favorites from Documents")
+                return
+            }
+        } catch {
+            print("⚠️ Failed to load favorites from Documents: \(error)")
+        }
+        
+        // Fallback: Try to migrate from UserDefaults (one-time migration)
         if let data = userDefaults.data(forKey: favoritesKey) {
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
@@ -1360,21 +1550,36 @@ class FlowerStore: ObservableObject {
                 favorites = decoded.sorted { 
                     ($0.discoveryDate ?? $0.generatedDate) > ($1.discoveryDate ?? $1.generatedDate) 
                 }
+                
+                // Migrate to Documents directory
+                print("🔄 Migrating \(favorites.count) favorites from UserDefaults to Documents")
+                saveFavorites()
+                
+                // Clean up UserDefaults after successful migration
+                userDefaults.removeObject(forKey: favoritesKey)
+                userDefaults.synchronize()
             }
         }
     }
     
     private func saveFavorites() {
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-        if let encoded = try? encoder.encode(favorites) {
-            userDefaults.set(encoded, forKey: favoritesKey)
-            // Also save to shared defaults for widget access
-            sharedDefaults?.set(encoded, forKey: favoritesKey)
+        // Save favorites to Documents directory
+        do {
+            try FlowerStorageManager.shared.saveFavorites(favorites)
+            
+            // Save just favorite IDs to UserDefaults for quick lookup
+            let favoriteIds = favorites.map { $0.id.uuidString }
+            userDefaults.set(favoriteIds, forKey: "favoriteIds")
+            userDefaults.set(favorites.count, forKey: "favoritesCount")
+            
+            // Don't save full favorites to shared defaults - too large!
+            // Widget data is synced separately via syncDataToWidgets()
+            
+            // Reload widgets when favorites change
+            WidgetCenter.shared.reloadAllTimelines()
+        } catch {
+            print("❌ Failed to save favorites: \(error)")
         }
-        
-        // Reload widgets when favorites change
-        WidgetCenter.shared.reloadAllTimelines()
     }
     
     // MARK: - Discovered Flowers Management
@@ -1423,12 +1628,23 @@ class FlowerStore: ObservableObject {
         // Find the highest milestone we've reached
         for milestone in milestoneThresholds {
             if currentCount >= milestone && lastMilestone < milestone {
-                // We've hit a new milestone!
-                userDefaults.set(milestone, forKey: lastMilestoneKey)
+                // Check if we already have this milestone bouquet
+                let bouquetName = "\(milestone) Flowers Celebration Bouquet"
+                let alreadyHasBouquet = discoveredFlowers.contains { flower in
+                    flower.name == bouquetName && flower.isBouquet == true
+                }
                 
-                // Generate achievement bouquet
-                Task {
-                    await generateMilestoneBouquet(for: milestone)
+                if !alreadyHasBouquet {
+                    // We've hit a new milestone!
+                    userDefaults.set(milestone, forKey: lastMilestoneKey)
+                    
+                    // Generate achievement bouquet
+                    Task {
+                        await generateMilestoneBouquet(for: milestone)
+                    }
+                } else {
+                    // Update the milestone tracker even if we have the bouquet
+                    userDefaults.set(milestone, forKey: lastMilestoneKey)
                 }
                 break
             }
@@ -1446,21 +1662,15 @@ class FlowerStore: ObservableObject {
                 throw NSError(domain: "FlowerStore", code: 0, userInfo: [NSLocalizedDescriptionKey: "Failed to convert image"])
             }
             
-            // Create milestone flower names based on the achievement
-            let bouquetFlowerNames = [
-                "Golden Achievement Roses",
-                "Celebration Orchids",
-                "Victory Lilies",
-                "Success Peonies",
-                "Milestone Carnations"
-            ]
+            // Create milestone flower names with variety based on the milestone
+            let bouquetFlowerNames = generateMilestoneBouquetFlowers(for: milestone)
             
             var flower = AIFlower(
                 name: "\(milestone) Flowers Celebration Bouquet",
                 descriptor: descriptor,
                 imageData: imageData,
                 generatedDate: Date(),
-                isFavorite: true, // Auto-favorite milestone bouquets
+                isFavorite: false, // Don't auto-favorite milestone bouquets
                 discoveryDate: Date(),
                 contextualGeneration: false,
                 generationContext: nil,
@@ -1512,6 +1722,21 @@ class FlowerStore: ObservableObject {
     }
     
     private func loadDiscoveredFlowers() {
+        // Try to load from Documents directory first
+        do {
+            let flowers = try FlowerStorageManager.shared.loadFlowers()
+            if !flowers.isEmpty {
+                discoveredFlowers = flowers.sorted { 
+                    ($0.discoveryDate ?? $0.generatedDate) > ($1.discoveryDate ?? $1.generatedDate) 
+                }
+                print("✅ Loaded \(flowers.count) flowers from Documents")
+                return
+            }
+        } catch {
+            print("⚠️ Failed to load from Documents: \(error)")
+        }
+        
+        // Fallback: Try to migrate from UserDefaults (one-time migration)
         if let data = userDefaults.data(forKey: discoveredFlowersKey) {
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
@@ -1519,6 +1744,14 @@ class FlowerStore: ObservableObject {
                 discoveredFlowers = decoded.sorted { 
                     ($0.discoveryDate ?? $0.generatedDate) > ($1.discoveryDate ?? $1.generatedDate) 
                 }
+                
+                // Migrate to Documents directory
+                print("🔄 Migrating \(discoveredFlowers.count) flowers from UserDefaults to Documents")
+                saveDiscoveredFlowers()
+                
+                // Clean up UserDefaults after successful migration
+                userDefaults.removeObject(forKey: discoveredFlowersKey)
+                userDefaults.synchronize()
             }
         }
     }
@@ -1540,20 +1773,26 @@ class FlowerStore: ObservableObject {
     }
     
     private func saveDiscoveredFlowers() {
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-        if let encoded = try? encoder.encode(discoveredFlowers) {
-            userDefaults.set(encoded, forKey: discoveredFlowersKey)
-            // Also save to shared defaults for widget access
-            sharedDefaults?.set(encoded, forKey: discoveredFlowersKey)
-        }
-        
-        // Reload widgets when data changes
-        WidgetCenter.shared.reloadAllTimelines()
-        
-        // Sync to iCloud
-        Task {
-            await iCloudSyncManager.shared.syncToICloud()
+        // Save full flowers to Documents directory
+        do {
+            try FlowerStorageManager.shared.saveFlowers(discoveredFlowers)
+            
+            // Save lightweight metadata to UserDefaults for quick access
+            FlowerStorageManager.shared.saveMetadataToUserDefaults(discoveredFlowers, 
+                                                                   userDefaults: userDefaults)
+            
+            // Don't save full flowers to shared defaults - too large!
+            // Widget data is synced separately via syncDataToWidgets()
+            
+            // Reload widgets when data changes
+            WidgetCenter.shared.reloadAllTimelines()
+            
+            // Sync to iCloud
+            Task {
+                await iCloudSyncManager.shared.syncToICloud()
+            }
+        } catch {
+            print("❌ Failed to save flowers: \(error)")
         }
     }
     
@@ -2446,4 +2685,86 @@ struct WidgetDataStore: Codable {
     let totalCount: Int
     let favoritesCount: Int
     let lastUpdated: Date
+}
+
+// MARK: - Flower Storage Manager
+private class FlowerStorageManager {
+    static let shared = FlowerStorageManager()
+    
+    private let documentsDirectory: URL
+    private let flowersFileName = "flowers_collection.json"
+    private let metadataFileName = "flowers_metadata.json"
+    
+    init() {
+        documentsDirectory = FileManager.default.urls(for: .documentDirectory, 
+                                                      in: .userDomainMask).first!
+    }
+    
+    // Save full flowers to Documents directory
+    func saveFlowers(_ flowers: [AIFlower]) throws {
+        let url = documentsDirectory.appendingPathComponent(flowersFileName)
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let data = try encoder.encode(flowers)
+        try data.write(to: url)
+        
+        print("💾 Saved \(flowers.count) flowers to Documents (\(data.count) bytes)")
+    }
+    
+    // Load full flowers from Documents directory
+    func loadFlowers() throws -> [AIFlower] {
+        let url = documentsDirectory.appendingPathComponent(flowersFileName)
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            return []
+        }
+        
+        let data = try Data(contentsOf: url)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let flowers = try decoder.decode([AIFlower].self, from: data)
+        
+        print("📁 Loaded \(flowers.count) flowers from Documents")
+        return flowers
+    }
+    
+    // Save lightweight metadata to UserDefaults
+    func saveMetadataToUserDefaults(_ flowers: [AIFlower], userDefaults: UserDefaults) {
+        let metadata = flowers.map { flower in
+            return [
+                "id": flower.id.uuidString,
+                "name": flower.name,
+                "date": ISO8601DateFormatter().string(from: flower.generatedDate)
+            ]
+        }
+        
+        userDefaults.set(metadata, forKey: "flowersMetadata")
+        userDefaults.set(flowers.count, forKey: "flowersCount")
+    }
+    
+    // Save favorites to Documents directory
+    func saveFavorites(_ favorites: [AIFlower]) throws {
+        let url = documentsDirectory.appendingPathComponent("favorites.json")
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let data = try encoder.encode(favorites)
+        try data.write(to: url)
+        
+        print("💾 Saved \(favorites.count) favorites to Documents")
+    }
+    
+    // Load favorites from Documents directory
+    func loadFavorites() throws -> [AIFlower] {
+        let url = documentsDirectory.appendingPathComponent("favorites.json")
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            return []
+        }
+        
+        let data = try Data(contentsOf: url)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let favorites = try decoder.decode([AIFlower].self, from: data)
+        
+        print("📁 Loaded \(favorites.count) favorites from Documents")
+        return favorites
+    }
 } 

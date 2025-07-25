@@ -269,14 +269,21 @@ struct OnboardingView: View {
             print("OnboardingView: Generated contextual themes for \(cityName), \(country) during \(currentSeason.rawValue) \(timeOfDay)")
             
             // We always have built-in API keys
+            let effectiveFALKey = AppConfig.shared.effectiveFALKey
+            let effectiveOpenAIKey = AppConfig.shared.effectiveOpenAIKey
             print("OnboardingView: Generating flowers with built-in API keys")
+            print("OnboardingView: FAL key available: \(!effectiveFALKey.isEmpty) (length: \(effectiveFALKey.count))")
+            print("OnboardingView: OpenAI key available: \(!effectiveOpenAIKey.isEmpty) (length: \(effectiveOpenAIKey.count))")
             
             for (index, theme) in starterThemes.enumerated() {
                 print("OnboardingView: Generating flower \(index + 1)/\(starterThemes.count): \(theme.name)")
                 
                 do {
                     // Generate image
+                    print("OnboardingView: Calling FAL API for flower \(index + 1): \(theme.name)")
                     let (image, _) = try await FALService.shared.generateFlowerImage(descriptor: theme.descriptor)
+                    print("OnboardingView: FAL API returned image for \(theme.name)")
+                    
                     guard let imageData = image.pngData() else { 
                         print("OnboardingView: Failed to convert image to PNG data for \(theme.name)")
                         continue 
@@ -644,34 +651,31 @@ struct OnboardingView: View {
 }
 
 struct WelcomePageView: View {
-    @State private var animateFlower = false
     @State private var onboardingFlowerImage: UIImage?
     
     var body: some View {
         VStack(spacing: 32) {
             Spacer()
             
-            // Beautiful flower image
-            if let flowerImage = onboardingFlowerImage {
-                Image(uiImage: flowerImage)
+            // Beautiful bundled flower image
+            if let flower = BundledFlowersService.shared.getBundledFlower(at: 0),
+               let imageData = flower.imageData,
+               let image = UIImage(data: imageData) {
+                Image(uiImage: image)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 280, height: 280)
                     .cornerRadius(12)
-                    .scaleEffect(animateFlower ? 1.05 : 1.0)
-                    .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true), value: animateFlower)
-                    .onAppear { animateFlower = true }
             } else {
-                // Fallback animated flower icon while loading
-                Image(systemName: "flower")
-                    .font(.system(size: 80, design: .rounded))
-                    .foregroundColor(.flowerPrimary)
-                    .scaleEffect(animateFlower ? 1.1 : 1.0)
-                    .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true), value: animateFlower)
-                    .onAppear { 
-                        animateFlower = true
-                        generateOnboardingFlower()
-                    }
+                // Fallback placeholder
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.flowerCardBackground)
+                    .frame(width: 280, height: 280)
+                    .overlay(
+                        Image(systemName: "flower.fill")
+                            .font(.system(size: 80))
+                            .foregroundColor(.flowerPrimary)
+                    )
             }
             
             VStack(spacing: 20) {
@@ -692,9 +696,6 @@ struct WelcomePageView: View {
             
             Spacer()
             Spacer()
-        }
-        .onAppear {
-            generateOnboardingFlower()
         }
     }
     
@@ -749,7 +750,7 @@ struct HowItWorksPageView: View {
     @State private var featuresAppeared = false
     
     var body: some View {
-        VStack(spacing: 40) {
+        VStack(spacing: 32) {
             Text("How It Works")
                 .font(.system(size: 32, weight: .light, design: .serif))
                 .foregroundColor(.flowerTextPrimary)
@@ -921,7 +922,7 @@ struct StarterFlowerSelectionView: View {
     @State private var cardsAppeared = false
     
     var body: some View {
-        VStack(spacing: 32) {
+        VStack(spacing: 24) {
             // Title
             VStack(spacing: 12) {
                 Text("Pick Your First Flower")
@@ -934,7 +935,7 @@ struct StarterFlowerSelectionView: View {
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.top, 60)
+            .padding(.top, 40)
             
             if isLoading || flowers.isEmpty {
                 // Loading state
@@ -954,7 +955,7 @@ struct StarterFlowerSelectionView: View {
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 32)
                 }
-                .frame(maxHeight: .infinity)
+                .padding(.vertical, 100)
             } else {
                 // Flower cards carousel with proper snap-to-place
                 TabView(selection: $selectedIndex) {
@@ -980,7 +981,7 @@ struct StarterFlowerSelectionView: View {
                     }
                 }
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-                .frame(height: 550)
+                .frame(height: 480)
                 .onChange(of: selectedIndex) { oldValue, newValue in
                     if let newValue = newValue, oldValue != newValue {
                         // Haptic feedback when card snaps
@@ -1008,14 +1009,13 @@ struct StarterFlowerSelectionView: View {
                     .foregroundColor(.flowerTextSecondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
-                    .padding(.top, -10)
                     .lineLimit(2)
                     .minimumScaleFactor(0.9)
                     .opacity(cardsAppeared ? 1 : 0)
                     .animation(.easeIn(duration: 0.5).delay(0.5), value: cardsAppeared)
                 
                 // Select button with page dots
-                VStack(spacing: 20) {
+                VStack(spacing: 16) {
                     // Page dots for flower cards
                     HStack(spacing: 8) {
                         ForEach(0..<flowers.count, id: \.self) { index in
@@ -1051,11 +1051,12 @@ struct StarterFlowerSelectionView: View {
                         .foregroundColor(.flowerTextTertiary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 32)
-                        .padding(.top, 8)
+                        .padding(.top, 4)
                         .opacity(cardsAppeared ? 0.8 : 0)
                         .animation(.easeIn(duration: 0.5).delay(0.7), value: cardsAppeared)
                 }
-                .padding(.bottom, 50)
+                
+                Spacer(minLength: 20)
             }
         }
     }
@@ -1065,7 +1066,6 @@ struct StarterFlowerSelectionView: View {
 
 struct CameraRollPermissionPageView: View {
     @State private var animateAlbum = false
-    @State private var onboardingImages: [UIImage] = []
     
     var body: some View {
         VStack(spacing: 32) {
@@ -1101,12 +1101,24 @@ struct CameraRollPermissionPageView: View {
                 }
                 .padding(.horizontal, 16)
                 
-                // Sample flower grid
+                // Sample flower grid using bundled flowers
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 3), spacing: 4) {
                     ForEach(0..<6) { index in
                         Group {
-                            if index < onboardingImages.count {
-                                Image(uiImage: onboardingImages[index])
+                            if index < 5,
+                               let flower = BundledFlowersService.shared.getBundledFlower(at: index),
+                               let imageData = flower.imageData,
+                               let image = UIImage(data: imageData) {
+                                Image(uiImage: image)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .aspectRatio(1, contentMode: .fill)
+                                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                            } else if index == 5,
+                                      let flower = BundledFlowersService.shared.getBundledFlower(at: 5), // BundledFlower6
+                                      let imageData = flower.imageData,
+                                      let image = UIImage(data: imageData) {
+                                Image(uiImage: image)
                                     .resizable()
                                     .scaledToFill()
                                     .aspectRatio(1, contentMode: .fill)
@@ -1141,9 +1153,6 @@ struct CameraRollPermissionPageView: View {
             .rotationEffect(.degrees(1.5)) // Random rotation: +1.5 degrees
             .onAppear { 
                 animateAlbum = true
-                Task {
-                    onboardingImages = await OnboardingAssetsService.shared.getOnboardingFlowerImages()
-                }
             }
             
             Spacer()
@@ -1359,14 +1368,14 @@ struct StarterFlowerCard: View {
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 16) {
             // Flower image
             if let imageData = flower.imageData,
                let uiImage = UIImage(data: imageData) {
                 Image(uiImage: uiImage)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(width: 280, height: 280)
+                    .frame(width: 260, height: 260)
                     .clipped()
                     .cornerRadius(24)
             } else {
@@ -1374,7 +1383,7 @@ struct StarterFlowerCard: View {
                 ZStack {
                     RoundedRectangle(cornerRadius: 24)
                         .fill(Color.flowerCardBackground)
-                        .frame(width: 280, height: 280)
+                        .frame(width: 260, height: 260)
                     
                     VStack(spacing: 12) {
                         Image(systemName: "flower.fill")
@@ -1388,30 +1397,30 @@ struct StarterFlowerCard: View {
                 }
             }
             
-            VStack(spacing: 12) {
+            VStack(spacing: 8) {
                 // Flower name
                 Text(flower.name)
-                    .font(.system(size: 24, weight: .medium, design: .serif))
+                    .font(.system(size: 22, weight: .medium, design: .serif))
                     .foregroundColor(colorScheme == .dark ? .black : .flowerTextPrimary)
                     .multilineTextAlignment(.center)
-                    .lineLimit(3)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .lineLimit(2)
                     .minimumScaleFactor(0.8)
                     .padding(.horizontal, 16)
                 
                 // Flower meaning/description
                 if let meaning = flower.meaning {
                     Text(meaning)
-                        .font(.system(size: 16, design: .rounded))
+                        .font(.system(size: 14, design: .rounded))
                         .foregroundColor(.flowerTextSecondary)
                         .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
+                        .lineLimit(4)
+                        .minimumScaleFactor(0.9)
                         .padding(.horizontal, 16)
                 }
             }
         }
         .frame(width: 300)
-        .padding(24)
+        .padding(20)
         .background(
             RoundedRectangle(cornerRadius: 32)
                 .fill(Color.white)
