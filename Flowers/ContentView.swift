@@ -914,7 +914,7 @@ struct ContentView: View {
 // App info modal
 struct AppInfoPopover: View {
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 16) {
             // App icon only
             Image("FlowersSVG")
                 .resizable()
@@ -922,7 +922,7 @@ struct AppInfoPopover: View {
                 .frame(height: 32)
             
             // Personal message from James
-            Text("Hi! I built Flowers to celebrate special moments and locations with something beautiful.\n\nCollect flowers for your garden, or share them with friends and family to create special moments together.\n\nEnjoy discovering beauty in everyday life!\n\n— James")
+            Text("Hey! I made Flowers as a fun way to collect something new each day.\n\nOpen flowers in different places to grow your collection. Each location unlocks unique flowers based on weather, time, and special occasions.\n\nGift flowers to friends and build collections together - there's some surprise ones in there too.\n\n— James")
                 .font(.system(size: 16, design: .rounded))
                 .foregroundColor(.flowerTextSecondary)
                 .multilineTextAlignment(.center)
@@ -930,7 +930,7 @@ struct AppInfoPopover: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(.horizontal, 32)
-        .padding(.vertical, 24)
+        .padding(.vertical, 20)
         .frame(maxWidth: .infinity)
         .background(Color.flowerBackground)
     }

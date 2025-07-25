@@ -1554,36 +1554,20 @@ class FlowerStore: ObservableObject {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         
-        // Sync discovered flowers
+        // Create lightweight widget data to avoid UserDefaults size limits
+        let widgetData = createWidgetData()
+        
         do {
-            let encoded = try encoder.encode(discoveredFlowers)
-            sharedDefaults.set(encoded, forKey: discoveredFlowersKey)
-            print("✅ FlowerStore: Synced \(discoveredFlowers.count) discovered flowers to shared defaults")
+            let encoded = try encoder.encode(widgetData)
+            print("📏 FlowerStore: Widget data size: \(encoded.count) bytes (\(String(format: "%.1f", Double(encoded.count) / 1024))KB)")
+            
+            sharedDefaults.set(encoded, forKey: "widgetData")
+            print("✅ FlowerStore: Synced lightweight widget data (\(widgetData.recentFlowers.count) flowers) to shared defaults")
         } catch {
-            print("❌ FlowerStore: Failed to encode discovered flowers: \(error)")
+            print("❌ FlowerStore: Failed to encode widget data: \(error)")
         }
         
-        // Sync favorites
-        do {
-            let encoded = try encoder.encode(favorites)
-            sharedDefaults.set(encoded, forKey: favoritesKey)
-            print("✅ FlowerStore: Synced \(favorites.count) favorites to shared defaults")
-        } catch {
-            print("❌ FlowerStore: Failed to encode favorites: \(error)")
-        }
-        
-        // Sync current/pending flower if available
-        if let currentFlower = currentFlower {
-            do {
-                let encoded = try encoder.encode(currentFlower)
-                sharedDefaults.set(encoded, forKey: dailyFlowerKey)
-                sharedDefaults.set(Date(), forKey: dailyFlowerDateKey)
-                print("✅ FlowerStore: Synced current flower to shared defaults")
-            } catch {
-                print("❌ FlowerStore: Failed to encode current flower: \(error)")
-            }
-        }
-        
+        // Sync small data items that widgets need
         if let pendingFlower = pendingFlower {
             do {
                 let encoded = try encoder.encode(pendingFlower)
@@ -1600,23 +1584,70 @@ class FlowerStore: ObservableObject {
         }
         
         // Verify the sync worked
-        if let data = sharedDefaults.data(forKey: discoveredFlowersKey) {
+        if let data = sharedDefaults.data(forKey: "widgetData") {
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
             do {
-                let flowers = try decoder.decode([AIFlower].self, from: data)
-                print("🔍 FlowerStore: Verification - Successfully read back \(flowers.count) flowers from shared defaults")
+                let widgetData = try decoder.decode(WidgetDataStore.self, from: data)
+                print("🔍 FlowerStore: Verification - Successfully read back widget data with \(widgetData.recentFlowers.count) flowers")
             } catch {
-                print("❌ FlowerStore: Verification failed - Could not decode flowers: \(error)")
+                print("❌ FlowerStore: Verification failed - Could not decode widget data: \(error)")
             }
         } else {
-            print("❌ FlowerStore: Verification failed - No data found in shared defaults")
+            print("❌ FlowerStore: Verification failed - No widget data found in shared defaults")
         }
         
         // Force widget reload
         WidgetCenter.shared.reloadAllTimelines()
         print("🔄 FlowerStore: Widget timelines reloaded")
         print("✅ FlowerStore: Widget data sync complete")
+    }
+    
+    private func createWidgetData() -> WidgetDataStore {
+        // Get most recent flowers (limit to 20 for widgets)
+        let recentFlowers = discoveredFlowers
+            .sorted(by: { $0.generatedDate > $1.generatedDate })
+            .prefix(20)
+            .map { flower in
+                // Create lightweight version without large image data
+                WidgetFlower(
+                    id: flower.id,
+                    name: flower.name,
+                    descriptor: flower.descriptor,
+                    generatedDate: flower.generatedDate,
+                    isFavorite: flower.isFavorite,
+                    discoveryLocationName: flower.discoveryLocationName,
+                    discoveryWeatherCondition: flower.discoveryWeatherCondition,
+                    discoveryTemperature: flower.discoveryTemperature,
+                    discoveryTemperatureUnit: flower.discoveryTemperatureUnit,
+                    discoveryFormattedDate: flower.discoveryFormattedDate,
+                    // Store compressed thumbnail instead of full image
+                    thumbnailData: compressImageForWidget(flower.imageData)
+                )
+            }
+        
+        return WidgetDataStore(
+            recentFlowers: Array(recentFlowers),
+            totalCount: discoveredFlowers.count,
+            favoritesCount: favorites.count,
+            lastUpdated: Date()
+        )
+    }
+    
+    private func compressImageForWidget(_ imageData: Data?) -> Data? {
+        guard let imageData = imageData,
+              let uiImage = UIImage(data: imageData) else { return nil }
+        
+        // Create thumbnail at 150x150 for widgets
+        let thumbnailSize = CGSize(width: 150, height: 150)
+        let renderer = UIGraphicsImageRenderer(size: thumbnailSize)
+        
+        let thumbnail = renderer.image { _ in
+            uiImage.draw(in: CGRect(origin: .zero, size: thumbnailSize))
+        }
+        
+        // Compress to JPEG at 0.7 quality
+        return thumbnail.jpegData(compressionQuality: 0.7)
     }
     
     // Update a flower's details (used after fetching details from AI)
@@ -2335,4 +2366,27 @@ class FlowerStore: ObservableObject {
         UserDefaults.standard.set(true, forKey: migrationKey)
         print("Ownership history migration completed for \(discoveredFlowers.filter { !$0.hasOwnershipHistory }.count) flowers")
     }
+}
+
+// MARK: - Lightweight Widget Data Structures
+
+struct WidgetFlower: Codable, Identifiable {
+    let id: UUID
+    let name: String
+    let descriptor: String
+    let generatedDate: Date
+    let isFavorite: Bool
+    let discoveryLocationName: String?
+    let discoveryWeatherCondition: String?
+    let discoveryTemperature: Double?
+    let discoveryTemperatureUnit: String?
+    let discoveryFormattedDate: String?
+    let thumbnailData: Data? // Compressed thumbnail for widgets
+}
+
+struct WidgetDataStore: Codable {
+    let recentFlowers: [WidgetFlower]
+    let totalCount: Int
+    let favoritesCount: Int
+    let lastUpdated: Date
 } 

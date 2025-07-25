@@ -330,96 +330,150 @@ struct SimplifiedShareSheetPreview: View {
     var body: some View {
         VStack(spacing: 8) {
             // Mock iOS share sheet appearance
-            VStack(spacing: 12) {
-                // File preview row
+            VStack(spacing: 16) {
+                // File preview header
                 HStack(spacing: 12) {
                     // File icon
                     ZStack {
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(Color.flowerPrimary.opacity(0.2))
-                            .frame(width: 32, height: 32)
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.flowerPrimary.opacity(0.15))
+                            .frame(width: 50, height: 50)
                         
-                        Image(systemName: "doc.fill")
-                            .font(.system(size: 14))
-                            .foregroundColor(.flowerPrimary)
+                        Image("FlowersSVG")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 24, height: 24)
                     }
                     
                     // File info
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("FlowerName.flower")
-                            .font(.system(size: 11, weight: .medium))
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("Bittersweet Nightshade")
+                            .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(.flowerTextPrimary)
-                        Text("Flower document")
-                            .font(.system(size: 10))
+                        Text("Flower Document • 302 KB")
+                            .font(.system(size: 13))
                             .foregroundColor(.flowerTextSecondary)
                     }
                     
                     Spacer()
                 }
+                .padding(.horizontal, 20)
+                .padding(.top, 20)
                 
-                // App selection row
-                HStack(spacing: 16) {
-                    // Other apps (grayed out)
-                    VStack(spacing: 4) {
-                        Circle()
-                            .fill(Color.gray.opacity(0.3))
-                            .frame(width: 28, height: 28)
-                        Text("Mail")
-                            .font(.system(size: 9))
-                            .foregroundColor(.gray)
-                    }
-                    
-                    VStack(spacing: 4) {
-                        Circle()
-                            .fill(Color.gray.opacity(0.3))
-                            .frame(width: 28, height: 28)
-                        Text("Messages")
-                            .font(.system(size: 9))
-                            .foregroundColor(.gray)
-                    }
-                    
-                    // Flowers app (highlighted)
-                    VStack(spacing: 4) {
-                        ZStack {
-                            Circle()
-                                .fill(Color.flowerPrimary)
-                                .frame(width: 28, height: 28)
-                            
-                            Image(systemName: "flower.fill")
-                                .font(.system(size: 12))
-                                .foregroundColor(.white)
+                Divider()
+                    .padding(.horizontal, 20)
+                
+                // App selection grid
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 20) {
+                        // AirDrop
+                        VStack(spacing: 8) {
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color.gray.opacity(0.15))
+                                .frame(width: 60, height: 60)
+                            Text("AirDrop")
+                                .font(.system(size: 11))
+                                .foregroundColor(.gray)
                         }
-                        .overlay(
-                            Circle()
-                                .stroke(Color.flowerPrimary, lineWidth: 2)
-                                .frame(width: 32, height: 32)
-                        )
                         
-                        Text("Flowers")
-                            .font(.system(size: 9, weight: .medium))
-                            .foregroundColor(.flowerPrimary)
+                        // Slack
+                        VStack(spacing: 8) {
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color.gray.opacity(0.15))
+                                .frame(width: 60, height: 60)
+                            Text("Slack")
+                                .font(.system(size: 11))
+                                .foregroundColor(.gray)
+                        }
+                        
+                        // WhatsApp
+                        VStack(spacing: 8) {
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color.gray.opacity(0.15))
+                                .frame(width: 60, height: 60)
+                            Text("WhatsApp")
+                                .font(.system(size: 11))
+                                .foregroundColor(.gray)
+                        }
+                        
+                        // Flowers app (highlighted)
+                        VStack(spacing: 8) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 16)
+                                    .fill(Color.white)
+                                    .frame(width: 60, height: 60)
+                                    .shadow(color: .black.opacity(0.1), radius: 3, y: 1)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 16)
+                                            .stroke(Color.flowerPrimary.opacity(0.3), lineWidth: 2)
+                                    )
+                                
+                                Image("AppIcon2Preview")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 44, height: 44)
+                                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                            }
+                            
+                            Text("Flowers")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundColor(.flowerPrimary)
+                        }
+                        
+                        // Discord
+                        VStack(spacing: 8) {
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color.gray.opacity(0.15))
+                                .frame(width: 60, height: 60)
+                            Text("Discord")
+                                .font(.system(size: 11))
+                                .foregroundColor(.gray)
+                        }
                     }
-                    
-                    VStack(spacing: 4) {
-                        Circle()
-                            .fill(Color.gray.opacity(0.3))
-                            .frame(width: 28, height: 28)
-                        Text("Files")
-                            .font(.system(size: 9))
-                            .foregroundColor(.gray)
-                    }
+                    .padding(.horizontal, 20)
                 }
+                .frame(height: 90)
+                
+                // Additional options
+                VStack(spacing: 0) {
+                    Divider()
+                    
+                    HStack {
+                        Text("Dupe It")
+                            .font(.system(size: 16))
+                            .foregroundColor(.flowerTextPrimary)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 12)
+                    
+                    Divider()
+                    
+                    HStack {
+                        Text("Save to Cosmos")
+                            .font(.system(size: 16))
+                            .foregroundColor(.flowerTextPrimary)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 12)
+                }
+                .padding(.bottom, 8)
             }
-            .padding(12)
             .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.white)
-                    .shadow(color: .black.opacity(0.1), radius: 4, y: 2)
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color(UIColor.systemBackground))
+                    .shadow(color: .black.opacity(0.15), radius: 8, y: 2)
             )
             
-            Text("Tap the Flowers app icon")
-                .font(.system(size: 10, weight: .medium))
-                .foregroundColor(.flowerPrimary)
+            HStack(spacing: 4) {
+                Image(systemName: "arrow.up")
+                    .font(.system(size: 10, weight: .bold))
+                Text("Tap the Flowers app icon")
+                    .font(.system(size: 11, weight: .medium))
+            }
+            .foregroundColor(.flowerPrimary)
+            .padding(.top, 4)
         }
     }
 } 

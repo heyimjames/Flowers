@@ -52,10 +52,62 @@ class WidgetDataProvider {
     
     // MARK: - Collection Data
     
-    /// Get all discovered flowers
-    var discoveredFlowers: [AIFlower] {
-        print("🔍 WidgetDataProvider: Attempting to read discovered flowers...")
+    /// Get widget data (lightweight)
+    private var widgetDataStore: WidgetDataStore? {
+        print("🔍 WidgetDataProvider: Attempting to read widget data...")
         print("🔍 WidgetDataProvider: Shared defaults available: \(sharedDefaults != nil)")
+        
+        guard let sharedDefaults = sharedDefaults else {
+            print("❌ WidgetDataProvider: No shared UserDefaults available!")
+            return nil
+        }
+        
+        guard let data = sharedDefaults.data(forKey: "widgetData") else { 
+            print("❌ WidgetDataProvider: No widget data found")
+            print("🔍 WidgetDataProvider: Available keys in shared defaults: \(Array(sharedDefaults.dictionaryRepresentation().keys))")
+            return nil
+        }
+        
+        print("✅ WidgetDataProvider: Found widget data, size: \(data.count) bytes (\(String(format: "%.1f", Double(data.count) / 1024))KB)")
+        
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        do {
+            let widgetData = try decoder.decode(WidgetDataStore.self, from: data)
+            print("✅ WidgetDataProvider: Successfully decoded widget data with \(widgetData.recentFlowers.count) flowers")
+            if !widgetData.recentFlowers.isEmpty {
+                print("🌸 WidgetDataProvider: First flower: \(widgetData.recentFlowers[0].name)")
+            }
+            return widgetData
+        } catch {
+            print("❌ WidgetDataProvider: Failed to decode widget data: \(error)")
+            print("🔍 WidgetDataProvider: Raw data preview: \(String(data: data.prefix(200), encoding: .utf8) ?? "not UTF8")")
+            return nil
+        }
+    }
+    
+    /// Get all discovered flowers (fallback to old method if new data not available)
+    var discoveredFlowers: [AIFlower] {
+        // Try new lightweight data first
+        if let widgetData = widgetDataStore {
+            return widgetData.recentFlowers.map { widgetFlower in
+                AIFlower(
+                    name: widgetFlower.name,
+                    descriptor: widgetFlower.descriptor,
+                    imageData: widgetFlower.thumbnailData,
+                    generatedDate: widgetFlower.generatedDate,
+                    isFavorite: widgetFlower.isFavorite,
+                    discoveryLocationName: widgetFlower.discoveryLocationName,
+                    discoveryWeatherCondition: widgetFlower.discoveryWeatherCondition,
+                    discoveryTemperature: widgetFlower.discoveryTemperature,
+                    discoveryTemperatureUnit: widgetFlower.discoveryTemperatureUnit,
+                    discoveryFormattedDate: widgetFlower.discoveryFormattedDate
+                )
+            }
+        }
+        
+        // Fallback to old method (for backwards compatibility)
+        print("🔍 WidgetDataProvider: Falling back to old discovered flowers data...")
         
         guard let sharedDefaults = sharedDefaults else {
             print("❌ WidgetDataProvider: No shared UserDefaults available!")
@@ -64,24 +116,19 @@ class WidgetDataProvider {
         
         guard let data = sharedDefaults.data(forKey: discoveredFlowersKey) else { 
             print("❌ WidgetDataProvider: No data found for key '\(discoveredFlowersKey)'")
-            print("🔍 WidgetDataProvider: Available keys in shared defaults: \(Array(sharedDefaults.dictionaryRepresentation().keys))")
             return [] 
         }
         
-        print("✅ WidgetDataProvider: Found data, size: \(data.count) bytes")
+        print("✅ WidgetDataProvider: Found legacy data, size: \(data.count) bytes")
         
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         do {
             let flowers = try decoder.decode([AIFlower].self, from: data)
-            print("✅ WidgetDataProvider: Successfully decoded \(flowers.count) discovered flowers")
-            if !flowers.isEmpty {
-                print("🌸 WidgetDataProvider: First flower: \(flowers[0].name)")
-            }
+            print("✅ WidgetDataProvider: Successfully decoded \(flowers.count) discovered flowers from legacy data")
             return flowers
         } catch {
             print("❌ WidgetDataProvider: Failed to decode discovered flowers: \(error)")
-            print("🔍 WidgetDataProvider: Raw data preview: \(String(data: data.prefix(200), encoding: .utf8) ?? "not UTF8")")
             return []
         }
     }
@@ -155,11 +202,17 @@ class WidgetDataProvider {
     
     /// Total discovered flowers count
     var totalFlowersCount: Int {
+        if let widgetData = widgetDataStore {
+            return widgetData.totalCount
+        }
         return discoveredFlowers.count
     }
     
     /// Favorite flowers count
     var favoritesCount: Int {
+        if let widgetData = widgetDataStore {
+            return widgetData.favoritesCount
+        }
         return favoriteFlowers.count
     }
     
@@ -231,4 +284,27 @@ extension WidgetDataProvider {
             favoritesCount: 2
         )
     }
+}
+
+// MARK: - Lightweight Widget Data Structures
+
+struct WidgetFlower: Codable, Identifiable {
+    let id: UUID
+    let name: String
+    let descriptor: String
+    let generatedDate: Date
+    let isFavorite: Bool
+    let discoveryLocationName: String?
+    let discoveryWeatherCondition: String?
+    let discoveryTemperature: Double?
+    let discoveryTemperatureUnit: String?
+    let discoveryFormattedDate: String?
+    let thumbnailData: Data? // Compressed thumbnail for widgets
+}
+
+struct WidgetDataStore: Codable {
+    let recentFlowers: [WidgetFlower]
+    let totalCount: Int
+    let favoritesCount: Int
+    let lastUpdated: Date
 }

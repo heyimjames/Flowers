@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import CoreLocation
 
 // Smooth progress tracking using DisplayLink
 class HoldProgressTracker: ObservableObject {
@@ -104,9 +105,12 @@ struct FlowerRevealView: View {
                     
                     // Centered content area
                     VStack(spacing: 24) {
+                        // Use the updated pending flower if available, otherwise use the passed flower
+                        let displayFlower = (isRevealed && flowerStore.pendingFlower != nil) ? flowerStore.pendingFlower! : flower
+                        
                         // Flower image
                         ZStack {
-                            if let imageData = flower.imageData,
+                            if let imageData = displayFlower.imageData,
                                let uiImage = UIImage(data: imageData) {
                                 Image(uiImage: uiImage)
                                     .resizable()
@@ -123,7 +127,7 @@ struct FlowerRevealView: View {
                         // Flower info (shown when revealed)
                         if isRevealed {
                             VStack(spacing: 12) {
-                                Text(flower.name)
+                                Text(displayFlower.name)
                                     .font(.system(size: 28, weight: .light, design: .serif))
                                     .foregroundColor(.flowerTextPrimary)
                                     .multilineTextAlignment(.center)
@@ -132,7 +136,7 @@ struct FlowerRevealView: View {
                                     .minimumScaleFactor(0.8)
                                     .padding(.horizontal, 16)
                                 
-                                Text(capitalizeWords(flower.descriptor))
+                                Text(capitalizeWords(displayFlower.descriptor))
                                     .font(.system(size: 16))
                                     .foregroundColor(.flowerTextSecondary)
                                     .multilineTextAlignment(.center)
@@ -175,6 +179,9 @@ struct FlowerRevealView: View {
         }
         .flowerConfetti(isActive: $showConfetti)
         .onAppear {
+            // Request fresh location and weather data
+            ContextualFlowerGenerator.shared.requestLocationUpdate()
+            
             // Prepare all haptic generators
             lightImpact.prepare()
             mediumImpact.prepare()
@@ -368,6 +375,33 @@ struct FlowerRevealView: View {
         
         // Epic reveal haptic sequence
         performFlowerRevealHaptic()
+        
+        // Capture weather data immediately when flower is revealed
+        if var pendingFlower = flowerStore.pendingFlower {
+            // Update discovery date to current time and capture current location
+            pendingFlower.discoveryDate = Date()
+            if let currentLocation = ContextualFlowerGenerator.shared.currentLocation {
+                pendingFlower.discoveryLatitude = currentLocation.coordinate.latitude
+                pendingFlower.discoveryLongitude = currentLocation.coordinate.longitude
+            }
+            if let currentPlacemark = ContextualFlowerGenerator.shared.currentPlacemark {
+                pendingFlower.discoveryLocationName = currentPlacemark.locality ?? currentPlacemark.name
+            }
+            
+            // Capture current weather data
+            if let weather = ContextualFlowerGenerator.shared.currentWeather {
+                let weatherCondition = OnboardingAssetsService.getWeatherConditionString(from: weather.currentWeather.condition)
+                let temperature = weather.currentWeather.temperature.value
+                pendingFlower.captureWeatherAndDate(
+                    weatherCondition: weatherCondition,
+                    temperature: temperature,
+                    temperatureUnit: "°C"
+                )
+            }
+            
+            // Update the pending flower with weather data
+            flowerStore.pendingFlower = pendingFlower
+        }
         
         withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
             isRevealed = true
