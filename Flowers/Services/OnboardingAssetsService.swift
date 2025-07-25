@@ -123,22 +123,10 @@ class OnboardingAssetsService {
             do {
                 print("OnboardingAssetsService: Generating image \(index + 1)/6: \(descriptor)")
                 
-                // Try FAL service first, fallback to OpenAI
+                // Always use FAL for images (using built-in or user keys)
                 let image: UIImage
-                if !APIConfiguration.shared.falKey.isEmpty {
-                    let (generatedImage, _) = try await FALService.shared.generateFlowerImage(descriptor: descriptor)
-                    image = generatedImage
-                } else if !APIConfiguration.shared.openAIKey.isEmpty {
-                    // Use OpenAI service legacy method for descriptor-based generation
-                    let (generatedImage, _) = try await OpenAIService.shared.generateFlowerImage(descriptor: descriptor)
-                    image = generatedImage
-                } else {
-                    print("OnboardingAssetsService: No API keys available, using placeholder")
-                    if let placeholderImage = createPlaceholderImage(for: descriptor) {
-                        generatedImages.append(placeholderImage)
-                    }
-                    continue
-                }
+                let (generatedImage, _) = try await FALService.shared.generateFlowerImage(descriptor: descriptor)
+                image = generatedImage
                 
                 generatedImages.append(image)
                 print("OnboardingAssetsService: Successfully generated image \(index + 1)")
@@ -267,19 +255,8 @@ class OnboardingAssetsService {
         let name = "Jenny's Welcome Flower"
         
         do {
-            // Try FAL service first, fallback to OpenAI
-            let image: UIImage
-            if !APIConfiguration.shared.falKey.isEmpty {
-                let (generatedImage, _) = try await FALService.shared.generateFlowerImage(descriptor: descriptor)
-                image = generatedImage
-            } else if !APIConfiguration.shared.openAIKey.isEmpty {
-                // Use OpenAI service legacy method for descriptor-based generation
-                let (generatedImage, _) = try await OpenAIService.shared.generateFlowerImage(descriptor: descriptor)
-                image = generatedImage
-            } else {
-                print("OnboardingAssetsService: No API keys available for onboarding flower")
-                return createPlaceholderOnboardingFlower()
-            }
+            // Always use FAL for images (using built-in or user keys)
+            let (image, _) = try await FALService.shared.generateFlowerImage(descriptor: descriptor)
             
             guard let imageData = image.jpegData(compressionQuality: 0.8) else {
                 print("OnboardingAssetsService: Failed to convert image to data")

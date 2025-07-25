@@ -29,8 +29,11 @@ class WidgetDataProvider {
     
     /// Get the most recent discovered flower
     var mostRecentFlower: AIFlower? {
+        print("🔍 WidgetDataProvider: Getting most recent flower...")
         let flowers = discoveredFlowers
-        return flowers.sorted(by: { $0.generatedDate > $1.generatedDate }).first
+        let recent = flowers.sorted(by: { $0.generatedDate > $1.generatedDate }).first
+        print("📱 WidgetDataProvider: Most recent flower: \(recent?.name ?? "none")")
+        return recent
     }
     
     /// Get pending flower if available
@@ -90,8 +93,9 @@ class WidgetDataProvider {
     var discoveredFlowers: [AIFlower] {
         // Try new lightweight data first
         if let widgetData = widgetDataStore {
+            print("✅ WidgetDataProvider: Using new lightweight widget data")
             return widgetData.recentFlowers.map { widgetFlower in
-                AIFlower(
+                let flower = AIFlower(
                     name: widgetFlower.name,
                     descriptor: widgetFlower.descriptor,
                     imageData: widgetFlower.thumbnailData,
@@ -101,8 +105,11 @@ class WidgetDataProvider {
                     discoveryWeatherCondition: widgetFlower.discoveryWeatherCondition,
                     discoveryTemperature: widgetFlower.discoveryTemperature,
                     discoveryTemperatureUnit: widgetFlower.discoveryTemperatureUnit,
-                    discoveryFormattedDate: widgetFlower.discoveryFormattedDate
+                    discoveryFormattedDate: widgetFlower.discoveryFormattedDate,
+                    ownershipHistory: []
                 )
+                print("🌸 WidgetDataProvider: Created flower '\(flower.name)' with image data size: \(widgetFlower.thumbnailData?.count ?? 0) bytes")
+                return flower
             }
         }
         

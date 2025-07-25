@@ -1,5 +1,7 @@
 import SwiftUI
 import UniformTypeIdentifiers
+import CoreLocation
+import WeatherKit
 
 struct SettingsSheet: View {
     @ObservedObject var apiConfig = APIConfiguration.shared
@@ -130,26 +132,42 @@ struct SettingsSheet: View {
                                 }
                             }
                             
-                            // FAL API Key
+                            // FAL API Key (for images)
                             VStack(alignment: .leading, spacing: 8) {
-                                Text("FAL API Key")
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundColor(.flowerTextSecondary)
+                                HStack {
+                                    Text("FAL API Key (Images)")
+                                        .font(.system(size: 14, weight: .medium))
+                                        .foregroundColor(.flowerTextSecondary)
+                                    
+                                    if !apiConfig.falKey.isEmpty {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .font(.system(size: 12))
+                                            .foregroundColor(.green)
+                                    }
+                                }
                                 
-                                SecureField("Enter FAL API key", text: $apiConfig.falKey)
+                                SecureField("Enter FAL API key for image generation", text: $apiConfig.falKey)
                                     .textFieldStyle(FlowerTextFieldStyle())
                                     .onChange(of: apiConfig.falKey) { _ in
                                         apiConfig.saveConfiguration()
                                     }
                             }
                             
-                            // OpenAI API Key
+                            // OpenAI API Key (for text)
                             VStack(alignment: .leading, spacing: 8) {
-                                Text("OpenAI API Key")
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundColor(.flowerTextSecondary)
+                                HStack {
+                                    Text("OpenAI API Key (Text)")
+                                        .font(.system(size: 14, weight: .medium))
+                                        .foregroundColor(.flowerTextSecondary)
+                                    
+                                    if !apiConfig.openAIKey.isEmpty {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .font(.system(size: 12))
+                                            .foregroundColor(.green)
+                                    }
+                                }
                                 
-                                SecureField("Enter OpenAI API key", text: $apiConfig.openAIKey)
+                                SecureField("Enter OpenAI API key for text generation", text: $apiConfig.openAIKey)
                                     .textFieldStyle(FlowerTextFieldStyle())
                                     .onChange(of: apiConfig.openAIKey) { _ in
                                         apiConfig.saveConfiguration()
@@ -386,6 +404,34 @@ struct SettingsSheet: View {
                                     Text("Show Test Flower")
                                 }
                                 .flowerButtonStyle()
+                                
+                                Divider()
+                                
+                                // Debug Widget Data
+                                VStack(alignment: .leading, spacing: 12) {
+                                    Text("Debug Widget Data")
+                                        .font(.system(size: 16, weight: .medium, design: .rounded))
+                                        .foregroundColor(.flowerTextPrimary)
+                                    
+                                    Text("Check widget data synchronization status")
+                                        .font(.system(size: 12, design: .rounded))
+                                        .foregroundColor(.flowerTextSecondary)
+                                    
+                                    Button(action: {
+                                        flowerStore.debugWidgetData()
+                                        flowerStore.syncDataToWidgets()
+                                    }) {
+                                        Text("Debug & Sync Widget Data")
+                                    }
+                                    .flowerButtonStyle()
+                                    
+                                    Button(action: {
+                                        flowerStore.debugAPIConfiguration()
+                                    }) {
+                                        Text("Debug API Configuration")
+                                    }
+                                    .flowerButtonStyle()
+                                }
                                 
                                 Divider()
                                 
@@ -1367,11 +1413,11 @@ struct CustomFlowerGenerationSheet: View {
                                     .foregroundColor(.flowerTextPrimary)
                                 
                                 VStack(alignment: .leading, spacing: 8) {
-                                    Text("Give your flower a unique name")
+                                    Text("Give your flower a unique name or leave blank to generate one")
                                         .font(.system(size: 14, design: .rounded))
                                         .foregroundColor(.flowerTextSecondary)
                                     
-                                    TextField("Enter flower name", text: $customName)
+                                    TextField("Enter flower name or auto-generate", text: $customName)
                                         .textFieldStyle(FlowerTextFieldStyle())
                                         .autocorrectionDisabled()
                                         .textInputAutocapitalization(.words)
@@ -1418,7 +1464,6 @@ struct CustomFlowerGenerationSheet: View {
                                             HStack {
                                                 TextField("Enter city or location", text: $customLocation)
                                                     .textFieldStyle(FlowerTextFieldStyle())
-                                                    .disabled(showingLocationPicker)
                                                 
                                                 Button(action: { showingLocationPicker = true }) {
                                                     Image(systemName: "map")
@@ -1486,12 +1531,16 @@ struct CustomFlowerGenerationSheet: View {
                             }
                             .disabled(isGenerating || customPrompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                             
-                            // Error Message
+                            // Error/Info Message
                             if let error = errorMessage {
-                                Text(error)
-                                    .font(.system(size: 14, design: .rounded))
-                                    .foregroundColor(.flowerError)
-                                    .padding(.top, 8)
+                                HStack(spacing: 6) {
+                                    Image(systemName: error.contains("estimated") ? "info.circle" : "exclamationmark.circle")
+                                        .font(.system(size: 14))
+                                    Text(error)
+                                        .font(.system(size: 14, design: .rounded))
+                                }
+                                .foregroundColor(error.contains("estimated") ? .flowerTextSecondary : .flowerError)
+                                .padding(.top, 8)
                             }
                         }
                         .padding(24)
@@ -1548,6 +1597,60 @@ struct CustomFlowerGenerationSheet: View {
         } message: {
             Text("Your custom flower has been generated and added to your collection!")
         }
+        .sheet(isPresented: $showingLocationPicker) {
+            LocationPickerSheet(
+                locationName: $customLocation,
+                latitude: $selectedLatitude,
+                longitude: $selectedLongitude,
+                isPresented: $showingLocationPicker
+            )
+            .presentationDetents([.medium, .large])
+            .presentationCornerRadius(32)
+        }
+    }
+    
+    private func getFallbackWeather(for location: CLLocation) -> (condition: String, temperature: Double) {
+        // Provide reasonable weather estimates based on time of year and latitude
+        let calendar = Calendar.current
+        let month = calendar.component(.month, from: Date())
+        let latitude = location.coordinate.latitude
+        
+        // Determine if in Northern or Southern hemisphere
+        let isNorthernHemisphere = latitude >= 0
+        
+        // Base temperature estimates by season and hemisphere
+        var baseTemp: Double
+        var condition: String
+        
+        switch month {
+        case 12, 1, 2: // Winter (North) / Summer (South)
+            baseTemp = isNorthernHemisphere ? 5.0 : 25.0
+            condition = isNorthernHemisphere ? "Cloudy" : "Sunny"
+        case 3, 4, 5: // Spring (North) / Fall (South)
+            baseTemp = isNorthernHemisphere ? 15.0 : 15.0
+            condition = "Partly Cloudy"
+        case 6, 7, 8: // Summer (North) / Winter (South)
+            baseTemp = isNorthernHemisphere ? 25.0 : 10.0
+            condition = isNorthernHemisphere ? "Sunny" : "Cloudy"
+        case 9, 10, 11: // Fall (North) / Spring (South)
+            baseTemp = isNorthernHemisphere ? 15.0 : 20.0
+            condition = "Partly Cloudy"
+        default:
+            baseTemp = 20.0
+            condition = "Clear"
+        }
+        
+        // Adjust for extreme latitudes
+        let latitudeAdjustment = abs(latitude) / 90.0 * 10.0
+        if latitude > 60 || latitude < -60 {
+            baseTemp -= latitudeAdjustment
+        }
+        
+        // Add some randomness for variety
+        let randomAdjustment = Double.random(in: -3...3)
+        let finalTemp = baseTemp + randomAdjustment
+        
+        return (condition: condition, temperature: finalTemp)
     }
     
     private func generateCustomFlower() {
@@ -1570,10 +1673,22 @@ struct CustomFlowerGenerationSheet: View {
                 
                 if useCurrentLocation {
                     // Use current location
-                    locationName = await LocationManager.shared.getCurrentLocationName()
-                    if let location = LocationManager.shared.currentLocation {
+                    await ContextualFlowerGenerator.shared.ensureFreshLocationAndWeather()
+                    
+                    if let currentPlacemark = ContextualFlowerGenerator.shared.currentPlacemark {
+                        locationName = currentPlacemark.locality ?? currentPlacemark.name
+                    }
+                    
+                    if let location = ContextualFlowerGenerator.shared.currentLocation {
                         latitude = location.coordinate.latitude
                         longitude = location.coordinate.longitude
+                    }
+                    
+                    // Get current weather
+                    if let weather = ContextualFlowerGenerator.shared.currentWeather {
+                        let condition = OnboardingAssetsService.getWeatherConditionString(from: weather.currentWeather.condition)
+                        weatherCondition = condition
+                        temperature = weather.currentWeather.temperature.value
                     }
                 } else if !customLocation.isEmpty {
                     // Use custom location
@@ -1610,14 +1725,67 @@ struct CustomFlowerGenerationSheet: View {
     }
     
     private func fetchWeatherForLocation() {
-        // This is a placeholder - you would implement actual weather API call here
         fetchingWeather = true
+        errorMessage = nil
         
-        // Simulate weather fetch
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            fetchingWeather = false
-            // Mock weather data - replace with actual API call
-            weatherData = (condition: "Sunny", temperature: 22.0)
+        Task {
+            do {
+                var location: CLLocation?
+                
+                if let lat = selectedLatitude, let lon = selectedLongitude {
+                    // Use the selected coordinates
+                    location = CLLocation(latitude: lat, longitude: lon)
+                } else if !customLocation.isEmpty {
+                    // Geocode the custom location string
+                    let geocoder = CLGeocoder()
+                    let placemarks = try await geocoder.geocodeAddressString(customLocation)
+                    if let placemark = placemarks.first,
+                       let placemarkLocation = placemark.location {
+                        location = placemarkLocation
+                        await MainActor.run {
+                            selectedLatitude = placemarkLocation.coordinate.latitude
+                            selectedLongitude = placemarkLocation.coordinate.longitude
+                        }
+                    }
+                }
+                
+                if let location = location {
+                    do {
+                        // Try to fetch weather using WeatherKit
+                        let weatherService = WeatherService.shared
+                        let weather = try await weatherService.weather(for: location)
+                        let weatherCondition = OnboardingAssetsService.getWeatherConditionString(from: weather.currentWeather.condition)
+                        let temperature = weather.currentWeather.temperature.value
+                        
+                        await MainActor.run {
+                            weatherData = (condition: weatherCondition, temperature: temperature)
+                            fetchingWeather = false
+                        }
+                    } catch {
+                        // WeatherKit failed - provide fallback
+                        print("WeatherKit error: \(error)")
+                        
+                        // Use fallback weather data based on location
+                        let fallbackWeather = getFallbackWeather(for: location)
+                        
+                        await MainActor.run {
+                            weatherData = fallbackWeather
+                            fetchingWeather = false
+                            errorMessage = "Using estimated weather for this location"
+                        }
+                    }
+                } else {
+                    await MainActor.run {
+                        errorMessage = "Could not find location"
+                        fetchingWeather = false
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    errorMessage = "Failed to fetch weather: \(error.localizedDescription)"
+                    fetchingWeather = false
+                }
+            }
         }
     }
     
@@ -1679,6 +1847,130 @@ struct TipRow: View {
                     .foregroundColor(.flowerTextSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
+        }
+    }
+}
+
+// Simple location search sheet
+struct LocationPickerSheet: View {
+    @Binding var locationName: String
+    @Binding var latitude: Double?
+    @Binding var longitude: Double?
+    @Binding var isPresented: Bool
+    
+    @State private var searchText = ""
+    @State private var searchResults: [CLPlacemark] = []
+    @State private var isSearching = false
+    @State private var errorMessage: String?
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 0) {
+                // Search bar
+                HStack {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(.flowerTextSecondary)
+                    
+                    TextField("Search for a location", text: $searchText)
+                        .textFieldStyle(.plain)
+                        .onSubmit {
+                            searchLocation()
+                        }
+                    
+                    if isSearching {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                    }
+                }
+                .padding()
+                .background(Color.flowerInputBackground)
+                .cornerRadius(12)
+                .padding()
+                
+                if let error = errorMessage {
+                    Text(error)
+                        .font(.system(size: 14, design: .rounded))
+                        .foregroundColor(.flowerError)
+                        .padding(.horizontal)
+                }
+                
+                // Results list
+                List(searchResults, id: \.location?.coordinate.latitude) { placemark in
+                    Button(action: {
+                        selectLocation(placemark)
+                    }) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(placemark.name ?? "Unknown Location")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(.flowerTextPrimary)
+                            
+                            if let locality = placemark.locality,
+                               let country = placemark.country {
+                                Text("\(locality), \(country)")
+                                    .font(.system(size: 14, design: .rounded))
+                                    .foregroundColor(.flowerTextSecondary)
+                            }
+                        }
+                        .padding(.vertical, 8)
+                    }
+                }
+                .listStyle(PlainListStyle())
+                
+                Spacer()
+            }
+            .background(Color.flowerSheetBackground)
+            .navigationTitle("Choose Location")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Cancel") {
+                        isPresented = false
+                    }
+                }
+            }
+        }
+        .onAppear {
+            searchText = locationName
+            if !searchText.isEmpty {
+                searchLocation()
+            }
+        }
+    }
+    
+    private func searchLocation() {
+        guard !searchText.isEmpty else { return }
+        
+        isSearching = true
+        errorMessage = nil
+        
+        Task {
+            do {
+                let geocoder = CLGeocoder()
+                let placemarks = try await geocoder.geocodeAddressString(searchText)
+                
+                await MainActor.run {
+                    searchResults = placemarks
+                    isSearching = false
+                    
+                    if placemarks.isEmpty {
+                        errorMessage = "No locations found"
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    errorMessage = "Search failed: \(error.localizedDescription)"
+                    isSearching = false
+                }
+            }
+        }
+    }
+    
+    private func selectLocation(_ placemark: CLPlacemark) {
+        if let location = placemark.location {
+            locationName = placemark.name ?? placemark.locality ?? "Unknown Location"
+            latitude = location.coordinate.latitude
+            longitude = location.coordinate.longitude
+            isPresented = false
         }
     }
 } 

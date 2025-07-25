@@ -11,8 +11,6 @@ class ContextualFlowerGenerator: NSObject, ObservableObject, CLLocationManagerDe
     @Published var locationPermissionStatus: CLAuthorizationStatus = .notDetermined
     @Published var currentWeather: Weather?
     
-    private let weatherService = WeatherService.shared
-    
     override init() {
         super.init()
         locationManager.delegate = self
@@ -127,12 +125,20 @@ class ContextualFlowerGenerator: NSObject, ObservableObject, CLLocationManagerDe
     
     private func updateWeather(for location: CLLocation) async {
         do {
+            let weatherService = WeatherService.shared
             let weather = try await weatherService.weather(for: location)
             await MainActor.run {
                 self.currentWeather = weather
             }
         } catch {
             print("Weather update error: \(error)")
+            print("WeatherKit may not be configured. Please ensure:")
+            print("1. WeatherKit capability is enabled in your app")
+            print("2. WeatherKit service is enabled in your App ID on developer.apple.com")
+            print("3. You're using a valid provisioning profile")
+            
+            // Note: We don't provide fallback weather here because this is used for real-time
+            // flower generation where we want actual weather data
         }
     }
     
@@ -210,7 +216,7 @@ class ContextualFlowerGenerator: NSObject, ObservableObject, CLLocationManagerDe
         return (selectedSpecies, context)
     }
     
-    private func getContinent(for country: String) -> Continent? {
+    func getContinent(for country: String) -> Continent? {
         let continentMap: [String: Continent] = [
             "Portugal": .europe, "Spain": .europe, "France": .europe, "Italy": .europe,
             "Germany": .europe, "United Kingdom": .europe, "Ireland": .europe,

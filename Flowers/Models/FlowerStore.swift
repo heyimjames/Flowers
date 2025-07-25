@@ -206,6 +206,9 @@ class FlowerStore: ObservableObject {
         checkForPendingFlower()
         loadNextFlowerTime()
         
+        // Sync widget data on launch
+        syncDataToWidgets()
+        
         // Check if test flower should be shown
         if showTestFlowerOnNextLaunch {
             print("Test flower flag detected, creating test flower...")
@@ -275,6 +278,7 @@ class FlowerStore: ObservableObject {
                     self.favorites.insert(jennyFlower, at: 0)
                     self.saveDiscoveredFlowers()
                     self.saveFavorites()
+                    self.syncDataToWidgets()
                     
                     // Mark as received
                     UserDefaults.standard.set(true, forKey: "hasReceivedJennyFlower")
@@ -323,6 +327,7 @@ class FlowerStore: ObservableObject {
         self.favorites.insert(jennyFlower, at: 0)
         self.saveDiscoveredFlowers()
         self.saveFavorites()
+        self.syncDataToWidgets()
         
         // Mark as received
         UserDefaults.standard.set(true, forKey: "hasReceivedJennyFlower")
@@ -446,7 +451,11 @@ class FlowerStore: ObservableObject {
             Task {
                 await generateDailyFlower()
             }
-            nextFlowerTime = nil
+            // Set next scheduled time
+            nextFlowerTime = FlowerNotificationSchedule.getNextScheduledTime()
+            if let nextTime = nextFlowerTime {
+                userDefaults.set(nextTime, forKey: nextFlowerTimeKey)
+            }
         } else {
             // Generate the flower first, then schedule notification with its name
             Task {
@@ -488,18 +497,17 @@ class FlowerStore: ObservableObject {
             var notificationTitle = "A new flower awaits 🌸"
             var notificationBody = "\(flower.name) is ready. Tap to discover its beauty."
             
-            if apiConfig.hasValidOpenAIKey {
-                do {
-                    let customMessage = try await OpenAIService.shared.generateFlowerNotification(
-                        flowerName: flower.name,
-                        isBouquet: flower.isBouquet,
-                        holidayName: flower.holidayName
-                    )
-                    notificationTitle = customMessage.title
-                    notificationBody = customMessage.body
-                } catch {
-                    print("Failed to generate custom notification: \(error)")
-                }
+            do {
+                let customMessage = try await OpenAIService.shared.generateFlowerNotification(
+                    flowerName: flower.name,
+                    isBouquet: flower.isBouquet,
+                    holidayName: flower.holidayName
+                )
+                notificationTitle = customMessage.title
+                notificationBody = customMessage.body
+            } catch {
+                print("Failed to generate custom notification: \(error)")
+                // Fall back to default notification
             }
             
             scheduleFlowerNotification(at: date, title: notificationTitle, body: notificationBody)
@@ -623,8 +631,20 @@ class FlowerStore: ObservableObject {
     
     // MARK: - Daily Flower Management
     func loadNextFlowerTime() {
+        // If we have a pending flower or unrevealed flower, don't show next time
+        if pendingFlower != nil || hasUnrevealedFlower {
+            nextFlowerTime = nil
+            return
+        }
+        
         // Always use the pre-chosen schedule to determine next flower time
-        nextFlowerTime = FlowerNotificationSchedule.getNextScheduledTime()
+        if let scheduledTime = FlowerNotificationSchedule.getNextScheduledTime() {
+            nextFlowerTime = scheduledTime
+            print("FlowerStore: Next flower scheduled for \(scheduledTime)")
+        } else {
+            print("FlowerStore: No scheduled time found")
+            nextFlowerTime = nil
+        }
     }
     
     func checkForPendingFlower() {
@@ -695,12 +715,6 @@ class FlowerStore: ObservableObject {
     func validateAndFixState() {
         print("FlowerStore: Validating state consistency...")
         
-        // Fix case where we have nextFlowerTime but no pending flower
-        if nextFlowerTime != nil && pendingFlower == nil && !hasUnrevealedFlower {
-            print("FlowerStore: Found nextFlowerTime without pending flower - clearing timer")
-            nextFlowerTime = nil
-        }
-        
         // Fix case where we have unrevealed flower but nextFlowerTime is still set
         if hasUnrevealedFlower && nextFlowerTime != nil {
             print("FlowerStore: Found unrevealed flower with active timer - clearing timer")
@@ -711,6 +725,12 @@ class FlowerStore: ObservableObject {
         if pendingFlower != nil && nextFlowerTime == nil && !hasUnrevealedFlower {
             print("FlowerStore: Found pending flower without timer - this may indicate a timing issue")
             // Don't automatically fix this as it might be intentional, just log it
+        }
+        
+        // If we don't have a pending flower and no unrevealed flower, ensure we have a scheduled time
+        if pendingFlower == nil && !hasUnrevealedFlower && nextFlowerTime == nil {
+            print("FlowerStore: No pending flower and no scheduled time - scheduling next flower")
+            scheduleNextFlowerIfNeeded()
         }
         
         print("FlowerStore: State validation complete")
@@ -759,15 +779,16 @@ class FlowerStore: ObservableObject {
         // Clear notification badge
         UNUserNotificationCenter.current().setBadgeCount(0)
         
-        // Get the next scheduled flower time
-        nextFlowerTime = FlowerNotificationSchedule.getNextScheduledTime()
-        
-        // Schedule the next flower if there is one
-        if let nextTime = nextFlowerTime {
-            Task {
-                await generateDailyFlowerAndScheduleNotification(at: nextTime)
-            }
+            // Get the next scheduled flower time
+    let nextTime = FlowerNotificationSchedule.getNextScheduledTime()
+    nextFlowerTime = nextTime
+    
+    // Schedule the next flower if there is one
+    if let nextTime = nextTime {
+        Task {
+            await generateDailyFlowerAndScheduleNotification(at: nextTime)
         }
+    }
     }
     
     func generateDailyFlower() {
@@ -1257,6 +1278,7 @@ class FlowerStore: ObservableObject {
         
         saveFavorites()
         saveDiscoveredFlowers()
+        syncDataToWidgets()
     }
     
     func deleteFavorite(_ flower: AIFlower) {
@@ -1265,6 +1287,7 @@ class FlowerStore: ObservableObject {
             currentFlower?.isFavorite = false
         }
         saveFavorites()
+        syncDataToWidgets()
     }
     
     func deleteFlower(_ flower: AIFlower) {
@@ -1282,6 +1305,7 @@ class FlowerStore: ObservableObject {
         // Save changes
         saveFavorites()
         saveDiscoveredFlowers()
+        syncDataToWidgets()
     }
     
     func removeFlower(_ flower: AIFlower) {
@@ -1308,6 +1332,7 @@ class FlowerStore: ObservableObject {
         
         // Save and sync
         saveDiscoveredFlowers()
+        syncDataToWidgets()
         Task {
             await iCloudSyncManager.shared.syncToICloud()
         }
@@ -1370,6 +1395,9 @@ class FlowerStore: ObservableObject {
             
             discoveredFlowers.insert(updatedFlower, at: 0)
             saveDiscoveredFlowers()
+            
+            // Sync lightweight data to widgets
+            syncDataToWidgets()
             
             // Auto-save to photo library if enabled (use parameter or default setting)
             let shouldAutoSave = autoSaveToPhotos ?? self.autoSaveToPhotos
@@ -1539,6 +1567,18 @@ class FlowerStore: ObservableObject {
         }
     }
     
+    // MARK: - Debug Functions
+    
+    func debugAPIConfiguration() {
+        let apiConfig = APIConfiguration.shared
+        print("🔧 API Configuration Debug:")
+        print("   - FAL Key (Images): \(apiConfig.hasValidFalKey ? "✅ Available" : "❌ Missing")")
+        print("   - OpenAI Key (Text): \(apiConfig.hasValidOpenAIKey ? "✅ Available" : "❌ Missing")")
+        print("   - Images will use: \(apiConfig.hasValidFalKey ? "FAL AI" : "Placeholder")")
+        print("   - Text will use: \(apiConfig.hasValidOpenAIKey ? "OpenAI GPT" : "Basic templates")")
+    }
+    
+    
     // MARK: - Widget Data Sync
     
     /// Force sync all data to shared UserDefaults for widgets
@@ -1550,6 +1590,11 @@ class FlowerStore: ObservableObject {
             print("❌ FlowerStore: No shared UserDefaults available!")
             return
         }
+        
+        // Debug: Check app group configuration
+        print("🔍 FlowerStore: App group suite name: group.OCTOBER.Flowers")
+        print("🔍 FlowerStore: Shared defaults exists: \(sharedDefaults != nil)")
+        print("🔍 FlowerStore: Shared defaults URL: \(sharedDefaults.dictionaryRepresentation().count) keys")
         
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
@@ -1863,65 +1908,9 @@ class FlowerStore: ObservableObject {
                     userDefaults.set(encoded, forKey: pendingFlowerKey)
                 }
                 
-                // Generate image if API is available, otherwise use placeholder
-                if apiConfig.hasValidFalKey || apiConfig.hasValidOpenAIKey {
-                    Task {
-                        await generateFlowerImage(for: flower)
-                    }
-                } else {
-                    // Add placeholder image data for testing without API
-                    if let placeholderImage = createPlaceholderFlowerImage() {
-                        var updatedFlower = flower
-                        // Create new flower with image data
-                        updatedFlower = AIFlower(
-                            id: flower.id,
-                            name: flower.name,
-                            descriptor: flower.descriptor,
-                            imageData: placeholderImage.pngData(),
-                            generatedDate: flower.generatedDate,
-                            isFavorite: flower.isFavorite,
-                            scientificName: flower.scientificName,
-                            commonNames: flower.commonNames,
-                            family: flower.family,
-                            nativeRegions: flower.nativeRegions,
-                            bloomingSeason: flower.bloomingSeason,
-                            conservationStatus: flower.conservationStatus,
-                            uses: flower.uses,
-                            interestingFacts: flower.interestingFacts,
-                            careInstructions: flower.careInstructions,
-                            rarityLevel: flower.rarityLevel,
-                            meaning: flower.meaning,
-                            properties: flower.properties,
-                            origins: flower.origins,
-                            detailedDescription: flower.detailedDescription,
-                            shortDescription: flower.shortDescription,
-                            continent: flower.continent,
-                            discoveryDate: flower.discoveryDate,
-                            contextualGeneration: flower.contextualGeneration,
-                            generationContext: flower.generationContext,
-                            isBouquet: flower.isBouquet,
-                            bouquetFlowers: flower.bouquetFlowers,
-                            holidayName: flower.holidayName,
-                            discoveryLatitude: flower.discoveryLatitude,
-                            discoveryLongitude: flower.discoveryLongitude,
-                            discoveryLocationName: flower.discoveryLocationName,
-                            isInHerbarium: flower.isInHerbarium,
-                            discoveryWeatherCondition: flower.discoveryWeatherCondition,
-                            discoveryTemperature: flower.discoveryTemperature,
-                            discoveryTemperatureUnit: flower.discoveryTemperatureUnit,
-                            discoveryDayOfWeek: flower.discoveryDayOfWeek,
-                            discoveryFormattedDate: flower.discoveryFormattedDate,
-                            originalOwner: flower.originalOwner,
-                            ownershipHistory: flower.ownershipHistory
-                        )
-                        
-                        pendingFlower = updatedFlower
-                        
-                        // Save updated flower
-                        if let encoded = try? JSONEncoder().encode(updatedFlower) {
-                            userDefaults.set(encoded, forKey: pendingFlowerKey)
-                        }
-                    }
+                // Generate image using built-in API keys
+                Task {
+                    await generateFlowerImage(for: flower)
                 }
             } else {
                 // Fallback to mock if no species available
@@ -1997,15 +1986,9 @@ class FlowerStore: ObservableObject {
         do {
             let imageData: Data?
             
-            if apiConfig.hasValidFalKey {
-                let (image, _) = try await FALService.shared.generateFlowerImage(descriptor: flower.descriptor)
-                imageData = image.pngData()
-            } else if apiConfig.hasValidOpenAIKey {
-                let (image, _) = try await OpenAIService.shared.generateFlowerImage(descriptor: flower.descriptor)
-                imageData = image.pngData()
-            } else {
-                return
-            }
+            // Generate image using FAL (built-in keys)
+            let (image, _) = try await FALService.shared.generateFlowerImage(descriptor: flower.descriptor)
+            imageData = image.pngData()
             
             // Update the pending flower with the generated image
             if let imageData = imageData {
@@ -2134,7 +2117,26 @@ class FlowerStore: ObservableObject {
             let imageData = image.pngData()
             
             // Generate flower details using OpenAI
-            let flowerName = name?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false ? name! : "Custom Creation"
+            var flowerName: String
+            
+            // Check if a custom name was provided
+            if let providedName = name?.trimmingCharacters(in: .whitespacesAndNewlines), !providedName.isEmpty {
+                flowerName = providedName
+            } else {
+                // Generate a name based on the prompt
+                if apiConfig.hasValidOpenAIKey {
+                    do {
+                        flowerName = try await OpenAIService.shared.generateFlowerNameLegacy(descriptor: prompt)
+                    } catch {
+                        print("Failed to generate flower name: \(error)")
+                        flowerName = "Custom Creation"
+                    }
+                } else {
+                    flowerName = "Custom Creation"
+                }
+            }
+            
+            let currentOwner = createCurrentOwner()
             var flower = AIFlower(
                 name: flowerName,
                 descriptor: prompt,
@@ -2142,7 +2144,8 @@ class FlowerStore: ObservableObject {
                 generatedDate: Date(),
                 isFavorite: false,
                 discoveryDate: Date(),
-                originalOwner: createCurrentOwner()
+                originalOwner: currentOwner,
+                ownershipHistory: [currentOwner]  // Initialize ownership history with current owner
             )
             
             // Set custom location and weather if provided
@@ -2365,6 +2368,60 @@ class FlowerStore: ObservableObject {
         // Mark migration as complete
         UserDefaults.standard.set(true, forKey: migrationKey)
         print("Ownership history migration completed for \(discoveredFlowers.filter { !$0.hasOwnershipHistory }.count) flowers")
+    }
+    
+    // Debug function to check widget data
+    func debugWidgetData() {
+        print("\n🔍 === WIDGET DATA DEBUG ===")
+        print("📊 Main app data:")
+        print("  - Discovered flowers: \(discoveredFlowers.count)")
+        print("  - Favorites: \(favorites.count)")
+        
+        if let sharedDefaults = sharedDefaults {
+            print("\n✅ Shared UserDefaults available")
+            print("  - Suite name: group.OCTOBER.Flowers")
+            
+            // Check widget data
+            if let widgetData = sharedDefaults.data(forKey: "widgetData") {
+                print("  - Widget data size: \(widgetData.count) bytes")
+                
+                let decoder = JSONDecoder()
+                decoder.dateDecodingStrategy = .iso8601
+                if let decoded = try? decoder.decode(WidgetDataStore.self, from: widgetData) {
+                    print("  - Widget flowers: \(decoded.recentFlowers.count)")
+                    print("  - Widget total count: \(decoded.totalCount)")
+                    print("  - Widget favorites: \(decoded.favoritesCount)")
+                    print("  - Last updated: \(decoded.lastUpdated)")
+                    
+                    if !decoded.recentFlowers.isEmpty {
+                        print("\n  First 3 flowers in widget:")
+                        for (index, flower) in decoded.recentFlowers.prefix(3).enumerated() {
+                            print("    \(index + 1). \(flower.name) - \(flower.generatedDate)")
+                        }
+                    }
+                } else {
+                    print("  ❌ Failed to decode widget data")
+                }
+            } else {
+                print("  ❌ No widget data found")
+            }
+            
+            // Check discovered flowers in shared defaults
+            if let flowersData = sharedDefaults.data(forKey: discoveredFlowersKey) {
+                print("\n  - Discovered flowers data size: \(flowersData.count) bytes")
+            } else {
+                print("\n  ❌ No discovered flowers in shared defaults")
+            }
+            
+            print("\n  All keys in shared defaults:")
+            let keys = Array(sharedDefaults.dictionaryRepresentation().keys)
+            for key in keys.sorted() {
+                print("    - \(key)")
+            }
+        } else {
+            print("\n❌ Shared UserDefaults NOT available")
+        }
+        print("=========================\n")
     }
 }
 

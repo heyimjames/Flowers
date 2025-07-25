@@ -72,6 +72,10 @@
 	<false/>
 	<key>NSUserNotificationsUsageDescription</key>
 	<string>Get notified when your daily flower blooms</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Your location helps create unique flowers based on your local weather and special regional varieties</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Save your favorite flowers to your photo library to share with friends</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>

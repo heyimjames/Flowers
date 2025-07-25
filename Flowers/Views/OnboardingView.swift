@@ -208,95 +208,68 @@ struct OnboardingView: View {
             // Get contextual information for personalized flowers
             let location = ContextualFlowerGenerator.shared.currentLocation
             let placemark = ContextualFlowerGenerator.shared.currentPlacemark
-            let cityName = placemark?.locality ?? "your city"
-            let country = placemark?.country ?? "your region"
+            let cityName = placemark?.locality ?? ""
+            let country = placemark?.country ?? ""
             let currentSeason = ContextualFlowerGenerator.shared.getCurrentSeason()
             let currentHour = Calendar.current.component(.hour, from: Date())
             let timeOfDay = currentHour < 12 ? "morning" : (currentHour < 18 ? "afternoon" : "evening")
             
-            // Generate contextual starter themes
-            let currentMonth = Calendar.current.monthSymbols[Calendar.current.component(.month, from: Date()) - 1]
-            let seasonalColors = currentSeason == .spring ? "soft pastels and fresh greens" : 
-                               currentSeason == .summer ? "gentle yellows and soft sky blues" : 
-                               currentSeason == .autumn ? "muted dusty rose and pale copper tones" : 
-                               "crisp whites and soft sage green"
+            // Determine continent for botanical species selection
+            let continent = ContextualFlowerGenerator.shared.getContinent(for: country)
             
-            let starterThemes = [
-                (
-                    name: "\(cityName) Bloom",
-                    descriptor: "elegant petals that shimmer with \(seasonalColors), inspired by \(cityName) during \(currentMonth)",
-                    meaning: "A flower unique to \(cityName), featuring colors and patterns that reflect the character of your city in \(currentSeason.rawValue.lowercased())"
-                ),
-                (
-                    name: "\(currentMonth) Special",
-                    descriptor: "luminous blooms in \(seasonalColors) with delicate touches that capture \(currentMonth) in \(country)",
-                    meaning: "Created specifically for \(currentMonth) \(Calendar.current.component(.year, from: Date())), this flower marks the exact moment you started using the app"
-                ),
-                (
-                    name: "\(currentSeason.rawValue) Edition",
-                    descriptor: "radiant petals in perfect \(seasonalColors) that represent \(currentSeason.rawValue.lowercased()) in your location",
-                    meaning: "A seasonal flower that appears only during \(currentSeason.rawValue.lowercased()), featuring the signature colors of this time of year"
-                )
-            ]
+            // Get real botanical species native to the user's location
+            var usedSpecies: [String] = []
+            var starterThemes: [(name: String, descriptor: String, meaning: String)] = []
+            
+            // Generate 3 unique native flowers
+            for i in 0..<3 {
+                if let species = BotanicalDatabase.shared.getContextualSpecies(
+                    continent: continent,
+                    season: currentSeason.rawValue,
+                    existingSpecies: usedSpecies
+                ) {
+                    usedSpecies.append(species.scientificName)
+                    
+                    // Use the real flower's common name
+                    let flowerName = species.commonNames.first ?? species.scientificName
+                    
+                    // Create descriptors that incorporate the flower's real characteristics
+                    let descriptor = generateFlowerDescriptor(
+                        species: species,
+                        season: currentSeason,
+                        location: cityName.isEmpty ? country : cityName
+                    )
+                    
+                    let meaning = generateFlowerMeaning(
+                        species: species,
+                        location: cityName.isEmpty ? country : cityName,
+                        season: currentSeason,
+                        index: i
+                    )
+                    
+                    starterThemes.append((
+                        name: flowerName,
+                        descriptor: descriptor,
+                        meaning: meaning
+                    ))
+                } else {
+                    // Fallback to a generic beautiful flower if no species found
+                    let fallbackThemes = [
+                        "Wild Rose", "Garden Lily", "Mountain Orchid"
+                    ]
+                    let theme = fallbackThemes[i % fallbackThemes.count]
+                    starterThemes.append((
+                        name: theme,
+                        descriptor: "beautiful \(theme.lowercased()) with delicate petals in soft pastel colors",
+                        meaning: "A timeless flower that brings beauty and joy wherever it blooms"
+                    ))
+                }
+            }
             
             print("OnboardingView: Generated contextual themes for \(cityName), \(country) during \(currentSeason.rawValue) \(timeOfDay)")
             
-            // Check if API keys are available
-            let hasAPIKeys = AppConfig.shared.hasBuiltInKeys
-            let openAIKey = AppConfig.shared.effectiveOpenAIKey
-            let falKey = AppConfig.shared.effectiveFALKey
-            
-            print("OnboardingView: Built-in API keys available: \(hasAPIKeys)")
-            print("OnboardingView: OpenAI key length: \(openAIKey.count), starts with: \(openAIKey.prefix(10))")
-            print("OnboardingView: FAL key length: \(falKey.count), starts with: \(falKey.prefix(10))")
-            
-            if !hasAPIKeys {
-                print("OnboardingView: ERROR - No valid API keys available!")
-                await MainActor.run {
-                    // Create fallback flowers with complete metadata but no images
-                    self.starterFlowers = starterThemes.map { theme in
-                        var flower = AIFlower(
-                            name: theme.name,
-                            descriptor: theme.descriptor,
-                            imageData: nil,
-                            generatedDate: Date(),
-                            isFavorite: false,
-                            discoveryDate: Date(),
-                            originalOwner: self.createCurrentOwner()
-                        )
-                        flower.meaning = theme.meaning
-                        
-                        // Add location data if available
-                        if let location = ContextualFlowerGenerator.shared.currentLocation {
-                            flower.discoveryLatitude = location.coordinate.latitude
-                            flower.discoveryLongitude = location.coordinate.longitude
-                            flower.discoveryLocationName = ContextualFlowerGenerator.shared.currentPlacemark?.locality
-                        }
-                        
-                        // Add weather and date information
-                        if let weather = ContextualFlowerGenerator.shared.currentWeather {
-                            let weatherCondition = getWeatherConditionString(from: weather.currentWeather.condition)
-                            let temperature = weather.currentWeather.temperature.value
-                            flower.captureWeatherAndDate(
-                                weatherCondition: weatherCondition,
-                                temperature: temperature,
-                                temperatureUnit: "°C"
-                            )
-                        } else {
-                            // Always capture date even without weather
-                            flower.captureWeatherAndDate(
-                                weatherCondition: nil,
-                                temperature: nil,
-                                temperatureUnit: nil
-                            )
-                        }
-                        
-                        return flower
-                    }
-                    self.isGeneratingFlowers = false
-                }
-                return
-            }
+            // We always have built-in API keys
+            print("OnboardingView: Generating flowers with built-in API keys")
             
             for (index, theme) in starterThemes.enumerated() {
                 print("OnboardingView: Generating flower \(index + 1)/\(starterThemes.count): \(theme.name)")
@@ -640,6 +613,34 @@ struct OnboardingView: View {
             return "Clear"
         }
     }
+    
+    // Helper function to generate flower descriptor based on botanical species
+    private func generateFlowerDescriptor(species: BotanicalSpecies, season: Season, location: String) -> String {
+        let seasonalColors = season == .spring ? "soft pastels and fresh spring colors" : 
+                           season == .summer ? "warm summer hues with gentle yellows and soft blues" : 
+                           season == .autumn ? "muted autumn tones with dusty rose and pale copper" : 
+                           "crisp winter whites and soft sage greens"
+        
+        // Incorporate real characteristics of the species
+        let habitat = species.habitat.lowercased()
+        let description = species.description.lowercased()
+        
+        // Create a descriptor that combines the real flower with artistic elements
+        let locationText = location.isEmpty ? "" : "found in \(location), "
+        
+        return "beautiful \(species.commonNames.first?.lowercased() ?? "flower") \(locationText)with \(seasonalColors), featuring \(description)"
+    }
+    
+    // Helper function to generate meaningful context for the flower
+    private func generateFlowerMeaning(species: BotanicalSpecies, location: String, season: Season, index: Int) -> String {
+        let meanings = [
+            "This \(species.commonNames.first ?? "flower") is native to \(species.nativeRegions.first ?? "your region") and blooms during \(species.bloomingSeason.lowercased()). \(species.interestingFacts.first ?? "A beautiful flower that brings joy wherever it grows.")",
+            "Discovered in \(location.isEmpty ? "your area" : location), this \(species.commonNames.first ?? "flower") represents the unique beauty of \(season.rawValue.lowercased()). \(species.interestingFacts.randomElement() ?? "Each bloom tells a story of nature's artistry.")",
+            "A special \(species.commonNames.first ?? "flower") that marks the beginning of your flower collection journey. \(species.interestingFacts.last ?? "May it bring beauty and wonder to your days.")"
+        ]
+        
+        return meanings[index % meanings.count]
+    }
 }
 
 struct WelcomePageView: View {
@@ -679,12 +680,14 @@ struct WelcomePageView: View {
                     .foregroundColor(.flowerTextPrimary)
                     .multilineTextAlignment(.center)
                 
-                Text("Collect beautiful AI-generated flowers and share them with the people closest to you")
+                Text("Collect beautiful AI flowers and share them with friends")
                     .font(.system(size: 18, design: .rounded))
                     .foregroundColor(.flowerTextSecondary)
                     .multilineTextAlignment(.center)
                     .lineSpacing(7.2) // 1.4em at 18pt font size
                     .padding(.horizontal, 32)
+                    .lineLimit(3)
+                    .minimumScaleFactor(0.9)
             }
             
             Spacer()
@@ -878,6 +881,8 @@ struct LocationPermissionPageView: View {
                     .multilineTextAlignment(.center)
                     .lineSpacing(6.4) // 1.4em at 16pt font size
                     .padding(.horizontal, 32)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.9)
             }
             
             Spacer().frame(height: 24)
@@ -998,12 +1003,14 @@ struct StarterFlowerSelectionView: View {
                 }
                 
                 // Contextual description
-                Text("These starter flowers were specially generated based on your current location, season, and time. Each one is unique to this moment in your journey.")
+                Text("Each flower is unique to your location and this special moment")
                     .font(.system(size: 14, design: .rounded))
                     .foregroundColor(.flowerTextSecondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
                     .padding(.top, -10)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.9)
                     .opacity(cardsAppeared ? 1 : 0)
                     .animation(.easeIn(duration: 0.5).delay(0.5), value: cardsAppeared)
                 
@@ -1558,11 +1565,13 @@ struct UsernameSetupPageView: View {
                         .foregroundColor(.flowerTextPrimary)
                         .multilineTextAlignment(.center)
                     
-                    Text("Your username will be shown when you share flowers with friends. Use only letters and numbers.")
+                    Text("Pick a username for sharing flowers with friends")
                         .font(.system(size: 16, design: .rounded))
                         .foregroundColor(.flowerTextSecondary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 40)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.9)
                 }
                 
                 // Username input with @ prefix

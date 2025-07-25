@@ -231,6 +231,9 @@ struct ContentView: View {
             // Validate and fix any state inconsistencies on app launch
             flowerStore.validateAndFixState()
             
+            // Ensure next flower time is loaded
+            flowerStore.loadNextFlowerTime()
+            
             // Check if there's a pending flower that should be revealed immediately
             // This handles cases where countdown expired while app was closed
             if flowerStore.pendingFlower != nil && !flowerStore.hasUnrevealedFlower {

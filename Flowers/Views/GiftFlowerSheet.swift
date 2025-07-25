@@ -118,7 +118,7 @@ struct GiftFlowerSheet: View {
                                                 .fixedSize(horizontal: false, vertical: true)
                                             
                                             // Simplified iOS Share Sheet Preview
-                                            SimplifiedShareSheetPreview()
+                                            SimplifiedShareSheetPreview(flowerName: flower.name)
                                         }
                                         Spacer()
                                     }
@@ -327,6 +327,8 @@ struct GiftFlowerSheet: View {
 
 // MARK: - Simplified Share Sheet Preview
 struct SimplifiedShareSheetPreview: View {
+    let flowerName: String
+    
     var body: some View {
         VStack(spacing: 8) {
             // Mock iOS share sheet appearance
@@ -347,7 +349,7 @@ struct SimplifiedShareSheetPreview: View {
                     
                     // File info
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("Bittersweet Nightshade")
+                        Text(flowerName)
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(.flowerTextPrimary)
                         Text("Flower Document • 302 KB")
@@ -376,27 +378,7 @@ struct SimplifiedShareSheetPreview: View {
                                 .foregroundColor(.gray)
                         }
                         
-                        // Slack
-                        VStack(spacing: 8) {
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(Color.gray.opacity(0.15))
-                                .frame(width: 60, height: 60)
-                            Text("Slack")
-                                .font(.system(size: 11))
-                                .foregroundColor(.gray)
-                        }
-                        
-                        // WhatsApp
-                        VStack(spacing: 8) {
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(Color.gray.opacity(0.15))
-                                .frame(width: 60, height: 60)
-                            Text("WhatsApp")
-                                .font(.system(size: 11))
-                                .foregroundColor(.gray)
-                        }
-                        
-                        // Flowers app (highlighted)
+                        // Flowers app (highlighted) - moved to 2nd position
                         VStack(spacing: 8) {
                             ZStack {
                                 RoundedRectangle(cornerRadius: 16)
@@ -420,6 +402,26 @@ struct SimplifiedShareSheetPreview: View {
                                 .foregroundColor(.flowerPrimary)
                         }
                         
+                        // Slack
+                        VStack(spacing: 8) {
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color.gray.opacity(0.15))
+                                .frame(width: 60, height: 60)
+                            Text("Slack")
+                                .font(.system(size: 11))
+                                .foregroundColor(.gray)
+                        }
+                        
+                        // WhatsApp
+                        VStack(spacing: 8) {
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color.gray.opacity(0.15))
+                                .frame(width: 60, height: 60)
+                            Text("WhatsApp")
+                                .font(.system(size: 11))
+                                .foregroundColor(.gray)
+                        }
+                        
                         // Discord
                         VStack(spacing: 8) {
                             RoundedRectangle(cornerRadius: 16)
@@ -432,14 +434,14 @@ struct SimplifiedShareSheetPreview: View {
                     }
                     .padding(.horizontal, 20)
                 }
-                .frame(height: 90)
+                .frame(height: 100)
                 
                 // Additional options
                 VStack(spacing: 0) {
                     Divider()
                     
                     HStack {
-                        Text("Dupe It")
+                        Text("Copy")
                             .font(.system(size: 16))
                             .foregroundColor(.flowerTextPrimary)
                         Spacer()
@@ -450,7 +452,7 @@ struct SimplifiedShareSheetPreview: View {
                     Divider()
                     
                     HStack {
-                        Text("Save to Cosmos")
+                        Text("Save to Files")
                             .font(.system(size: 16))
                             .foregroundColor(.flowerTextPrimary)
                         Spacer()
@@ -469,7 +471,7 @@ struct SimplifiedShareSheetPreview: View {
             HStack(spacing: 4) {
                 Image(systemName: "arrow.up")
                     .font(.system(size: 10, weight: .bold))
-                Text("Tap the Flowers app icon")
+                Text("Tell your friend to Tap the Flowers app icon")
                     .font(.system(size: 11, weight: .medium))
             }
             .foregroundColor(.flowerPrimary)
