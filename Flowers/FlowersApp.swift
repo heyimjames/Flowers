@@ -36,6 +36,12 @@ struct FlowersApp: App {
                         }
                     }
                 }
+                .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+                    print("📱 App became active - forcing widget data sync...")
+                    // Sync data to widgets whenever app becomes active
+                    // This ensures existing users get their data synced even after updates
+                    flowerStore.syncDataToWidgets()
+                }
                 .fullScreenCover(isPresented: $flowerStore.hasUnrevealedFlower) {
                     if let pendingFlower = flowerStore.pendingFlower {
                         FlowerRevealView(flower: pendingFlower)

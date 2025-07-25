@@ -3,6 +3,7 @@ import SwiftUI
 import UIKit
 import UserNotifications
 import WeatherKit
+import WidgetKit
 
 @MainActor
 class FlowerStore: ObservableObject {
@@ -223,6 +224,9 @@ class FlowerStore: ObservableObject {
             // Schedule next flower if needed
             scheduleNextFlowerIfNeeded()
         }
+        
+        // Sync existing data to widgets on app launch
+        syncDataToWidgets()
         
         // Check for iCloud data on first launch
         Task { @MainActor in
@@ -1340,7 +1344,12 @@ class FlowerStore: ObservableObject {
         encoder.dateEncodingStrategy = .iso8601
         if let encoded = try? encoder.encode(favorites) {
             userDefaults.set(encoded, forKey: favoritesKey)
+            // Also save to shared defaults for widget access
+            sharedDefaults?.set(encoded, forKey: favoritesKey)
         }
+        
+        // Reload widgets when favorites change
+        WidgetCenter.shared.reloadAllTimelines()
     }
     
     // MARK: - Discovered Flowers Management
@@ -1507,7 +1516,12 @@ class FlowerStore: ObservableObject {
         encoder.dateEncodingStrategy = .iso8601
         if let encoded = try? encoder.encode(discoveredFlowers) {
             userDefaults.set(encoded, forKey: discoveredFlowersKey)
+            // Also save to shared defaults for widget access
+            sharedDefaults?.set(encoded, forKey: discoveredFlowersKey)
         }
+        
+        // Reload widgets when data changes
+        WidgetCenter.shared.reloadAllTimelines()
         
         // Sync to iCloud
         Task {
@@ -1523,6 +1537,86 @@ class FlowerStore: ObservableObject {
         Task {
             await FlowerBackupService.shared.performAutoBackup(flowerStore: self)
         }
+    }
+    
+    // MARK: - Widget Data Sync
+    
+    /// Force sync all data to shared UserDefaults for widgets
+    func syncDataToWidgets() {
+        print("🔄 FlowerStore: Starting widget data sync...")
+        print("📊 FlowerStore: Current data - Discovered: \(discoveredFlowers.count), Favorites: \(favorites.count)")
+        
+        guard let sharedDefaults = sharedDefaults else {
+            print("❌ FlowerStore: No shared UserDefaults available!")
+            return
+        }
+        
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        
+        // Sync discovered flowers
+        do {
+            let encoded = try encoder.encode(discoveredFlowers)
+            sharedDefaults.set(encoded, forKey: discoveredFlowersKey)
+            print("✅ FlowerStore: Synced \(discoveredFlowers.count) discovered flowers to shared defaults")
+        } catch {
+            print("❌ FlowerStore: Failed to encode discovered flowers: \(error)")
+        }
+        
+        // Sync favorites
+        do {
+            let encoded = try encoder.encode(favorites)
+            sharedDefaults.set(encoded, forKey: favoritesKey)
+            print("✅ FlowerStore: Synced \(favorites.count) favorites to shared defaults")
+        } catch {
+            print("❌ FlowerStore: Failed to encode favorites: \(error)")
+        }
+        
+        // Sync current/pending flower if available
+        if let currentFlower = currentFlower {
+            do {
+                let encoded = try encoder.encode(currentFlower)
+                sharedDefaults.set(encoded, forKey: dailyFlowerKey)
+                sharedDefaults.set(Date(), forKey: dailyFlowerDateKey)
+                print("✅ FlowerStore: Synced current flower to shared defaults")
+            } catch {
+                print("❌ FlowerStore: Failed to encode current flower: \(error)")
+            }
+        }
+        
+        if let pendingFlower = pendingFlower {
+            do {
+                let encoded = try encoder.encode(pendingFlower)
+                sharedDefaults.set(encoded, forKey: pendingFlowerKey)
+                print("✅ FlowerStore: Synced pending flower to shared defaults")
+            } catch {
+                print("❌ FlowerStore: Failed to encode pending flower: \(error)")
+            }
+        }
+        
+        if let nextFlowerTime = nextFlowerTime {
+            sharedDefaults.set(nextFlowerTime, forKey: nextFlowerTimeKey)
+            print("✅ FlowerStore: Synced next flower time to shared defaults")
+        }
+        
+        // Verify the sync worked
+        if let data = sharedDefaults.data(forKey: discoveredFlowersKey) {
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            do {
+                let flowers = try decoder.decode([AIFlower].self, from: data)
+                print("🔍 FlowerStore: Verification - Successfully read back \(flowers.count) flowers from shared defaults")
+            } catch {
+                print("❌ FlowerStore: Verification failed - Could not decode flowers: \(error)")
+            }
+        } else {
+            print("❌ FlowerStore: Verification failed - No data found in shared defaults")
+        }
+        
+        // Force widget reload
+        WidgetCenter.shared.reloadAllTimelines()
+        print("🔄 FlowerStore: Widget timelines reloaded")
+        print("✅ FlowerStore: Widget data sync complete")
     }
     
     // Update a flower's details (used after fetching details from AI)

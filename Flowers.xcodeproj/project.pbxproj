@@ -43,6 +43,9 @@
 		57D784332E2AFC0900419E0B /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D783FF2E2AFC0900419E0B /* OnboardingView.swift */; };
 		57D784342E2AFC0900419E0B /* GiftFlowerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D783FE2E2AFC0900419E0B /* GiftFlowerSheet.swift */; };
 		57D784352E2AFC0900419E0B /* FlowerNotificationSchedule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D783EF2E2AFC0900419E0B /* FlowerNotificationSchedule.swift */; };
+		57D784F82E32A0CF00419E0B /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 57D784F72E32A0CF00419E0B /* WidgetKit.framework */; };
+		57D784FA2E32A0CF00419E0B /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 57D784F92E32A0CF00419E0B /* SwiftUI.framework */; };
+		57D785092E32A0D100419E0B /* FlowersWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 57D784F52E32A0CF00419E0B /* FlowersWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -60,7 +63,28 @@
 			remoteGlobalIDString = 570A02862E25859600C149C7;
 			remoteInfo = Flowers;
 		};
+		57D785072E32A0D100419E0B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 570A027F2E25859600C149C7 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 57D784F42E32A0CF00419E0B;
+			remoteInfo = FlowersWidgetExtension;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		57D7850E2E32A0D100419E0B /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				57D785092E32A0D100419E0B /* FlowersWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		570A02872E25859600C149C7 /* Flowers.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flowers.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -104,6 +128,9 @@
 		57D7840D2E2AFC0900419E0B /* Flowers.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Flowers.entitlements; sourceTree = "<group>"; };
 		57D7840E2E2AFC0900419E0B /* FlowersApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowersApp.swift; sourceTree = "<group>"; };
 		57D7840F2E2AFC0900419E0B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		57D784F52E32A0CF00419E0B /* FlowersWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FlowersWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		57D784F72E32A0CF00419E0B /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		57D784F92E32A0CF00419E0B /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -113,6 +140,13 @@
 				Info.plist,
 			);
 			target = 570A02862E25859600C149C7 /* Flowers */;
+		};
+		57D7850D2E32A0D100419E0B /* Exceptions for "FlowersWidget" folder in "FlowersWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 57D784F42E32A0CF00419E0B /* FlowersWidgetExtension */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -133,6 +167,14 @@
 		570A02A52E25859800C149C7 /* FlowersUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = FlowersUITests;
+			sourceTree = "<group>";
+		};
+		57D784FB2E32A0CF00419E0B /* FlowersWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				57D7850D2E32A0D100419E0B /* Exceptions for "FlowersWidget" folder in "FlowersWidgetExtension" target */,
+			);
+			path = FlowersWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -159,6 +201,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		57D784F22E32A0CF00419E0B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				57D784FA2E32A0CF00419E0B /* SwiftUI.framework in Frameworks */,
+				57D784F82E32A0CF00419E0B /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -169,6 +220,8 @@
 				570A02892E25859600C149C7 /* Flowers */,
 				570A029B2E25859800C149C7 /* FlowersTests */,
 				570A02A52E25859800C149C7 /* FlowersUITests */,
+				57D784FB2E32A0CF00419E0B /* FlowersWidget */,
+				57D784F62E32A0CF00419E0B /* Frameworks */,
 				570A02882E25859600C149C7 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -179,6 +232,7 @@
 				570A02872E25859600C149C7 /* Flowers.app */,
 				570A02982E25859800C149C7 /* FlowersTests.xctest */,
 				570A02A22E25859800C149C7 /* FlowersUITests.xctest */,
+				57D784F52E32A0CF00419E0B /* FlowersWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -268,6 +322,15 @@
 			path = Flowers;
 			sourceTree = "<group>";
 		};
+		57D784F62E32A0CF00419E0B /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				57D784F72E32A0CF00419E0B /* WidgetKit.framework */,
+				57D784F92E32A0CF00419E0B /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -278,10 +341,12 @@
 				570A02832E25859600C149C7 /* Sources */,
 				570A02842E25859600C149C7 /* Frameworks */,
 				570A02852E25859600C149C7 /* Resources */,
+				57D7850E2E32A0D100419E0B /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				57D785082E32A0D100419E0B /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				570A02892E25859600C149C7 /* Flowers */,
@@ -339,6 +404,28 @@
 			productReference = 570A02A22E25859800C149C7 /* FlowersUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		57D784F42E32A0CF00419E0B /* FlowersWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 57D7850A2E32A0D100419E0B /* Build configuration list for PBXNativeTarget "FlowersWidgetExtension" */;
+			buildPhases = (
+				57D784F12E32A0CF00419E0B /* Sources */,
+				57D784F22E32A0CF00419E0B /* Frameworks */,
+				57D784F32E32A0CF00419E0B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				57D784FB2E32A0CF00419E0B /* FlowersWidget */,
+			);
+			name = FlowersWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = FlowersWidgetExtension;
+			productReference = 57D784F52E32A0CF00419E0B /* FlowersWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -360,6 +447,9 @@
 						CreatedOnToolsVersion = 16.4;
 						TestTargetID = 570A02862E25859600C149C7;
 					};
+					57D784F42E32A0CF00419E0B = {
+						CreatedOnToolsVersion = 16.4;
+					};
 				};
 			};
 			buildConfigurationList = 570A02822E25859600C149C7 /* Build configuration list for PBXProject "Flowers" */;
@@ -379,6 +469,7 @@
 				570A02862E25859600C149C7 /* Flowers */,
 				570A02972E25859800C149C7 /* FlowersTests */,
 				570A02A12E25859800C149C7 /* FlowersUITests */,
+				57D784F42E32A0CF00419E0B /* FlowersWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -405,6 +496,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		570A02A02E25859800C149C7 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		57D784F32E32A0CF00419E0B /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -465,6 +563,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		57D784F12E32A0CF00419E0B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -477,6 +582,11 @@
 			isa = PBXTargetDependency;
 			target = 570A02862E25859600C149C7 /* Flowers */;
 			targetProxy = 570A02A32E25859800C149C7 /* PBXContainerItemProxy */;
+		};
+		57D785082E32A0D100419E0B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 57D784F42E32A0CF00419E0B /* FlowersWidgetExtension */;
+			targetProxy = 57D785072E32A0D100419E0B /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -746,6 +856,60 @@
 			};
 			name = Release;
 		};
+		57D7850B2E32A0D100419E0B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = HJJGM6KHY5;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FlowersWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = FlowersWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = OCTOBER.Flowers.FlowersWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		57D7850C2E32A0D100419E0B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = HJJGM6KHY5;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FlowersWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = FlowersWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = OCTOBER.Flowers.FlowersWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -781,6 +945,15 @@
 			buildConfigurations = (
 				570A02B42E25859800C149C7 /* Debug */,
 				570A02B52E25859800C149C7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		57D7850A2E32A0D100419E0B /* Build configuration list for PBXNativeTarget "FlowersWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				57D7850B2E32A0D100419E0B /* Debug */,
+				57D7850C2E32A0D100419E0B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

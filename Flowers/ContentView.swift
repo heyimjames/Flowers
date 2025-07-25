@@ -743,6 +743,9 @@ struct ContentView: View {
                 loadInspirationalQuote()
             }
         }
+        .onOpenURL { url in
+            handleWidgetDeepLink(url: url)
+        }
     }
     
     private func loadInspirationalQuote() {
@@ -793,6 +796,47 @@ struct ContentView: View {
             // Countdown has expired, automatically show the reveal screen
             print("ContentView: Countdown expired, triggering flower reveal")
             flowerStore.showPendingFlowerIfAvailable()
+        }
+    }
+    
+    private func handleWidgetDeepLink(url: URL) {
+        guard url.scheme == "flowers" else { return }
+        
+        switch url.host {
+        case "reveal":
+            // Widget tapped to reveal pending flower
+            if flowerStore.hasUnrevealedFlower {
+                // Flower is ready to be revealed, no action needed
+                // The UI will automatically show the reveal button
+                print("Widget: Navigated to reveal pending flower")
+            }
+            
+        case "flower":
+            // Widget tapped on specific flower
+            let pathComponents = url.pathComponents
+            if pathComponents.count > 1 {
+                let flowerIdString = pathComponents[1]
+                if let flowerId = UUID(uuidString: flowerIdString),
+                   let flower = flowerStore.discoveredFlowers.first(where: { $0.id == flowerId }) {
+                    // Set the current flower and show details
+                    flowerStore.currentFlower = flower
+                    showingFlowerDetail = true
+                    print("Widget: Navigated to flower: \(flower.name)")
+                }
+            }
+            
+        case "collection":
+            // Widget tapped to open collection
+            showingFavorites = true
+            print("Widget: Opened collection")
+            
+        case "home":
+            // Widget tapped to open main app (default behavior)
+            print("Widget: Navigated to home")
+            
+        default:
+            // Unknown deep link, just open the app
+            print("Widget: Unknown deep link: \(url)")
         }
     }
     
